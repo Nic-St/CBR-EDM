@@ -1,10 +1,10 @@
 import { config } from './config.js';
 import { router } from './router.js';
 import { withSecurityHeaders } from './lib/securityHeaders.js';
+import { handleInboundEmail } from './lib/inboundEmail.js';
 
 /**
- * Worker entry point. More routes land through phase 2/3 (see SPEC.md
- * section 17).
+ * Worker entry point.
  * @type {ExportedHandler}
  */
 export default {
@@ -21,5 +21,12 @@ export default {
 
     const response = await router(request, env);
     return withSecurityHeaders(response);
+  },
+
+  /**
+   * Handles mail arriving at events@domain via Email Routing, section 10.6.
+   */
+  async email(message, env) {
+    await handleInboundEmail(message, env);
   },
 };
