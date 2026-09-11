@@ -5,7 +5,11 @@
 const CSP = [
   "default-src 'self'",
   "script-src 'self' https://challenges.cloudflare.com https://static.cloudflareinsights.com",
-  "style-src 'self'",
+  // The Turnstile widget injects its own inline styles into its iframe/host
+  // elements, so style-src needs 'unsafe-inline'. This is far lower risk
+  // than allowing inline scripts (still fully blocked above): styles can't
+  // execute code or exfiltrate data on their own.
+  "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data:",
   "font-src 'self'",
   "connect-src 'self' https://cloudflareinsights.com",
