@@ -29,6 +29,22 @@ Local dev never touches your real Cloudflare account. Add `--remote` to the
 migration or seed commands only if you deliberately want to run them against
 the live database, and never run the seed script against remote.
 
+### Testing the admin panel locally
+
+`/admin*` is protected by Cloudflare Access in production (step 10 below),
+which does not exist in local dev. To exercise the admin panel without it,
+copy the example dev vars file and restart `wrangler dev`:
+
+```bash
+cp .dev.vars.example .dev.vars
+```
+
+`.dev.vars` is gitignored and never deployed. `DEV_BYPASS_ACCESS=true` only
+has any effect when running locally; production always requires a real,
+independently verified Access JWT (see `src/lib/auth.js`), and rejects the
+request if that verification fails for any reason, including a
+misconfigured Access application.
+
 ## Owner setup checklist
 
 Claude Code cannot do any of the following steps itself; they need a human
