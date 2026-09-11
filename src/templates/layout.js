@@ -21,6 +21,16 @@ export function layout({ title, bodyContent, extraHead = '' }) {
   <header class="site-header">
     <p class="site-name">${config.siteName}</p>
     <p class="slogan-strip">${config.slogan}</p>
+    <nav aria-label="Main">
+      <ul class="site-nav">
+        <li><a href="/submit">Put an event on the wall</a></li>
+        <li><a href="/crews">Crews</a></li>
+        <li><a href="/archive">Archive</a></li>
+        <li><a href="/look-after-each-other">${config.harmReductionTitle}</a></li>
+        <li><a href="/contact">Get in touch</a></li>
+        <li><a href="/calendar.ics">Subscribe to the calendar</a></li>
+      </ul>
+    </nav>
   </header>
   <main>
     ${raw(bodyContent)}

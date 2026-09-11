@@ -42,7 +42,7 @@
   --text-small: 14px;
   --text-h3: 20px;
   --text-h2: 28px;
-  --text-h1: clamp(40px, 8vw, 88px);
+  --text-h1: clamp(28px, 3.6vw, 48px);
 
   /* Shape and depth */
   --radius: 0;
@@ -109,14 +109,36 @@ select:focus-visible {
   font-family: var(--font-display);
   font-weight: 900;
   font-size: var(--text-h1);
-  line-height: 1.05;
+  line-height: 1.15;
   margin: 0;
-  max-width: 20ch;
+  max-width: 36ch;
   background: var(--paper);
   color: var(--toner);
   display: inline-block;
-  padding: 0.2em 0.3em;
+  padding: 0.35em 0.5em;
   transform: rotate(-1deg);
+}
+
+/* Site nav: the actionable links, up top so people don't need to scroll
+   the footer to find them. */
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-nav a {
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+}
+
+.site-nav a:hover,
+.site-nav a:focus-visible {
+  border-bottom-color: var(--paper);
 }
 
 /* Paper scraps: event cards. Shape and rotation are set inline per event
@@ -210,6 +232,16 @@ select:focus-visible {
 
   .board {
     grid-template-columns: 1fr 1fr;
+  }
+
+  /* Been and gone on the left, Coming up on the right. DOM order stays
+     upcoming-first so mobile (no grid here) keeps Coming up on top. */
+  .board-column:first-child {
+    order: 2;
+  }
+
+  .board-column:last-child {
+    order: 1;
   }
 
   .calendar-panel {
