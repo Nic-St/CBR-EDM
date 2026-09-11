@@ -3,6 +3,48 @@
 All notable changes to this project are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.0] - 2026-09-12
+
+### Added
+- Inbound email handler for `events@domain` (`postal-mime`, the spec's one
+  approved dependency for this): stores sender, subject, plain text body
+  (or a stripped-tag fallback when a message has only HTML), and up to 3
+  image attachments to R2. Oversized messages (over 10MB) are rejected
+  before parsing; non-image attachments are dropped. Sends an admin alert.
+  Verified with a real MIME message in a Node test, not a hand-built stub.
+- Admin inbound email queue (`/admin/inbound-emails`): list, plain-text
+  view (attachments shown as images through an admin-only route, raw
+  attachments are never served publicly), dismiss, and convert-to-event.
+  Converting pre-fills the new event's title from the subject; if the
+  email had an image attachment, the event edit page offers a "use this
+  image as the flyer" button that runs it through the same browser resize
+  pipeline as any other upload (so it comes out as a processed, EXIF-free
+  WebP, not the raw attachment).
+- Crews directory (`/crews`) and profile pages (`/crews/:slug`): listed
+  crews alphabetically with blurb and event count; profile pages with
+  upcoming and past events. Events with a `crew_id` link to the crew page;
+  events with only free-text `presented_by` do not.
+- Trusted crews can edit their own profile (blurb and links) from the
+  `/crew` dashboard.
+- Slogan updated per owner request: "No algorithm - The info you need,
+  for those with no feed".
+
+### Fixed
+- Home and archive pages never joined the crews table, so a crew's name
+  and profile link were never available on their event cards there (only
+  on the single event page, which already had the join). Both queries now
+  join crews, and cards link the crew name when `crew_id` is set.
+
+### Verified with a full browser walkthrough
+An inbound email with a real PNG attachment converted end to end: queue
+listing, plain-text view with the attachment visible through the
+admin-only route, convert-to-event pre-filling the title, and the flyer
+pipeline producing proper `.webp` flyer keys (confirmed in D1) rather than
+reusing the raw attachment. Also: the crews directory excluding an
+unlisted crew, a crew profile page showing the right upcoming/past split
+and its links, and a trusted crew's profile edit appearing live on their
+public page immediately after saving.
+
 ## [0.3.0] - 2026-09-12
 
 ### Added
@@ -169,6 +211,7 @@ admin queue.
 - Harm reduction links: seeded but marked as needing verification before
   launch, per section 15.4.
 
+[0.4.0]: https://github.com/REPLACE_WITH_OWNER/REPLACE_WITH_REPO/releases/tag/v0.4.0
 [0.3.0]: https://github.com/REPLACE_WITH_OWNER/REPLACE_WITH_REPO/releases/tag/v0.3.0
 [0.2.0]: https://github.com/REPLACE_WITH_OWNER/REPLACE_WITH_REPO/releases/tag/v0.2.0
 [0.1.0]: https://github.com/REPLACE_WITH_OWNER/REPLACE_WITH_REPO/releases/tag/v0.1.0
