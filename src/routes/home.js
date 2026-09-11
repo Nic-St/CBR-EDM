@@ -22,7 +22,7 @@ export async function handleHome(request, env) {
 
   const { body } = homePage(results, year, month);
 
-  const page = String(layout({ title: null, bodyContent: body }));
+  const page = String(layout({ title: null, bodyContent: body, bodyClass: 'page-home' }));
 
   return new Response(page, {
     headers: {

@@ -4,9 +4,9 @@ import { config } from '../config.js';
 /**
  * The shared page shell: header with site name and slogan, footer with the
  * required links (section 6), and a slot for page content.
- * @param {{ title: string, bodyContent: string, activeNav?: string, extraHead?: string }} options
+ * @param {{ title: string, bodyContent: string, activeNav?: string, extraHead?: string, bodyClass?: string }} options
  */
-export function layout({ title, bodyContent, extraHead = '' }) {
+export function layout({ title, bodyContent, extraHead = '', bodyClass = '' }) {
   return html`<!doctype html>
 <html lang="en-AU">
 <head>
@@ -17,7 +17,7 @@ export function layout({ title, bodyContent, extraHead = '' }) {
   <link rel="stylesheet" href="/css/style.css">
   ${raw(extraHead)}
 </head>
-<body>
+<body${bodyClass ? html` class="${bodyClass}"` : ''}>
   <header class="site-header">
     <p class="site-name">${config.siteName}</p>
     <p class="slogan-strip">${config.slogan}</p>

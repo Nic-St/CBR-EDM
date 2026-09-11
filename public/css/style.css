@@ -57,7 +57,7 @@
 }
 
 html {
-  background: var(--wall-base);
+  background: var(--wall-base) url('/textures/concrete-grain.svg') repeat;
 }
 
 body {
@@ -223,13 +223,6 @@ select:focus-visible {
 }
 
 @media (min-width: 1024px) {
-  .home-layout {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 2rem;
-    align-items: start;
-  }
-
   .board {
     grid-template-columns: 1fr 1fr;
   }
@@ -247,6 +240,62 @@ select:focus-visible {
   .calendar-panel {
     position: sticky;
     top: 1.25rem;
+  }
+
+  /* Home page only: promote the header's and main's children into one
+     page-level grid, so the calendar can sit beside the slogan instead of
+     under the board, without changing the mobile layout (which stays a
+     plain block flow, header then main then footer) or moving anything
+     in the actual markup. display: contents removes a box from the box
+     tree but keeps its children and its own semantics (header/nav/main
+     landmarks are unaffected), so this is a purely visual reflow. */
+  .page-home {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    column-gap: 2rem;
+    row-gap: 0.75rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2.5rem 1.25rem 3rem;
+  }
+
+  .page-home [data-panel="board"] {
+    margin-top: 1.5rem;
+  }
+
+  .page-home .site-header,
+  .page-home main,
+  .page-home .home-layout {
+    display: contents;
+  }
+
+  .page-home .site-header .site-name {
+    grid-column: 1 / -1;
+  }
+
+  .page-home .slogan-strip {
+    grid-column: 1;
+  }
+
+  .page-home [data-panel="calendar"] {
+    grid-column: 2;
+    grid-row: 2 / 4;
+  }
+
+  .page-home .site-header > nav {
+    grid-column: 1;
+  }
+
+  .page-home .view-toggle {
+    display: none;
+  }
+
+  .page-home [data-panel="board"] {
+    grid-column: 1 / -1;
+  }
+
+  .page-home .site-footer {
+    grid-column: 1 / -1;
   }
 }
 
