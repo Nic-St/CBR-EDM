@@ -5,6 +5,7 @@ const NAV = [
   ['/admin', 'Queue'],
   ['/admin/events', 'Events'],
   ['/admin/changes', 'Changes'],
+  ['/admin/inbound-emails', 'Inbound emails'],
   ['/admin/crews', 'Crews'],
   ['/admin/contact-messages', 'Messages'],
   ['/admin/harm-reduction', 'Harm reduction links'],
@@ -42,6 +43,7 @@ export function adminLayout({ title, bodyContent, email, now = new Date() }) {
   <script src="/js/admin-confirm.js" defer></script>
   <script src="/js/image-resize.js" defer></script>
   <script src="/js/admin-flyer-upload.js" defer></script>
+  <script src="/js/admin-flyer-from-email.js" defer></script>
 </body>
 </html>`;
 }

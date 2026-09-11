@@ -64,7 +64,8 @@ export async function handleEventEditForm(request, env, admin, id) {
   const event = await env.DB.prepare('SELECT * FROM events WHERE id = ?').bind(id).first();
   if (!event) return notFound();
   const crews = await getCrews(env);
-  return page(admin, `Edit: ${event.title || 'Untitled'}`, eventFormPage(eventForForm(event), crews));
+  const fromEmail = new URL(request.url).searchParams.get('from_email');
+  return page(admin, `Edit: ${event.title || 'Untitled'}`, eventFormPage(eventForForm(event), crews, { fromEmailId: fromEmail }));
 }
 
 /**

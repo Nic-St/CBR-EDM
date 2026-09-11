@@ -25,7 +25,7 @@ export async function handleAdminQueue(request, env, admin) {
       <tbody>
         <tr><td><a href="/admin/events?visibility=pending">Pending submissions</a></td><td>${pendingEvents.n}</td></tr>
         <tr><td><a href="/admin/changes">Pending changes and requests</a></td><td>${pendingChanges.n}</td></tr>
-        <tr><td>New inbound emails</td><td>${newEmails.n}</td></tr>
+        <tr><td><a href="/admin/inbound-emails">New inbound emails</a></td><td>${newEmails.n}</td></tr>
         <tr><td><a href="/admin/contact-messages">New contact messages</a></td><td>${newMessages.n}</td></tr>
       </tbody>
     </table>

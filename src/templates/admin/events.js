@@ -102,14 +102,22 @@ export function eventFormPage(event, crews, options = {}) {
       <button type="submit">Save</button>
     </form>
 
-    ${!isNew ? adminEventActions(event) : ''}
+    ${!isNew ? adminEventActions(event, options) : ''}
   `;
 }
 
-function adminEventActions(event) {
+function adminEventActions(event, options = {}) {
   return html`
     <h2>Flyer</h2>
     ${event.flyer_thumb_key ? html`<img src="/img/${event.flyer_thumb_key}" alt="Current flyer" width="200">` : html`<p class="muted">No flyer uploaded.</p>`}
+    ${options.fromEmailId
+      ? html`<div data-flyer-from-email="${options.fromEmailId}" data-flyer-from-email-index="0" data-event-id="${event.id}">
+          <p>This event was converted from an email. Use its attached image as the flyer:</p>
+          <img src="/admin/api/inbound-emails/${options.fromEmailId}/attachments/0" alt="Attachment from the source email" width="200">
+          <button type="button" data-flyer-from-email-btn>Use this image as the flyer</button>
+          <p data-flyer-from-email-status role="status"></p>
+        </div>`
+      : ''}
     <form data-flyer-upload action="/admin/api/events/${event.id}/flyer" method="post" enctype="multipart/form-data">
       <div class="field">
         <label for="flyer-file">Upload a flyer image</label>

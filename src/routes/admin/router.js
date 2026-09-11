@@ -14,6 +14,10 @@ import {
 import { handleHarmReductionList, handleHarmReductionCreate, handleHarmReductionUpdate } from './harmReduction.js';
 import { handleStats } from './stats.js';
 import { handleFlyerUpload } from './flyerUpload.js';
+import {
+  handleInboundEmailList, handleInboundEmailView, handleInboundEmailAttachment,
+  handleInboundEmailDismiss, handleInboundEmailConvert,
+} from './inboundEmails.js';
 
 /**
  * Handles every /admin* and /admin/api* route. Section 10.1: Access
@@ -89,6 +93,22 @@ export async function adminRouter(request, env) {
   if (harmReductionEdit && method === 'POST') return handleHarmReductionUpdate(request, env, admin, harmReductionEdit[1]);
 
   if (path === '/admin/stats' && method === 'GET') return handleStats(request, env, admin);
+
+  if (path === '/admin/inbound-emails' && method === 'GET') return handleInboundEmailList(request, env, admin);
+
+  const inboundEmailAttachment = path.match(/^\/admin\/api\/inbound-emails\/([^/]+)\/attachments\/(\d+)$/);
+  if (inboundEmailAttachment && method === 'GET') {
+    return handleInboundEmailAttachment(request, env, inboundEmailAttachment[1], inboundEmailAttachment[2]);
+  }
+
+  const inboundEmailAction = path.match(/^\/admin\/inbound-emails\/([^/]+)\/(dismiss|convert)$/);
+  if (inboundEmailAction && method === 'POST') {
+    const [, id, action] = inboundEmailAction;
+    return action === 'dismiss' ? handleInboundEmailDismiss(request, env, admin, id) : handleInboundEmailConvert(request, env, admin, id);
+  }
+
+  const inboundEmailView = path.match(/^\/admin\/inbound-emails\/([^/]+)$/);
+  if (inboundEmailView && method === 'GET') return handleInboundEmailView(request, env, admin, inboundEmailView[1]);
 
   return new Response('Not found', { status: 404, headers: { 'Cache-Control': 'no-store' } });
 }
