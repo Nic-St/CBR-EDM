@@ -1,6 +1,7 @@
 import { layout } from '../templates/layout.js';
 import { homePage } from '../templates/home.js';
 import { currentCanberraMonth } from '../lib/dates.js';
+import { recordCount, isBotRequest } from '../lib/analytics.js';
 
 /**
  * GET / and GET /?month=YYYY-MM. Section 6 and 7.
@@ -14,6 +15,8 @@ export async function handleHome(request, env) {
   const { results } = await env.DB.prepare(
     "SELECT * FROM events WHERE visibility = 'published' ORDER BY start_at",
   ).all();
+
+  if (!isBotRequest(request)) await recordCount(env, 'home_view');
 
   const { body } = homePage(results, year, month);
 

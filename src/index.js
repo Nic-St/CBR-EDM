@@ -1,8 +1,10 @@
 import { config } from './config.js';
-import { handleHome } from './routes/home.js';
+import { router } from './router.js';
+import { withSecurityHeaders } from './lib/securityHeaders.js';
 
 /**
- * Worker entry point. More routes land through phase 1 (see SPEC.md section 17).
+ * Worker entry point. More routes land through phase 2/3 (see SPEC.md
+ * section 17).
  * @type {ExportedHandler}
  */
 export default {
@@ -17,10 +19,7 @@ export default {
       );
     }
 
-    if (url.pathname === '/') {
-      return handleHome(request, env);
-    }
-
-    return env.ASSETS.fetch(request);
+    const response = await router(request, env);
+    return withSecurityHeaders(response);
   },
 };
