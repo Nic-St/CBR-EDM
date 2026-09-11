@@ -25,19 +25,24 @@ const RAW = Symbol('raw html');
  * @param {string} value
  */
 export function raw(value) {
-  return { [RAW]: true, value: String(value) };
+  return { [RAW]: true, value: String(value), toString: () => String(value) };
 }
 
 /**
  * Tagged template: html`<p>${userInput}</p>` escapes userInput automatically.
  * Arrays are joined (each item escaped or passed through raw() individually).
+ *
+ * Returns a raw-marked value, not a plain string, so that composing one
+ * template inside another (e.g. an event card inside the home page) does
+ * not get double-escaped. Call String(...) on the final, outermost result
+ * to get the actual HTML string for a Response body.
  */
 export function html(strings, ...values) {
   let out = strings[0];
   for (let i = 0; i < values.length; i++) {
     out += renderValue(values[i]) + strings[i + 1];
   }
-  return out;
+  return raw(out);
 }
 
 function renderValue(value) {
