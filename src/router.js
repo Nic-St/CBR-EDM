@@ -6,6 +6,7 @@ import { handleCalendarFeed } from './routes/calendarFeed.js';
 import { handleImg } from './routes/img.js';
 import { handleGo } from './routes/go.js';
 import { handleRobots } from './routes/robots.js';
+import { adminRouter } from './routes/admin/router.js';
 import { notFound } from './lib/http.js';
 
 /**
@@ -20,6 +21,7 @@ export async function router(request, env) {
   const path = url.pathname;
 
   if (path === '/') return handleHome(request, env);
+  if (path === '/admin' || path.startsWith('/admin/')) return adminRouter(request, env);
   if (path === '/robots.txt') return handleRobots();
   if (path === '/calendar.ics') return handleCalendarFeed(request, env);
   if (path === '/look-after-each-other') return handleHarmReduction(request, env);

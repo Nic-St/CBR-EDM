@@ -1,0 +1,195 @@
+import { adminLayout } from '../../templates/admin/layout.js';
+import { eventListPage, eventFormPage } from '../../templates/admin/events.js';
+import { generateId, eventSlugFor } from '../../lib/ids.js';
+import { canberraLocalInputToUtc, utcToCanberraLocalInput } from '../../lib/dates.js';
+import { notFound } from '../../lib/http.js';
+
+function page(admin, title, body) {
+  return new Response(String(adminLayout({ title, bodyContent: body, email: admin.email })), {
+    headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' },
+  });
+}
+
+/**
+ * GET /admin/events?q=...&visibility=...
+ */
+export async function handleEventList(request, env, admin) {
+  const url = new URL(request.url);
+  const query = url.searchParams.get('q') || '';
+  const visibility = url.searchParams.get('visibility');
+
+  let sql = 'SELECT * FROM events WHERE 1=1';
+  const params = [];
+  if (query) {
+    sql += ' AND title LIKE ?';
+    params.push(`%${query}%`);
+  }
+  if (visibility) {
+    sql += ' AND visibility = ?';
+    params.push(visibility);
+  }
+  sql += ' ORDER BY start_at DESC';
+
+  const { results } = await env.DB.prepare(sql).bind(...params).all();
+  return page(admin, 'Events', eventListPage(results, query));
+}
+
+async function getCrews(env) {
+  const { results } = await env.DB.prepare('SELECT id, name FROM crews ORDER BY name').all();
+  return results;
+}
+
+function eventForForm(event) {
+  return {
+    ...event,
+    start_at_local: utcToCanberraLocalInput(event.start_at),
+    end_at_local: utcToCanberraLocalInput(event.end_at),
+  };
+}
+
+/**
+ * GET /admin/events/new
+ */
+export async function handleEventNewForm(request, env, admin) {
+  const crews = await getCrews(env);
+  return page(admin, 'Add an event', eventFormPage({}, crews));
+}
+
+/**
+ * GET /admin/events/:id/edit
+ */
+export async function handleEventEditForm(request, env, admin, id) {
+  const event = await env.DB.prepare('SELECT * FROM events WHERE id = ?').bind(id).first();
+  if (!event) return notFound();
+  const crews = await getCrews(env);
+  return page(admin, `Edit: ${event.title || 'Untitled'}`, eventFormPage(eventForForm(event), crews));
+}
+
+function readEventFields(formData) {
+  return {
+    title: formData.get('title') || null,
+    presented_by: formData.get('presented_by') || null,
+    crew_id: formData.get('crew_id') || null,
+    start_at: canberraLocalInputToUtc(formData.get('start_at_local')),
+    end_at: canberraLocalInputToUtc(formData.get('end_at_local')),
+    venue_name: formData.get('venue_name') || null,
+    venue_address: formData.get('venue_address') || null,
+    location_tba: formData.get('location_tba') ? 1 : 0,
+    location_reveal_at: formData.get('location_reveal_at') || null,
+    location_how_to_find: formData.get('location_how_to_find') || null,
+    genres: formData.get('genres') || null,
+    price_text: formData.get('price_text') || null,
+    lineup: formData.get('lineup') || null,
+    ticket_url: formData.get('ticket_url') || null,
+    notes: formData.get('notes') || null,
+    age_restriction: formData.get('age_restriction') || 'unknown',
+    status: formData.get('status') || 'on',
+  };
+}
+
+/**
+ * POST /admin/events/new
+ */
+export async function handleEventCreate(request, env, admin) {
+  const formData = await request.formData();
+  const fields = readEventFields(formData);
+  const now = new Date().toISOString();
+  const id = generateId('evt');
+  const slug = eventSlugFor(fields.title, fields.start_at);
+
+  await env.DB.prepare(
+    `INSERT INTO events (id, slug, title, crew_id, presented_by, start_at, end_at, venue_name, venue_address,
+       location_tba, location_reveal_at, location_how_to_find, genres, price_text, lineup, ticket_url, notes,
+       age_restriction, status, visibility, source, sequence, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'admin', 0, ?, ?)`,
+  ).bind(
+    id, slug, fields.title, fields.crew_id, fields.presented_by, fields.start_at, fields.end_at,
+    fields.venue_name, fields.venue_address, fields.location_tba, fields.location_reveal_at,
+    fields.location_how_to_find, fields.genres, fields.price_text, fields.lineup, fields.ticket_url,
+    fields.notes, fields.age_restriction, fields.status, now, now,
+  ).run();
+
+  return Response.redirect(new URL(`/admin/events/${id}/edit`, request.url), 303);
+}
+
+/**
+ * POST /admin/events/:id/edit
+ */
+export async function handleEventUpdate(request, env, admin, id) {
+  const event = await env.DB.prepare('SELECT id FROM events WHERE id = ?').bind(id).first();
+  if (!event) return notFound();
+
+  const formData = await request.formData();
+  const fields = readEventFields(formData);
+  const now = new Date().toISOString();
+
+  await env.DB.prepare(
+    `UPDATE events SET title = ?, crew_id = ?, presented_by = ?, start_at = ?, end_at = ?, venue_name = ?,
+       venue_address = ?, location_tba = ?, location_reveal_at = ?, location_how_to_find = ?, genres = ?,
+       price_text = ?, lineup = ?, ticket_url = ?, notes = ?, age_restriction = ?, status = ?, updated_at = ?
+     WHERE id = ?`,
+  ).bind(
+    fields.title, fields.crew_id, fields.presented_by, fields.start_at, fields.end_at, fields.venue_name,
+    fields.venue_address, fields.location_tba, fields.location_reveal_at, fields.location_how_to_find,
+    fields.genres, fields.price_text, fields.lineup, fields.ticket_url, fields.notes, fields.age_restriction,
+    fields.status, now, id,
+  ).run();
+
+  return Response.redirect(new URL(`/admin/events/${id}/edit`, request.url), 303);
+}
+
+/**
+ * POST /admin/events/:id/publish. Section 10.2: needs at least a title and
+ * start date.
+ */
+export async function handleEventPublish(request, env, admin, id) {
+  const event = await env.DB.prepare('SELECT * FROM events WHERE id = ?').bind(id).first();
+  if (!event) return notFound();
+
+  if (!event.title || !event.start_at) {
+    const crews = await getCrews(env);
+    const body = eventFormPage(eventForForm(event), crews, {
+      errors: ['An event needs at least a title and start date to publish.'],
+    });
+    return page(admin, `Edit: ${event.title || 'Untitled'}`, body);
+  }
+
+  const now = new Date().toISOString();
+  await env.DB.prepare(
+    "UPDATE events SET visibility = 'published', published_at = COALESCE(published_at, ?), sequence = sequence + 1, updated_at = ? WHERE id = ?",
+  ).bind(now, now, id).run();
+
+  return Response.redirect(new URL(`/admin/events/${id}/edit`, request.url), 303);
+}
+
+function simpleVisibilityChange(newVisibility) {
+  return async (request, env, admin, id) => {
+    const event = await env.DB.prepare('SELECT id FROM events WHERE id = ?').bind(id).first();
+    if (!event) return notFound();
+    await env.DB.prepare('UPDATE events SET visibility = ?, updated_at = ? WHERE id = ?')
+      .bind(newVisibility, new Date().toISOString(), id).run();
+    return Response.redirect(new URL(`/admin/events/${id}/edit`, request.url), 303);
+  };
+}
+
+export const handleEventReject = simpleVisibilityChange('rejected');
+export const handleEventRemove = simpleVisibilityChange('removed');
+export const handleEventRestore = simpleVisibilityChange('published');
+
+/**
+ * POST /admin/events/:id/delete. Section 9.4: a genuine hard delete,
+ * including its R2 images.
+ */
+export async function handleEventDelete(request, env, admin, id) {
+  const event = await env.DB.prepare('SELECT flyer_key, flyer_thumb_key FROM events WHERE id = ?').bind(id).first();
+  if (!event) return notFound();
+
+  const keysToDelete = [event.flyer_key, event.flyer_thumb_key].filter(Boolean);
+  if (keysToDelete.length) {
+    await Promise.all(keysToDelete.map((key) => env.FLYERS.delete(key)));
+  }
+
+  await env.DB.prepare('DELETE FROM events WHERE id = ?').bind(id).run();
+
+  return Response.redirect(new URL('/admin/events', request.url), 303);
+}

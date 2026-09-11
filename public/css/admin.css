@@ -1,0 +1,146 @@
+/* Admin panel: plain and functional, not the public site's design. */
+
+:root {
+  --bg: #f4f3f0;
+  --text: #1a1a18;
+  --muted: #5c5b57;
+  --border: #cbc9c2;
+  --accent: #2e2d2a;
+  --danger: #8f1d1d;
+  --focus: #b8722a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+a {
+  color: var(--accent);
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--accent);
+  color: #fff;
+}
+
+.admin-header nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.admin-header a {
+  color: #fff;
+}
+
+.admin-banner {
+  background: #f7d9a8;
+  color: #4a2c02;
+  padding: 0.75rem 1.25rem;
+  margin: 0;
+  font-weight: bold;
+}
+
+main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+}
+
+th, td {
+  text-align: left;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.field {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+label {
+  font-weight: bold;
+}
+
+input, textarea, select {
+  font: inherit;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  min-height: 44px;
+}
+
+textarea {
+  min-height: 88px;
+}
+
+button, .button {
+  font: inherit;
+  padding: 0.5rem 1rem;
+  min-height: 44px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+button.secondary, .button.secondary {
+  background: transparent;
+  color: var(--accent);
+}
+
+button.danger, .button.danger {
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.error {
+  color: var(--danger);
+  font-weight: bold;
+}
+
+.field-error {
+  color: var(--danger);
+  font-size: 14px;
+}
