@@ -142,4 +142,28 @@ export function canberraDayKey(isoUtc) {
   return toCanberraParts(isoUtc).dayKey;
 }
 
+/**
+ * The current Canberra local {year, month} (1-indexed month), for the
+ * calendar's default view.
+ * @param {Date} [now]
+ */
+export function currentCanberraMonth(now = new Date()) {
+  const parts = toCanberraParts(now.toISOString());
+  return { year: parts.year, month: parts.month };
+}
+
+/**
+ * A human label for a calendar month, e.g. "March 2026".
+ * @param {number} year
+ * @param {number} month - 1-indexed
+ */
+export function monthLabel(year, month) {
+  return `${MONTHS_FULL[month - 1]} ${year}`;
+}
+
+const MONTHS_FULL = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
 export { WEEKDAYS_SHORT, MONTHS_SHORT };
