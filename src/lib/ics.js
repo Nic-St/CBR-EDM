@@ -87,7 +87,7 @@ export function buildCalendar(events, domain, now = new Date()) {
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Project C-EDM//EN',
+    'PRODID:-//CBR EDM//EN',
     'CALSCALE:GREGORIAN',
     ...events.filter((event) => event.start_at).map((event) => eventToVEvent(event, domain, now)),
     'END:VCALENDAR',

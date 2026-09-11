@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "project-c-edm",
+  "name": "cbredm",
   "main": "src/index.js",
   // Set this to the day you first deploy, then leave it alone.
   "compatibility_date": "2026-09-11",

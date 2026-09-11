@@ -1,13 +1,14 @@
-# Project C-EDM
+# CBR EDM
 
 A community-run noticeboard for underground EDM events in and around Canberra.
 No algorithm, no accounts, no feed. See [SPEC.md](./SPEC.md) for the full
-build specification and [CHANGELOG.md](./CHANGELOG.md) for what has actually
-been built.
+build specification (its working name, "Project C-EDM", predates the real
+name and domain below) and [CHANGELOG.md](./CHANGELOG.md) for what has
+actually been built.
 
-The site name is a placeholder (`Project C-EDM`) until the owner picks a real
-one. Everything reads it from [`src/config.js`](./src/config.js), so renaming
-is a one-file change.
+The site name is `CBR EDM`, with the domain `cbredm.org`. Everything reads
+the name from [`src/config.js`](./src/config.js), so renaming later is still
+a one-file change.
 
 ## Local development
 
@@ -60,20 +61,20 @@ with access to accounts, a card, and a domain registrar.
    ```
 2. **Personal Cloudflare account.** Sign up at
    [dash.cloudflare.com](https://dash.cloudflare.com) if you do not have one.
-3. **Domain.** Pick a `.au` domain. Check whether
+3. **Domain: `cbredm.org`.** Check whether
    [Cloudflare Registrar](https://developers.cloudflare.com/registrar/)
-   supports that extension at purchase time. If not, buy it from an
-   Australian registrar and point the nameservers at Cloudflare. Before
-   buying, check what the `.au` public WHOIS lookup will display about the
-   registrant, so your personal details stay private.
+   sells `.org` domains at purchase time. If not, buy it from any registrar
+   and point the nameservers at Cloudflare. Before buying, check what the
+   registrar's WHOIS privacy settings will display about the registrant, so
+   your personal details stay private.
 4. **Dedicated project mailbox.** Create a new, free email account used only
    for this project (not your personal address). This becomes the admin
    alert destination, the Cloudflare Access login identity, and the address
    people see replies come from.
 5. **Email Routing.** Enable it on the domain in the Cloudflare dashboard.
    Add the project mailbox as a verified destination address. Create routes:
-   - `events@yourdomain` to the Email Worker (inbound submissions, phase 3).
-   - `noreply@yourdomain` as the sender identity for admin alerts.
+   - `events@cbredm.org` to the Email Worker (inbound submissions).
+   - `noreply@cbredm.org` as the sender identity for admin alerts.
 6. **Email Service sending.** Onboard the domain for outbound sending so the
    Worker can email alerts to the verified project mailbox.
 7. **D1 database.** Run `npx wrangler d1 create c_edm_db`, then replace the

@@ -2,9 +2,8 @@
 // Change this file rather than hunting for hardcoded strings elsewhere.
 
 export const config = {
-  // TBC by owner, see SPEC.md section 18. Everything reads from here
-  // until a real name and domain are picked.
-  siteName: 'Project C-EDM',
+  // Site name and domain decided by the owner, see SPEC.md section 18.
+  siteName: 'CBR EDM',
 
   slogan: 'No algorithm - The info you need, for those with no feed',
 
@@ -24,11 +23,11 @@ export const config = {
 
   // Public inbound address, shown on the contact page and footer.
   // Never the owner's personal address.
-  contactAddress: 'events@REPLACE_WITH_DOMAIN',
+  contactAddress: 'events@cbredm.org',
 
   // Sender identity for admin alert emails, section 10.3. Must be on the
   // same domain as contactAddress, per the Email Routing setup in README.md.
-  noreplyAddress: 'noreply@REPLACE_WITH_DOMAIN',
+  noreplyAddress: 'noreply@cbredm.org',
 
   reminderBanner: {
     fromDate: '2027-04-01',

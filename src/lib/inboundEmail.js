@@ -65,7 +65,7 @@ export async function handleInboundEmail(message, env) {
   // Build the admin link from the recipient's own domain (e.g.
   // events@yourdomain), since there is no request object here to read it
   // from, the way the other admin alert call sites do.
-  const domain = message.to.split('@')[1] || 'REPLACE_WITH_DOMAIN';
+  const domain = message.to.split('@')[1] || 'cbredm.org';
   await sendAdminAlert(env, {
     subject: `New inbound email: ${parsed.subject || 'no subject'}`,
     path: `https://${domain}/admin/inbound-emails/${id}`,
