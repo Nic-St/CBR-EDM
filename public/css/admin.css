@@ -14,11 +14,18 @@
   box-sizing: border-box;
 }
 
+@font-face {
+  font-family: 'Archivo';
+  src: url('/fonts/archivo.woff2') format('woff2-variations');
+  font-weight: 400 600;
+  font-display: swap;
+}
+
 body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: Arial, sans-serif;
+  font-family: 'Archivo', Arial, sans-serif;
   font-size: 16px;
   line-height: 1.5;
 }

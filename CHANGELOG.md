@@ -3,6 +3,62 @@
 All notable changes to this project are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.0] - 2026-09-12
+
+### Added
+- Home page: two-column board ("Coming up" / "Been and gone"), a Monday-start
+  month calendar with no-JS `?month=YYYY-MM` navigation, and a mobile
+  board/calendar toggle that only hides a panel once JavaScript confirms it
+  can bring the other one back.
+- Event pages (`/e/:slug`) with Open Graph and Twitter card tags, a single
+  event `.ics` download, and the subscribable `/calendar.ics` feed (RFC
+  5545: line folding, escaping, `STATUS:CANCELLED` for cancelled events).
+- Forever archive (`/archive`, `/archive/:year`).
+- Harm reduction page (`/look-after-each-other`) sourced from the
+  `harm_reduction_links` table.
+- `/img/:key` (serves R2 flyers only for published events), `/go/:eventId`
+  (counted, scheme-validated ticket redirect), `/robots.txt`.
+- First-party analytics counters (`daily_counts`) on every metric in section
+  11.2, skipping obvious bots.
+- Security headers and CSP on every HTML response (no inline scripts
+  anywhere, including admin: destructive-action confirmations and the flyer
+  uploader are both external files).
+- The full design system from `DESIGN.md`: self-hosted variable fonts (3
+  files covering every weight), the seeded torn-paper scrap shape (workshopped
+  with the owner across several visual iterations before landing on a
+  combined light/heavy/torn-top approach that varies per event), and the
+  generated concrete grain texture.
+- Admin panel behind Cloudflare Access, with the Worker independently
+  verifying the Access JWT's signature (via the Access JWKS endpoint),
+  audience and issuer, and rejecting the request if that verification fails
+  for any reason: queue (pending counts, stale harm-reduction-link warning),
+  event CRUD with publish/reject/unpublish/restore/hard-delete, the flyer
+  image pipeline (browser-side resize to WebP at two sizes, which also
+  strips EXIF/GPS data; server-side magic-byte and size validation), crew
+  management with key issue/rotate/revoke, harm reduction link editing, and
+  a stats page.
+- `DEV_BYPASS_ACCESS`, a local-only dev var (`.dev.vars`, gitignored) that
+  lets the admin panel be exercised without a real Access application. Has
+  no effect unless explicitly set, and is never present in a deployment.
+
+### Notes on deviations from the spec
+- **Crew profile links (`links_json`) are not yet editable from the admin
+  UI.** The column exists and defaults to `[]`; a proper editor is more
+  natural to build alongside the crews directory in phase 3, where the
+  links are actually displayed publicly.
+- **Event change requests (`event_changes`) have no review UI yet.** Nothing
+  creates rows in that table until phase 2's edit-link and crew-key flows
+  exist, so there was nothing real to review against.
+- **Calendar feed has not been validated against a real calendar app.**
+  RFC 5545 structure (folding, escaping, required fields) is covered by
+  tests, but subscribing it in Apple/Google/Outlook calendar needs a
+  publicly reachable URL, which only exists after deployment (owner setup
+  step 13). Worth doing once the site is live.
+- **No automated accessibility audit tool was run** (e.g. axe). Semantic
+  landmarks, form labels, focus-visible styles and a keyboard walkthrough of
+  the home page were checked by hand; a full audit is easiest once the site
+  is deployed and a tool like Lighthouse can be pointed at a real URL.
+
 ## [0.1.0] - 2026-09-11
 
 ### Added
@@ -49,4 +105,5 @@ All notable changes to this project are documented here. Format follows
 - Harm reduction links: seeded but marked as needing verification before
   launch, per section 15.4.
 
+[0.2.0]: https://github.com/REPLACE_WITH_OWNER/REPLACE_WITH_REPO/releases/tag/v0.2.0
 [0.1.0]: https://github.com/REPLACE_WITH_OWNER/REPLACE_WITH_REPO/releases/tag/v0.1.0
