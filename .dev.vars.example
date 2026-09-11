@@ -1,1 +1,6 @@
 DEV_BYPASS_ACCESS=true
+
+# Cloudflare's published "always passes" Turnstile test secret key, paired
+# with the test site key already in wrangler.jsonc. Replace with the real
+# secret key from step 9 before going live: npx wrangler secret put TURNSTILE_SECRET_KEY
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA

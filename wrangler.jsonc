@@ -34,7 +34,15 @@
   "vars": {
     "ACCESS_TEAM_DOMAIN": "REPLACE_WITH_ACCESS_TEAM_DOMAIN",
     "ACCESS_AUD": "REPLACE_WITH_ACCESS_APPLICATION_AUDIENCE_TAG",
-    "TURNSTILE_SITE_KEY": "REPLACE_WITH_TURNSTILE_SITE_KEY"
+    // This is Cloudflare's published "always passes" Turnstile test site key,
+    // so local dev and preview deploys work out of the box. Replace with the
+    // real site key from step 9 before going live.
+    "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
+    // Must be the same address as the send_email destination_address above.
+    "ADMIN_EMAIL": "REPLACE_WITH_PROJECT_MAILBOX@example.com",
+    // Any random string. Only used to salt rate-limit hashes; rotating it
+    // just resets rate-limit history, it does not need to be memorable.
+    "RATE_LIMIT_SALT": "REPLACE_WITH_A_RANDOM_STRING"
   },
   "observability": {
     "enabled": true

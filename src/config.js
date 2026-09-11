@@ -26,6 +26,10 @@ export const config = {
   // Never the owner's personal address.
   contactAddress: 'events@REPLACE_WITH_DOMAIN',
 
+  // Sender identity for admin alert emails, section 10.3. Must be on the
+  // same domain as contactAddress, per the Email Routing setup in README.md.
+  noreplyAddress: 'noreply@REPLACE_WITH_DOMAIN',
+
   reminderBanner: {
     fromDate: '2027-04-01',
     text: 'CanTEST funding was due to end June 2027. Check the service is still running.',
