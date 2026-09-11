@@ -1,4 +1,4 @@
--- Local-only seed data. Every name, crew and flyer reference here is fictional.
+﻿-- Local-only seed data. Every name, crew and flyer reference here is fictional.
 -- Timestamps are illustrative UTC conversions of Canberra local time (not
 -- adjusted precisely for daylight saving) -- good enough for local dev,
 -- never used against a remote database.
@@ -24,7 +24,9 @@ INSERT INTO crews (id, slug, name, blurb, links_json, key_hash, trusted, listed,
 
 -- 1. Past, published, full details, 18+, has flyer keys (files need not exist locally)
 INSERT INTO events (id, slug, title, crew_id, presented_by, start_at, end_at, venue_name, venue_address, location_tba, location_reveal_at, location_how_to_find, location_revealed_at, genres, price_text, lineup, ticket_url, notes, flyer_key, flyer_thumb_key, age_restriction, status, visibility, source, submitter_contact, edit_token_hash, sequence, created_at, updated_at, published_at) VALUES
-('evt_deepsignal0314', 'deep-signal-2026-03-14', 'Deep Signal', 'crw_static_freq01', NULL, '2026-03-14T11:00:00Z', '2026-03-14T17:00:00Z', 'The Basement', '1 Example St, Braddon ACT', 0, NULL, NULL, NULL, 'Dub, bass', '$20 presale, $30 door', 'DJ Fictional\nMC Placeholder\nStatic Frequency b2b', 'https://example.com/tickets/deep-signal', 'Bring earplugs, it gets loud.', 'seed/deep-signal-large.webp', 'seed/deep-signal-thumb.webp', '18+', 'on', 'published', 'admin', NULL, NULL, 3, '2026-02-01T09:00:00Z', '2026-02-20T09:00:00Z', '2026-02-01T09:00:00Z');
+('evt_deepsignal0314', 'deep-signal-2026-03-14', 'Deep Signal', 'crw_static_freq01', NULL, '2026-03-14T11:00:00Z', '2026-03-14T17:00:00Z', 'The Basement', '1 Example St, Braddon ACT', 0, NULL, NULL, NULL, 'Dub, bass', '$20 presale, $30 door', 'DJ Fictional
+MC Placeholder
+Static Frequency b2b', 'https://example.com/tickets/deep-signal', 'Bring earplugs, it gets loud.', 'seed/deep-signal-large.webp', 'seed/deep-signal-thumb.webp', '18+', 'on', 'published', 'admin', NULL, NULL, 3, '2026-02-01T09:00:00Z', '2026-02-20T09:00:00Z', '2026-02-01T09:00:00Z');
 
 -- 2. Past, cancelled, stays visible with stamp
 INSERT INTO events (id, slug, title, crew_id, presented_by, start_at, end_at, venue_name, venue_address, location_tba, location_reveal_at, location_how_to_find, location_revealed_at, genres, price_text, lineup, ticket_url, notes, flyer_key, flyer_thumb_key, age_restriction, status, visibility, source, submitter_contact, edit_token_hash, sequence, created_at, updated_at, published_at) VALUES
@@ -36,7 +38,10 @@ INSERT INTO events (id, slug, title, crew_id, presented_by, start_at, end_at, ve
 
 -- 4. Past, location was TBA and later revealed
 INSERT INTO events (id, slug, title, crew_id, presented_by, start_at, end_at, venue_name, venue_address, location_tba, location_reveal_at, location_how_to_find, location_revealed_at, genres, price_text, lineup, ticket_url, notes, flyer_key, flyer_thumb_key, age_restriction, status, visibility, source, submitter_contact, edit_token_hash, sequence, created_at, updated_at, published_at) VALUES
-('evt_signalflare0725', 'signal-flare-2026-07-25', 'Signal Flare', 'crw_static_freq01', NULL, '2026-07-25T11:00:00Z', '2026-07-25T16:00:00Z', 'Undisclosed Warehouse', 'Emailed to ticket holders on the day', 0, NULL, 'Emailed to ticket holders', '2026-07-20T09:00:00Z', 'Bass, jungle', '$15', 'DJ Fictional\nMC Placeholder\nGuest TBA\nStatic Frequency all night', NULL, NULL, NULL, NULL, 'unknown', 'on', 'published', 'admin', NULL, NULL, 2, '2026-07-01T09:00:00Z', '2026-07-20T09:00:00Z', '2026-07-01T09:00:00Z');
+('evt_signalflare0725', 'signal-flare-2026-07-25', 'Signal Flare', 'crw_static_freq01', NULL, '2026-07-25T11:00:00Z', '2026-07-25T16:00:00Z', 'Undisclosed Warehouse', 'Emailed to ticket holders on the day', 0, NULL, 'Emailed to ticket holders', '2026-07-20T09:00:00Z', 'Bass, jungle', '$15', 'DJ Fictional
+MC Placeholder
+Guest TBA
+Static Frequency all night', NULL, NULL, NULL, NULL, 'unknown', 'on', 'published', 'admin', NULL, NULL, 2, '2026-07-01T09:00:00Z', '2026-07-20T09:00:00Z', '2026-07-01T09:00:00Z');
 
 -- 5. Coming up, location TBA, not yet revealed
 INSERT INTO events (id, slug, title, crew_id, presented_by, start_at, end_at, venue_name, venue_address, location_tba, location_reveal_at, location_how_to_find, location_revealed_at, genres, price_text, lineup, ticket_url, notes, flyer_key, flyer_thumb_key, age_restriction, status, visibility, source, submitter_contact, edit_token_hash, sequence, created_at, updated_at, published_at) VALUES
