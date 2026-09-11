@@ -1,4 +1,5 @@
 import { recordCount, isBotRequest } from '../lib/analytics.js';
+import { isHttpUrl } from '../lib/eventFields.js';
 
 /**
  * GET /go/:eventId. Section 6 and 12: a counted redirect to the stored
@@ -17,13 +18,4 @@ export async function handleGo(request, env, eventId) {
   if (!isBotRequest(request)) await recordCount(env, 'ticket_click', eventId);
 
   return Response.redirect(event.ticket_url, 302);
-}
-
-function isHttpUrl(value) {
-  try {
-    const url = new URL(value);
-    return url.protocol === 'http:' || url.protocol === 'https:';
-  } catch {
-    return false;
-  }
 }

@@ -27,6 +27,11 @@ export function layout({ title, bodyContent, extraHead = '' }) {
   </main>
   ${raw(siteFooter())}
   <script src="/js/board-toggle.js" defer></script>
+  <script src="/js/image-resize.js" defer></script>
+  <script src="/js/submit-form.js" defer></script>
+  <script src="/js/edit-form.js" defer></script>
+  <script src="/js/crew-dashboard.js" defer></script>
+  <script src="/js/contact-form.js" defer></script>
 </body>
 </html>`;
 }
