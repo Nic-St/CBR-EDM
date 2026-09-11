@@ -3,6 +3,23 @@
 All notable changes to this project are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.0] - 2026-09-12
+
+### Added
+- Printable poster (`/poster?size=a4|a6`): site name, slogan and a QR code
+  linking to the home page, in the site's visual style, sized for actual
+  A4/A6 paper via `@page` print rules. Size switches with a plain link, so
+  it works without JavaScript; a print button is the one small JS
+  enhancement.
+- Vendored `kazuhikoarase/qrcode-generator` (MIT licence) for QR generation,
+  per section 3.2's one approved exception for a vendored QR library. Kept
+  as the base module only (`js/dist/qrcode.mjs`); the UTF-8 helper module
+  was left out since every URL this site generates is plain ASCII.
+
+This completes every phase in SPEC.md section 17. The "Later (not
+scheduled)" items (Workers AI drafting from emails, an email digest,
+additional admins) remain deliberately out of scope.
+
 ## [0.4.0] - 2026-09-12
 
 ### Added
@@ -211,6 +228,7 @@ admin queue.
 - Harm reduction links: seeded but marked as needing verification before
   launch, per section 15.4.
 
+[0.5.0]: https://github.com/REPLACE_WITH_OWNER/REPLACE_WITH_REPO/releases/tag/v0.5.0
 [0.4.0]: https://github.com/REPLACE_WITH_OWNER/REPLACE_WITH_REPO/releases/tag/v0.4.0
 [0.3.0]: https://github.com/REPLACE_WITH_OWNER/REPLACE_WITH_REPO/releases/tag/v0.3.0
 [0.2.0]: https://github.com/REPLACE_WITH_OWNER/REPLACE_WITH_REPO/releases/tag/v0.2.0
