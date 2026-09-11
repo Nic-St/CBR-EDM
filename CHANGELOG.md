@@ -3,6 +3,70 @@
 All notable changes to this project are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.0] - 2026-09-12
+
+### Added
+- Public submission form (`/submit`) with Turnstile, per-IP daily rate
+  limiting, the flyer image pipeline reused from admin, and a privacy note
+  distinguishing published fields from the admin-only contact field.
+- Private edit links (`/edit`): the token lives only in the URL fragment and
+  this session's own fetch bodies, never in a query string. Edits to a still
+  pending event apply directly; edits to a published event, and every
+  cancel or removal request, always go to admin review instead, regardless
+  of who holds the link.
+- Admin review for pending changes (`/admin/changes`): a before/after
+  comparison for proposed edits, and approve/reject for cancel and removal
+  requests.
+- Crew dashboard (`/crew`): key-based sign-in (key kept in
+  `sessionStorage` for the tab only), event creation and editing, status
+  changes (cancelled/sold out/postponed), and instant unpublish. Trusted
+  crews with a title and start date publish immediately; everyone else
+  goes to pending, or to admin review if editing something already
+  published.
+- Contact form (`/contact`) and an admin message viewer
+  (`/admin/contact-messages`), wired to "Something wrong with this
+  listing?" on event pages.
+- Admin alert emails on every write that publishes, changes or removes
+  something: submissions, crew actions, change/cancel/removal requests,
+  contact messages.
+- Edit-link revoke and reissue from the admin event page.
+
+### Fixed
+- The Turnstile widget injects its own inline styles into its host
+  elements; the CSP's `style-src 'self'` blocked this outright and broke
+  the widget. `style-src` now also allows `'unsafe-inline'`, `script-src`
+  is unaffected and still blocks all inline script.
+- `handleCrewEventList` originally did `SELECT *`, which would have sent
+  `submitter_contact` and `edit_token_hash` to the crew's own browser
+  session. Narrowed to an explicit safe column list. Caught by hand during
+  the browser walkthrough below, now covered by a test.
+
+### Notes on deviations from the spec
+- **Status changes (cancelled/sold out/postponed) for untrusted crews.**
+  Section 9.3's prose says these are "immediate for trusted crews," while
+  the table in section 9.4 lists "cancel" among the crew's always-instant
+  actions without a trust qualifier. Implemented per the more specific
+  9.3 prose: untrusted crews' status changes go to admin review as an edit
+  request, same as any other edit to a published event. Unpublish stays
+  instant regardless of trust either way, since 9.4 is explicit that it is
+  "the only non-admin path to instant removal."
+- **Crew profile editing (blurb, links) is still admin-only.** The crew
+  dashboard covers event management per section 9.3; profile self-editing
+  is more natural to build alongside the public crews directory in phase 3.
+- **Turnstile's own dashboard/API setup is not something Claude Code can
+  do.** Owner setup step 9 (README.md) still needs a human with Cloudflare
+  dashboard access; local dev and this walkthrough used Cloudflare's
+  published "always passes" test keys instead.
+
+### Verified with a full browser walkthrough
+Submission through to a published event (both as a public submitter and
+as a crew), the edit-link flow in both its instant and review-required
+modes (including confirming a removal request never actually removes the
+event until approved), a trusted crew publishing instantly, an untrusted
+crew's submission landing as pending, wrong-crew-key rate limiting
+triggering after repeated attempts, and the contact form reaching the
+admin queue.
+
 ## [0.2.0] - 2026-09-12
 
 ### Added
@@ -105,5 +169,6 @@ All notable changes to this project are documented here. Format follows
 - Harm reduction links: seeded but marked as needing verification before
   launch, per section 15.4.
 
+[0.3.0]: https://github.com/REPLACE_WITH_OWNER/REPLACE_WITH_REPO/releases/tag/v0.3.0
 [0.2.0]: https://github.com/REPLACE_WITH_OWNER/REPLACE_WITH_REPO/releases/tag/v0.2.0
 [0.1.0]: https://github.com/REPLACE_WITH_OWNER/REPLACE_WITH_REPO/releases/tag/v0.1.0
