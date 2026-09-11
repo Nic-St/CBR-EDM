@@ -1,0 +1,345 @@
+/* Design tokens: see DESIGN.md. Self-hosted variable fonts, no Google Fonts
+   request at runtime. */
+
+@font-face {
+  font-family: 'Archivo';
+  src: url('/fonts/archivo.woff2') format('woff2-variations');
+  font-weight: 400 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Big Shoulders Display';
+  src: url('/fonts/big-shoulders-display.woff2') format('woff2-variations');
+  font-weight: 700 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Big Shoulders Stencil';
+  src: url('/fonts/big-shoulders-stencil.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+:root {
+  /* Colour: see DESIGN.md */
+  --wall-base: #2b2a27;
+  --wall-patch: #403e39;
+  --paper: #d9d8d2;
+  --paper-faded: #bab8b0;
+  --toner: #141312;
+  --stamp-ink: #8f1d1d;
+  --sodium: #b8722a;
+  --focus-ring: #e8b04a;
+
+  /* Type */
+  --font-display: 'Big Shoulders Display', 'Arial Narrow', sans-serif;
+  --font-stencil: 'Big Shoulders Stencil', 'Arial Narrow', sans-serif;
+  --font-body: 'Archivo', Arial, sans-serif;
+
+  --text-body: 16px;
+  --text-small: 14px;
+  --text-h3: 20px;
+  --text-h2: 28px;
+  --text-h1: clamp(40px, 8vw, 88px);
+
+  /* Shape and depth */
+  --radius: 0;
+  --tape-width: 28px;
+
+  /* Motion */
+  --motion-interaction: 200ms ease-out;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--wall-base);
+}
+
+body {
+  margin: 0;
+  background: var(--wall-base);
+  background-image: url('/textures/concrete-grain.svg');
+  background-repeat: repeat;
+  color: var(--paper);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: 1.5;
+}
+
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.25rem 3rem;
+}
+
+a {
+  color: var(--paper);
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Header and slogan strip, section 13.3: the one loud element. */
+.site-header {
+  padding: 2.5rem 1.25rem 2rem;
+  text-align: left;
+}
+
+.site-header .site-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-h2);
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.slogan-strip {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: var(--text-h1);
+  line-height: 1.05;
+  margin: 0;
+  max-width: 20ch;
+  background: var(--paper);
+  color: var(--toner);
+  display: inline-block;
+  padding: 0.2em 0.3em;
+  transform: rotate(-1deg);
+}
+
+/* Paper scraps: event cards. Shape and rotation are set inline per event
+   via scrapShapeFor(), see src/lib/scrapShape.js. */
+.scrap {
+  background: var(--paper);
+  color: var(--toner);
+  padding: 1rem 1.25rem;
+  position: relative;
+  border-radius: var(--radius);
+}
+
+.scrap--past {
+  background: var(--paper-faded);
+}
+
+.scrap .scrap-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-h3);
+  margin: 0 0 0.4rem;
+  line-height: 1.2;
+}
+
+.scrap .scrap-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.scrap .scrap-title a:hover {
+  text-decoration: underline;
+}
+
+.scrap-meta {
+  font-size: var(--text-small);
+  margin: 0.15rem 0;
+  color: #3a3835;
+}
+
+.scrap-tape {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: var(--tape-width);
+  height: 18px;
+  background: rgba(217, 216, 210, 0.6);
+}
+
+/* Status stamps: real text, not images. Section 8.2. */
+.stamp {
+  display: inline-block;
+  font-family: var(--font-stencil);
+  font-weight: 700;
+  color: var(--stamp-ink);
+  border: 3px solid var(--stamp-ink);
+  padding: 0.15em 0.5em;
+  transform: rotate(-4deg);
+  text-transform: uppercase;
+  font-size: var(--text-small);
+}
+
+/* Board columns, section 7.1 */
+.board {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.board-column h2 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-h2);
+  text-transform: uppercase;
+}
+
+.board-column ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 1024px) {
+  .home-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .board {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .calendar-panel {
+    position: sticky;
+    top: 1.25rem;
+  }
+}
+
+/* Mobile board/calendar toggle, section 7.2 */
+.view-toggle {
+  display: none;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+}
+
+.view-toggle button {
+  font-family: var(--font-body);
+  font-weight: 600;
+  padding: 0.6rem 1rem;
+  border: 2px solid var(--paper);
+  background: transparent;
+  color: var(--paper);
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.view-toggle button[aria-pressed="true"] {
+  background: var(--paper);
+  color: var(--toner);
+}
+
+@media (max-width: 1023px) {
+  .view-toggle {
+    display: flex;
+  }
+
+  [data-panel].is-hidden {
+    display: none;
+  }
+}
+
+/* Calendar grid, section 7.1 and 14 */
+.calendar {
+  background: var(--wall-patch);
+  padding: 1rem;
+}
+
+.calendar table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.calendar caption {
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-align: left;
+  margin-bottom: 0.5rem;
+}
+
+.calendar th,
+.calendar td {
+  text-align: center;
+  padding: 0.4rem;
+  font-size: var(--text-small);
+}
+
+.calendar td a {
+  display: block;
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--paper);
+  color: var(--toner);
+  text-decoration: none;
+}
+
+.calendar-nav {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.calendar-nav a {
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Footer, section 6 */
+.site-footer {
+  border-top: 1px solid rgba(217, 216, 210, 0.2);
+  padding: 2rem 1.25rem;
+  font-size: var(--text-small);
+  display: grid;
+  gap: 0.5rem;
+}
+
+.site-footer a {
+  color: var(--paper);
+}
+
+/* Empty state, section 7.3 */
+.empty-scrap {
+  background: var(--paper);
+  color: var(--toner);
+  padding: 1.5rem;
+  transform: rotate(-1deg);
+}
+
+/* Reduced motion and high contrast, sections 13.5 and 14 */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  body {
+    background-image: none;
+  }
+
+  .scrap,
+  .empty-scrap,
+  .slogan-strip {
+    clip-path: none !important;
+    transform: none !important;
+  }
+}
