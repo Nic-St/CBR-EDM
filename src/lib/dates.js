@@ -166,4 +166,32 @@ const MONTHS_FULL = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
 
+/**
+ * Converts a `<input type="datetime-local">` value ("YYYY-MM-DDTHH:mm"),
+ * read as Canberra local time, to a UTC ISO string. Section 3.4: "Admin and
+ * submission forms take local Canberra time and convert to UTC on save."
+ * @param {string} localDateTimeString
+ * @returns {string|null}
+ */
+export function canberraLocalInputToUtc(localDateTimeString) {
+  if (!localDateTimeString) return null;
+  const [datePart, timePart] = localDateTimeString.split('T');
+  const [year, month, day] = datePart.split('-').map(Number);
+  const [hour, minute] = (timePart || '00:00').split(':').map(Number);
+  const wallClockAsUtc = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
+  return canberraLocalToUtc(wallClockAsUtc).toISOString();
+}
+
+/**
+ * The reverse of canberraLocalInputToUtc: a UTC ISO string to a
+ * "YYYY-MM-DDTHH:mm" value for pre-filling a datetime-local input.
+ * @param {string|null} isoUtc
+ */
+export function utcToCanberraLocalInput(isoUtc) {
+  if (!isoUtc) return '';
+  const parts = toCanberraParts(isoUtc);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${parts.year}-${pad(parts.month)}-${pad(parts.day)}T${pad(parts.hour)}:${pad(parts.minute)}`;
+}
+
 export { WEEKDAYS_SHORT, MONTHS_SHORT };

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { formatEventDateTime, isEventPast } from '../src/lib/dates.js';
+import { formatEventDateTime, isEventPast, canberraLocalInputToUtc, utcToCanberraLocalInput } from '../src/lib/dates.js';
 
 test('on-the-hour start formats without minutes', () => {
   assert.equal(
@@ -44,6 +44,19 @@ test('no-end-time event becomes past at 6am Canberra the next day (AEST)', () =>
   const event = { start_at: '2026-07-25T11:00:00Z', end_at: null };
   assert.equal(isEventPast(event, new Date('2026-07-25T19:59:00Z')), false);
   assert.equal(isEventPast(event, new Date('2026-07-25T20:01:00Z')), true);
+});
+
+test('admin datetime-local input converts Canberra local time to UTC (AEDT)', () => {
+  assert.equal(canberraLocalInputToUtc('2026-03-14T22:00'), '2026-03-14T11:00:00.000Z');
+});
+
+test('admin datetime-local input converts Canberra local time to UTC (AEST)', () => {
+  assert.equal(canberraLocalInputToUtc('2026-07-25T21:00'), '2026-07-25T11:00:00.000Z');
+});
+
+test('utcToCanberraLocalInput is the reverse of canberraLocalInputToUtc', () => {
+  assert.equal(utcToCanberraLocalInput('2026-03-14T11:00:00.000Z'), '2026-03-14T22:00');
+  assert.equal(utcToCanberraLocalInput(null), '');
 });
 
 test('an end time overrides the 6am rule', () => {
