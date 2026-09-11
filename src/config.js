@@ -6,7 +6,7 @@ export const config = {
   // until a real name and domain are picked.
   siteName: 'Project C-EDM',
 
-  slogan: 'No algorithm, just the info you need, for the ones not on the feed',
+  slogan: 'No algorithm - The info you need, for those with no feed',
 
   privacyLine: 'No tracking cookies. We count visits, not people.',
 
