@@ -1,0 +1,74 @@
+import { html } from '../lib/escape.js';
+
+const FIELD_DEFS = [
+  ['title', 'Title', 'text'],
+  ['start_at_local', 'Start (Canberra time)', 'datetime-local'],
+  ['end_at_local', 'End (Canberra time, leave blank for "til late")', 'datetime-local'],
+  ['venue_name', 'Venue name', 'text'],
+  ['venue_address', 'Venue address', 'text'],
+  ['genres', 'Genre', 'text'],
+  ['price_text', 'Price', 'text'],
+  ['lineup', 'Lineup (one act per line)', 'textarea'],
+  ['ticket_url', 'Ticket URL', 'url'],
+  ['notes', 'Anything else worth knowing', 'textarea'],
+];
+
+/**
+ * GET /crew. Section 9.3: the crew pastes their key, kept in
+ * sessionStorage for the tab session only, never sent anywhere except
+ * this site's own API.
+ * @param {string} turnstileSiteKey
+ */
+export function crewDashboardPage(turnstileSiteKey) {
+  return html`
+    <h1>Crew dashboard</h1>
+
+    <form data-crew-login>
+      <div class="field">
+        <label for="crew-key">Crew key</label>
+        <input type="password" id="crew-key" name="key" autocomplete="off">
+      </div>
+      <div class="cf-turnstile" data-sitekey="${turnstileSiteKey}"></div>
+      <button type="submit">Sign in</button>
+      <p data-login-status role="status"></p>
+      <noscript><p class="error">The crew dashboard needs JavaScript, since your key is never sent as part of a normal page load.</p></noscript>
+    </form>
+
+    <div data-crew-area hidden>
+      <p data-crew-greeting></p>
+      <button type="button" data-crew-signout class="secondary">Sign out</button>
+
+      <h2>Your events</h2>
+      <ul data-crew-event-list></ul>
+
+      <h2>Add an event</h2>
+      ${eventFieldsMarkup('create')}
+      <button type="button" data-crew-create>Add event</button>
+      <p data-crew-create-status role="status"></p>
+    </div>
+
+    <div data-crew-edit hidden>
+      <h2>Edit event</h2>
+      ${eventFieldsMarkup('edit')}
+      <div class="actions">
+        <button type="button" data-crew-save>Save</button>
+        <button type="button" data-crew-status-btn="cancelled" class="secondary">Mark cancelled</button>
+        <button type="button" data-crew-status-btn="sold_out" class="secondary">Mark sold out</button>
+        <button type="button" data-crew-status-btn="postponed" class="secondary">Mark postponed</button>
+        <button type="button" data-crew-unpublish class="danger">Unpublish</button>
+      </div>
+      <p data-crew-edit-status role="status"></p>
+    </div>
+  `;
+}
+
+function eventFieldsMarkup(scope) {
+  return html`<div data-scope="${scope}">
+    ${FIELD_DEFS.map(([name, label, type]) => html`<div class="field">
+      <label for="${scope}-${name}">${label}</label>
+      ${type === 'textarea'
+        ? html`<textarea id="${scope}-${name}" data-field="${name}"></textarea>`
+        : html`<input type="${type}" id="${scope}-${name}" data-field="${name}">`}
+    </div>`)}
+  </div>`;
+}
