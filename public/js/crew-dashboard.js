@@ -65,6 +65,9 @@
     });
   }
 
+  var profileSection = crewArea.querySelector('[data-crew-profile]');
+  var profileStatus = crewArea.querySelector('[data-crew-profile-status]');
+
   function loadDashboard(crew) {
     greeting.textContent = 'Signed in as ' + crew.name + (crew.trusted ? ' (trusted, publishes instantly)' : ' (new submissions need admin approval)');
     loginForm.hidden = true;
@@ -72,6 +75,14 @@
     api('/api/crew/events/list', {}).then(function (result) {
       if (result.ok) renderEventList(result.events);
     });
+
+    if (crew.trusted) {
+      profileSection.hidden = false;
+      document.getElementById('crew-blurb').value = crew.blurb || '';
+      document.getElementById('crew-links').value = (crew.links || [])
+        .map(function (link) { return link.label + ', ' + link.url; })
+        .join('\n');
+    }
   }
 
   if (currentKey) {
@@ -103,6 +114,22 @@
   crewArea.querySelector('[data-crew-signout]').addEventListener('click', function () {
     sessionStorage.removeItem('cedm_crew_key');
     window.location.reload();
+  });
+
+  crewArea.querySelector('[data-crew-save-profile]').addEventListener('click', function () {
+    var blurb = document.getElementById('crew-blurb').value;
+    var linksText = document.getElementById('crew-links').value;
+    var links = linksText.split('\n').map(function (line) {
+      var parts = line.split(',');
+      var label = (parts[0] || '').trim();
+      var url = parts.slice(1).join(',').trim();
+      return label && url ? { label: label, url: url } : null;
+    }).filter(Boolean);
+
+    profileStatus.textContent = 'Saving...';
+    api('/api/crew/profile', { blurb: blurb, links: links }).then(function (result) {
+      profileStatus.textContent = result.ok ? 'Saved.' : (result.error || 'Could not save.');
+    });
   });
 
   crewArea.querySelector('[data-crew-create]').addEventListener('click', function () {

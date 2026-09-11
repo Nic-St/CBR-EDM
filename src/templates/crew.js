@@ -38,6 +38,20 @@ export function crewDashboardPage(turnstileSiteKey) {
       <p data-crew-greeting></p>
       <button type="button" data-crew-signout class="secondary">Sign out</button>
 
+      <div data-crew-profile hidden>
+        <h2>Your crew profile</h2>
+        <div class="field">
+          <label for="crew-blurb">Blurb</label>
+          <textarea id="crew-blurb" data-profile-field="blurb"></textarea>
+        </div>
+        <div class="field">
+          <label for="crew-links">Links (one per line, as "label, url")</label>
+          <textarea id="crew-links" data-profile-field="links"></textarea>
+        </div>
+        <button type="button" data-crew-save-profile>Save profile</button>
+        <p data-crew-profile-status role="status"></p>
+      </div>
+
       <h2>Your events</h2>
       <ul data-crew-event-list></ul>
 

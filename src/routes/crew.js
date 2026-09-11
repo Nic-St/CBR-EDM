@@ -52,7 +52,38 @@ export async function handleCrewLogin(request, env) {
   const crew = await requireCrew(request, env, body);
   if (!crew) return jsonResponse({ ok: false, error: 'That key was not recognised.' }, 401);
 
-  return jsonResponse({ ok: true, crew: { name: crew.name, trusted: Boolean(crew.trusted) } });
+  let links = [];
+  try {
+    links = JSON.parse(crew.links_json || '[]');
+  } catch {
+    links = [];
+  }
+
+  return jsonResponse({
+    ok: true,
+    crew: { name: crew.name, trusted: Boolean(crew.trusted), blurb: crew.blurb, links },
+  });
+}
+
+/**
+ * POST /api/crew/profile. Section 16: trusted crews edit their own profile
+ * from the dashboard.
+ */
+export async function handleCrewProfileUpdate(request, env) {
+  const body = await readJson(request);
+  const crew = await requireCrew(request, env, body);
+  if (!crew) return jsonResponse({ ok: false, error: 'Not signed in.' }, 401);
+  if (!crew.trusted) return jsonResponse({ ok: false, error: 'Only trusted crews can edit their profile.' }, 403);
+
+  const blurb = String(body.blurb || '').slice(0, 1000);
+  const links = Array.isArray(body.links)
+    ? body.links.slice(0, 20).map((link) => ({ label: String(link.label || '').slice(0, 100), url: String(link.url || '').slice(0, 500) }))
+    : [];
+
+  await env.DB.prepare('UPDATE crews SET blurb = ?, links_json = ?, updated_at = ? WHERE id = ?')
+    .bind(blurb, JSON.stringify(links), new Date().toISOString(), crew.id).run();
+
+  return jsonResponse({ ok: true });
 }
 
 // Never select submitter_contact or edit_token_hash here: this data goes
