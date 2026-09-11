@@ -10,6 +10,7 @@ const NAV = [
   ['/admin/contact-messages', 'Messages'],
   ['/admin/harm-reduction', 'Harm reduction links'],
   ['/admin/stats', 'Stats'],
+  ['/poster', 'Poster'],
 ];
 
 /**

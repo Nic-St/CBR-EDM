@@ -15,6 +15,7 @@ import {
 } from './routes/crew.js';
 import { handleContactForm, handleContactSent, handleContactApi } from './routes/contact.js';
 import { handleCrewsDirectory, handleCrewProfile } from './routes/crews.js';
+import { handlePoster } from './routes/poster.js';
 import { notFound } from './lib/http.js';
 
 /**
@@ -59,6 +60,8 @@ export async function router(request, env) {
     const handlers = { update: handleCrewEventUpdate, status: handleCrewEventStatus, unpublish: handleCrewEventUnpublish };
     return handlers[action](request, env, id);
   }
+
+  if (path === '/poster' && method === 'GET') return handlePoster(request, env);
 
   if (path === '/crews' && method === 'GET') return handleCrewsDirectory(request, env);
   const crewSlug = path.match(/^\/crews\/([^/]+)$/);
