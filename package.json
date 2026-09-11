@@ -11,6 +11,6 @@
     "db:seed:local": "wrangler d1 execute c_edm_db --local --file=./seed/seed.sql"
   },
   "devDependencies": {
-    "wrangler": "^4.0.0"
+    "wrangler": "^4.131.0"
   }
 }
