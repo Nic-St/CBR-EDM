@@ -38,6 +38,7 @@ export function layout({ title, bodyContent, extraHead = '' }) {
 
 function siteFooter() {
   return html`<footer class="site-footer">
+    <p><a href="/crews">Crews</a></p>
     <p><a href="/look-after-each-other">${config.harmReductionTitle}</a></p>
     <p><a href="/contact">Get in touch</a></p>
     <p><a href="/submit">Put an event on the wall</a></p>

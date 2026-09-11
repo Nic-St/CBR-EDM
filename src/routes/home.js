@@ -13,7 +13,9 @@ export async function handleHome(request, env) {
   const { year, month } = parseMonthParam(url.searchParams.get('month'));
 
   const { results } = await env.DB.prepare(
-    "SELECT * FROM events WHERE visibility = 'published' ORDER BY start_at",
+    `SELECT events.*, crews.name AS crew_name, crews.slug AS crew_slug
+     FROM events LEFT JOIN crews ON crews.id = events.crew_id
+     WHERE events.visibility = 'published' ORDER BY events.start_at`,
   ).all();
 
   if (!isBotRequest(request)) await recordCount(env, 'home_view');

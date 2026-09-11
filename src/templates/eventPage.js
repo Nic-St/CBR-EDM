@@ -16,7 +16,9 @@ export function eventPage(event, now = new Date()) {
   const dateText = formatEventDateTime(event.start_at, event.end_at, { includeYear: isPast });
   const stamp = stampFor(event, isPast, now);
   const venueText = venueTextFor(event);
-  const presentedBy = event.crew_name || event.presented_by;
+  const presentedBy = event.crew_slug
+    ? html`<a href="/crews/${event.crew_slug}">${event.crew_name}</a>`
+    : (event.crew_name || event.presented_by);
   const lineupActs = (event.lineup || '').split('\n').map((line) => line.trim()).filter(Boolean);
 
   const body = html`

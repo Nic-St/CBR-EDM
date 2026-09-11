@@ -16,8 +16,10 @@ export function eventCard(event, now = new Date()) {
   const dateText = formatEventDateTime(event.start_at, event.end_at, { includeYear: isPast });
   const stamp = stampFor(event, isPast, now);
   const venueText = venueTextFor(event);
-  const presentedBy = event.crew_name || event.presented_by;
   const { acts, hasMore } = lineupPreview(event.lineup);
+  const presentedBy = event.crew_slug
+    ? html`<a href="/crews/${event.crew_slug}">${event.crew_name}</a>`
+    : (event.crew_name || event.presented_by);
 
   return html`<li>
     <article class="scrap${isPast ? ' scrap--past' : ''}"

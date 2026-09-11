@@ -11,9 +11,10 @@ import { handleSubmitForm, handleSubmitConfirmation, handleSubmissionApi } from 
 import { handleEditPage, handleEditLoad, handleEditUpdate, handleEditCancel, handleEditRemoval } from './routes/edit.js';
 import {
   handleCrewPage, handleCrewLogin, handleCrewEventList, handleCrewEventCreate,
-  handleCrewEventUpdate, handleCrewEventStatus, handleCrewEventUnpublish,
+  handleCrewEventUpdate, handleCrewEventStatus, handleCrewEventUnpublish, handleCrewProfileUpdate,
 } from './routes/crew.js';
 import { handleContactForm, handleContactSent, handleContactApi } from './routes/contact.js';
+import { handleCrewsDirectory, handleCrewProfile } from './routes/crews.js';
 import { notFound } from './lib/http.js';
 
 /**
@@ -50,6 +51,7 @@ export async function router(request, env) {
   if (path === '/api/crew/login' && method === 'POST') return handleCrewLogin(request, env);
   if (path === '/api/crew/events/list' && method === 'POST') return handleCrewEventList(request, env);
   if (path === '/api/crew/events/create' && method === 'POST') return handleCrewEventCreate(request, env);
+  if (path === '/api/crew/profile' && method === 'POST') return handleCrewProfileUpdate(request, env);
 
   const crewEventAction = path.match(/^\/api\/crew\/events\/([^/]+)\/(update|status|unpublish)$/);
   if (crewEventAction && method === 'POST') {
@@ -57,6 +59,10 @@ export async function router(request, env) {
     const handlers = { update: handleCrewEventUpdate, status: handleCrewEventStatus, unpublish: handleCrewEventUnpublish };
     return handlers[action](request, env, id);
   }
+
+  if (path === '/crews' && method === 'GET') return handleCrewsDirectory(request, env);
+  const crewSlug = path.match(/^\/crews\/([^/]+)$/);
+  if (crewSlug && method === 'GET') return handleCrewProfile(request, env, crewSlug[1]);
 
   if (path === '/contact' && method === 'GET') return handleContactForm(request, env);
   if (path === '/contact/sent' && method === 'GET') return handleContactSent(request, env);

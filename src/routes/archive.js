@@ -7,7 +7,10 @@ import { canberraDayKey, isEventPast } from '../lib/dates.js';
  */
 export async function handleArchive(request, env, year) {
   const { results } = await env.DB.prepare(
-    "SELECT * FROM events WHERE visibility = 'published' AND start_at IS NOT NULL ORDER BY start_at DESC",
+    `SELECT events.*, crews.name AS crew_name, crews.slug AS crew_slug
+     FROM events LEFT JOIN crews ON crews.id = events.crew_id
+     WHERE events.visibility = 'published' AND events.start_at IS NOT NULL
+     ORDER BY events.start_at DESC`,
   ).all();
 
   const past = results.filter((event) => isEventPast(event));
