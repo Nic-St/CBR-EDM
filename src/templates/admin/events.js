@@ -59,6 +59,9 @@ export function eventFormPage(event, crews, options = {}) {
 
   return html`
     <h1>${isNew ? 'Add an event' : `Edit: ${event.title || 'Untitled'}`}</h1>
+    ${event.submitter_contact
+      ? html`<p class="error">Submitter contact (private, never published): ${event.submitter_contact}</p>`
+      : ''}
     ${options.errors?.length
       ? html`<ul class="field-error">${options.errors.map((error) => html`<li>${error}</li>`)}</ul>`
       : ''}
@@ -116,6 +119,19 @@ function adminEventActions(event) {
       <p data-flyer-status role="status"></p>
       <noscript><p class="error">Flyer upload needs JavaScript, since the image is resized in your browser before it uploads.</p></noscript>
     </form>
+
+    <h2>Edit link</h2>
+    ${event.newEditLink
+      ? html`<p class="error">New edit link (shown once, copy it now): <code>${event.newEditLink}</code></p>`
+      : ''}
+    <div class="actions">
+      <form method="post" action="/admin/events/${event.id}/reissue-edit-link">
+        <button type="submit">${event.edit_token_hash ? 'Issue a new edit link' : 'Issue an edit link'}</button>
+      </form>
+      ${event.edit_token_hash
+        ? html`<form method="post" action="/admin/events/${event.id}/revoke-edit-link" data-confirm="Revoke this event's edit link? The submitter will no longer be able to use it."><button type="submit" class="secondary">Revoke edit link</button></form>`
+        : ''}
+    </div>
 
     <h2>Actions</h2>
     <div class="actions">

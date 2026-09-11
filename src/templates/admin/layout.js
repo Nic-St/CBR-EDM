@@ -4,7 +4,9 @@ import { config } from '../../config.js';
 const NAV = [
   ['/admin', 'Queue'],
   ['/admin/events', 'Events'],
+  ['/admin/changes', 'Changes'],
   ['/admin/crews', 'Crews'],
+  ['/admin/contact-messages', 'Messages'],
   ['/admin/harm-reduction', 'Harm reduction links'],
   ['/admin/stats', 'Stats'],
 ];
@@ -38,6 +40,7 @@ export function adminLayout({ title, bodyContent, email, now = new Date() }) {
     ${raw(bodyContent)}
   </main>
   <script src="/js/admin-confirm.js" defer></script>
+  <script src="/js/image-resize.js" defer></script>
   <script src="/js/admin-flyer-upload.js" defer></script>
 </body>
 </html>`;

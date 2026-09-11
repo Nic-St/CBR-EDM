@@ -3,7 +3,10 @@ import { handleAdminQueue } from './queue.js';
 import {
   handleEventList, handleEventNewForm, handleEventEditForm, handleEventCreate, handleEventUpdate,
   handleEventPublish, handleEventReject, handleEventRemove, handleEventRestore, handleEventDelete,
+  handleEventReissueEditLink, handleEventRevokeEditLink,
 } from './events.js';
+import { handleChangeList, handleChangeApprove, handleChangeReject } from './changes.js';
+import { handleContactMessageList, handleContactMessageMarkDone } from './contactMessages.js';
 import {
   handleCrewList, handleCrewNewForm, handleCrewEditForm, handleCrewCreate, handleCrewUpdate,
   handleCrewIssueKey, handleCrewRevokeKey,
@@ -40,15 +43,27 @@ export async function adminRouter(request, env) {
   if (eventEdit && method === 'GET') return handleEventEditForm(request, env, admin, eventEdit[1]);
   if (eventEdit && method === 'POST') return handleEventUpdate(request, env, admin, eventEdit[1]);
 
-  const eventAction = path.match(/^\/admin\/events\/([^/]+)\/(publish|reject|remove|restore|delete)$/);
+  const eventAction = path.match(/^\/admin\/events\/([^/]+)\/(publish|reject|remove|restore|delete|reissue-edit-link|revoke-edit-link)$/);
   if (eventAction && method === 'POST') {
     const [, id, action] = eventAction;
     const handlers = {
       publish: handleEventPublish, reject: handleEventReject, remove: handleEventRemove,
       restore: handleEventRestore, delete: handleEventDelete,
+      'reissue-edit-link': handleEventReissueEditLink, 'revoke-edit-link': handleEventRevokeEditLink,
     };
     return handlers[action](request, env, admin, id);
   }
+
+  if (path === '/admin/changes' && method === 'GET') return handleChangeList(request, env, admin);
+  const changeAction = path.match(/^\/admin\/changes\/([^/]+)\/(approve|reject)$/);
+  if (changeAction && method === 'POST') {
+    const [, id, action] = changeAction;
+    return action === 'approve' ? handleChangeApprove(request, env, admin, id) : handleChangeReject(request, env, admin, id);
+  }
+
+  if (path === '/admin/contact-messages' && method === 'GET') return handleContactMessageList(request, env, admin);
+  const contactMessageDone = path.match(/^\/admin\/contact-messages\/([^/]+)\/done$/);
+  if (contactMessageDone && method === 'POST') return handleContactMessageMarkDone(request, env, admin, contactMessageDone[1]);
 
   const flyerUpload = path.match(/^\/admin\/api\/events\/([^/]+)\/flyer$/);
   if (flyerUpload && method === 'POST') return handleFlyerUpload(request, env, flyerUpload[1]);

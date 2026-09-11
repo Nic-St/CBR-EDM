@@ -1,7 +1,9 @@
 import { adminLayout } from '../../templates/admin/layout.js';
 import { eventListPage, eventFormPage } from '../../templates/admin/events.js';
 import { generateId, eventSlugFor } from '../../lib/ids.js';
-import { canberraLocalInputToUtc, utcToCanberraLocalInput } from '../../lib/dates.js';
+import { utcToCanberraLocalInput } from '../../lib/dates.js';
+import { readEventFields } from '../../lib/eventFields.js';
+import { generateToken, hashToken } from '../../lib/tokens.js';
 import { notFound } from '../../lib/http.js';
 
 function page(admin, title, body) {
@@ -63,28 +65,6 @@ export async function handleEventEditForm(request, env, admin, id) {
   if (!event) return notFound();
   const crews = await getCrews(env);
   return page(admin, `Edit: ${event.title || 'Untitled'}`, eventFormPage(eventForForm(event), crews));
-}
-
-function readEventFields(formData) {
-  return {
-    title: formData.get('title') || null,
-    presented_by: formData.get('presented_by') || null,
-    crew_id: formData.get('crew_id') || null,
-    start_at: canberraLocalInputToUtc(formData.get('start_at_local')),
-    end_at: canberraLocalInputToUtc(formData.get('end_at_local')),
-    venue_name: formData.get('venue_name') || null,
-    venue_address: formData.get('venue_address') || null,
-    location_tba: formData.get('location_tba') ? 1 : 0,
-    location_reveal_at: formData.get('location_reveal_at') || null,
-    location_how_to_find: formData.get('location_how_to_find') || null,
-    genres: formData.get('genres') || null,
-    price_text: formData.get('price_text') || null,
-    lineup: formData.get('lineup') || null,
-    ticket_url: formData.get('ticket_url') || null,
-    notes: formData.get('notes') || null,
-    age_restriction: formData.get('age_restriction') || 'unknown',
-    status: formData.get('status') || 'on',
-  };
 }
 
 /**
@@ -175,6 +155,34 @@ function simpleVisibilityChange(newVisibility) {
 export const handleEventReject = simpleVisibilityChange('rejected');
 export const handleEventRemove = simpleVisibilityChange('removed');
 export const handleEventRestore = simpleVisibilityChange('published');
+
+/**
+ * POST /admin/events/:id/reissue-edit-link. Section 9.2: issuing a new one
+ * shows it once to the admin, who passes it on.
+ */
+export async function handleEventReissueEditLink(request, env, admin, id) {
+  const event = await env.DB.prepare('SELECT * FROM events WHERE id = ?').bind(id).first();
+  if (!event) return notFound();
+
+  const token = generateToken();
+  const tokenHash = await hashToken(token);
+  await env.DB.prepare('UPDATE events SET edit_token_hash = ?, updated_at = ? WHERE id = ?')
+    .bind(tokenHash, new Date().toISOString(), id).run();
+
+  const crews = await getCrews(env);
+  const body = eventFormPage({ ...eventForForm(event), edit_token_hash: tokenHash, newEditLink: `${new URL(request.url).origin}/edit#${token}` }, crews);
+  return page(admin, `Edit: ${event.title || 'Untitled'}`, body);
+}
+
+export async function handleEventRevokeEditLink(request, env, admin, id) {
+  const event = await env.DB.prepare('SELECT id FROM events WHERE id = ?').bind(id).first();
+  if (!event) return notFound();
+
+  await env.DB.prepare('UPDATE events SET edit_token_hash = NULL, updated_at = ? WHERE id = ?')
+    .bind(new Date().toISOString(), id).run();
+
+  return Response.redirect(new URL(`/admin/events/${id}/edit`, request.url), 303);
+}
 
 /**
  * POST /admin/events/:id/delete. Section 9.4: a genuine hard delete,
