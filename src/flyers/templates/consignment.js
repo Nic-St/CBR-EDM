@@ -43,6 +43,17 @@ const CELL_PADDING = 20;
 const VALUE_MAX_SIZE = 28;
 const VALUE_MIN_SIZE = 16;
 
+// The label/value pair's block height, for centring it on each cell's own
+// vertical axis (section unnamed, owner request): rows are 130-160 tall,
+// and the pair used to sit at a fixed offset from the row's top instead
+// of accounting for the row's actual height, so they landed at visibly
+// different heights from one cell to the next. Kept independent of the
+// value's actual (shrunk) font size, so centring never jitters based on
+// how long a particular value happens to be.
+const CELL_BLOCK_HEIGHT = 64;
+const CELL_LABEL_OFFSET = 16;
+const CELL_VALUE_OFFSET = 58;
+
 const ROW0_HEIGHT = 130;
 const ROW2_HEIGHT = 160;
 const ROW3_HEIGHT = 130;
@@ -183,8 +194,9 @@ function strike(x, y, width, color) {
 function cell(ctx, { x, y, w, h, label, value }) {
   const { palette } = ctx;
   const padding = CELL_PADDING;
-  const labelY = y + 34;
-  const valueY = y + 76;
+  const blockTop = y + (h - CELL_BLOCK_HEIGHT) / 2;
+  const labelY = blockTop + CELL_LABEL_OFFSET;
+  const valueY = blockTop + CELL_VALUE_OFFSET;
   const maxWidth = w - padding * 2;
   const parts = [
     `<text x="${x + padding}" y="${labelY}" font-family="${LABEL_FONT}" font-size="18" letter-spacing="0.04em" fill="${palette.tonerBlack}">${escapeXml(label)}</text>`,

@@ -78,6 +78,10 @@ All notable changes to this project are documented here. Format follows
 Every visual change to the generated flyer engine, in order. See
 `FLYER_ENGINE_VERSION` in `src/flyers/index.js`.
 
+- **0.4.1** - `consignment`: each cell's label/value pair is now
+  centred on that cell's own vertical axis instead of sitting at a
+  fixed offset from the row top, so a 130px row and a 160px row no
+  longer land the text at visibly different heights. Still left-aligned.
 - **0.4.0** - `consignment`: kraft-paper canvas with a content-sized
   label instead of a fixed-height one; values and lineup names shrink to
   fit their column instead of overflowing into a divider or border.
