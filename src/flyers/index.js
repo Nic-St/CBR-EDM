@@ -10,6 +10,7 @@ import { gridFor } from './layout.js';
 import { normaliseEvent, flyerDataHash } from './normalise.js';
 import { resolveTemplate, TEMPLATES } from './manifest.js';
 import { stampTextFor, stamp } from './parts/stamp.js';
+import { grain } from './parts/grain.js';
 import { escapeXml } from './xml.js';
 import { isEventPast } from '../lib/dates.js';
 
@@ -17,7 +18,7 @@ import { isEventPast } from '../lib/dates.js';
 // to an existing one, a shared part changing). It is part of the cache
 // key (section 4.2), so forgetting to bump it serves stale artwork. Record
 // every bump under "## Flyers" in CHANGELOG.md.
-export const FLYER_ENGINE_VERSION = '0.2.0';
+export const FLYER_ENGINE_VERSION = '0.3.0';
 
 const SIZE_BUDGETS = {
   scrap: 12 * 1024,
@@ -69,6 +70,13 @@ function validationError(svg, budget) {
 
 function renderWithTemplate(template, ctx) {
   const inner = [template.render(ctx)];
+
+  // Section 11.4: past events get the faded palette (already applied in
+  // buildCtx) plus one extra layer of grain over the whole canvas, on top
+  // of whatever grain the template itself draws.
+  if (ctx.isPast) {
+    inner.push(grain(ctx, { opacity: 0.05, area: { x: 0, y: 0, width: ctx.canvas.width, height: ctx.canvas.height } }));
+  }
 
   // Status stamps sit above everything and are drawn last, section 11.
   const stampText = stampTextFor(ctx.event.status);

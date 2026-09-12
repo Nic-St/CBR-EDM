@@ -59,7 +59,7 @@ export default {
       parts.push(`<text x="${canvas.centerX}" y="${(blockY + 58).toFixed(1)}" text-anchor="middle" font-family="'Archivo',Arial,sans-serif" font-weight="700" font-size="36" fill="${palette.tonerBlack}">${escapeXml(event.dateLong.toUpperCase())}</text>`);
     }
 
-    const support = event.acts.slice(1, ctx.surface === 'scrap' ? 4 : undefined);
+    const support = event.acts.slice(1, ctx.surface === 'scrap' ? 3 : undefined);
     let y = blockY + 150;
     for (const act of support) {
       parts.push(`<text x="${canvas.left}" y="${y}" font-family="'Archivo',Arial,sans-serif" font-size="24" letter-spacing="0.03em" fill="${palette.paper}">${escapeXml(act.name.toUpperCase())}</text>`);

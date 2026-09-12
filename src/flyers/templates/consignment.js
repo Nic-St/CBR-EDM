@@ -82,7 +82,7 @@ export default {
     parts.push(cell(ctx, { x: splitX, y: rowTops[2], w: box.x + box.w - splitX, h: rowHeights[2], label: 'WINDOW', value: windowText || null }));
 
     // Row 3: HANDLING
-    const handling = [event.ageRestriction, event.ticketText].filter(Boolean).join(', ');
+    const handling = event.ageRestriction || null;
     parts.push(cell(ctx, { x: box.x, y: rowTops[3], w: box.w, h: rowHeights[3], label: 'HANDLING', value: handling || null }));
 
     // Row 4: barcode + event ID. No barcode on the scrap surface (section

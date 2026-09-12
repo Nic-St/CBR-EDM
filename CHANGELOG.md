@@ -26,6 +26,26 @@ All notable changes to this project are documented here. Format follows
   section 13): a live preview, a template dropdown showing what auto
   routing would pick, a Reroll button (`seed_salt + 1`), and a compare
   grid rendering the event through all ten templates at once.
+- Flyer engine phase 3 (`FLYER-ENGINE-SPEC.md` section 8, 4.2, 4.5, 11.4):
+  anti-repetition, edge caching, and the past-event grain layer.
+  `resolveTemplate` takes an `exclude` option to skip one template id
+  during auto-routing without affecting an explicit choice. On publish,
+  an event with no explicit `flyer_template` now has its auto-routed
+  template resolved and frozen into the column immediately (rather than
+  re-resolving on every render, which would let the flyer visibly change
+  as later events are published) -- if the last three published events
+  all resolved to the same template, this one is nudged to its second
+  choice first. `GET /flyer/:id.svg` now checks the Workers Cache API
+  before rendering, keyed by the same event-id/template/seed/surface/
+  engine-version/data-hash tuple as `cacheKeyFor`, computed without a
+  render so a cache hit skips the render entirely. Past events now get
+  one extra full-canvas grain layer on top of the faded palette (section
+  11.4), applied centrally in `renderWithTemplate` so every template
+  gets it uniformly. `halftoneField`'s scrap surface now renders a
+  coarser, simplified halftone screen (fewer dots) instead of the full
+  detail one shrunk down; `halftoneField` and `stencil` now both
+  truncate scrap-surface support acts to three names, matching the
+  other templates and section 4.5's wording.
 - See "## Flyers" below for the visual-change log the engine spec asks
   for, kept separately since visual changes aren't visible in a diff.
 
@@ -34,6 +54,10 @@ All notable changes to this project are documented here. Format follows
 Every visual change to the generated flyer engine, in order. See
 `FLYER_ENGINE_VERSION` in `src/flyers/index.js`.
 
+- **0.3.0** - Past events get an extra full-canvas grain layer (section
+  11.4). `halftoneField`'s scrap surface uses a coarser halftone screen.
+  `halftoneField` and `stencil` truncate scrap-surface support acts to
+  three names instead of four.
 - **0.2.0** - The remaining eight templates: `schematic` (rig diagram),
   `stencil` (sprayed warehouse severity), `terminal` (monospace session
   readout), `halftoneField` (generative dot-screen), `ransom`

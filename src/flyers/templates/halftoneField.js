@@ -28,9 +28,12 @@ export default {
     parts.push(`<rect x="0" y="0" width="${canvas.width}" height="${canvas.height}" fill="${palette.paper}"/>`);
 
     const field = pickField(random, { x: 0, y: 0, width: canvas.width, height: canvas.height });
+    // Section 4.5: the scrap surface gets a simplified halftone (a coarser
+    // screen, so far fewer dots) rather than shrinking the full-detail one.
+    const [lpiMin, lpiMax] = ctx.surface === 'scrap' ? [8, 12] : [15, 25];
     parts.push(halftone(ctx, {
       shape: pick(random, ['round', 'square', 'line']),
-      lpi: range(random, 15, 25),
+      lpi: range(random, lpiMin, lpiMax),
       angle: pick(random, [15, 45, 75]),
       field,
       area: { x: 0, y: 0, width: canvas.width, height: canvas.height },
@@ -46,7 +49,7 @@ export default {
     parts.push(`<text x="${canvas.centerX}" y="${y}" text-anchor="middle" font-family="'Archivo',Arial,sans-serif" font-weight="800" font-size="56" fill="${palette.paper}">${escapeXml(headliner)}</text>`);
     y += 50;
 
-    const support = event.acts.slice(1, ctx.surface === 'scrap' ? 4 : undefined);
+    const support = event.acts.slice(1, ctx.surface === 'scrap' ? 3 : undefined);
     if (support.length) {
       parts.push(`<text x="${canvas.centerX}" y="${y}" text-anchor="middle" font-family="'Archivo',Arial,sans-serif" font-size="24" fill="${palette.paper}">${escapeXml(support.map((a) => a.name).join(', '))}</text>`);
       y += 44;

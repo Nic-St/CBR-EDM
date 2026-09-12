@@ -22,7 +22,6 @@ export function ticketFooter(ctx) {
     items.push(range);
   }
   if (event.ageRestriction === '18+') items.push('18+');
-  if (event.ticketText) items.push(event.ticketText);
 
   const labelY = top + 40;
   const linkY = top + HEIGHT - 22;

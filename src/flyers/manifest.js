@@ -56,8 +56,11 @@ function satisfies(template, event) {
  * section 8's resolution order.
  * @param {object} event - normalised event, see normalise.js
  * @param {string|null} [explicitTemplate] - event.flyer_template, admin override
+ * @param {{ exclude?: string }} [options] - exclude: skip this template id
+ *   during auto-routing (section 8's anti-repetition nudge), computed at
+ *   publish time by the caller. Has no effect on an explicit choice.
  */
-export function resolveTemplate(event, explicitTemplate) {
+export function resolveTemplate(event, explicitTemplate, options = {}) {
   const candidates = [];
 
   if (explicitTemplate && TEMPLATES[explicitTemplate]) {
@@ -82,6 +85,7 @@ export function resolveTemplate(event, explicitTemplate) {
   candidates.push('medi');
 
   for (const id of candidates) {
+    if (id === options.exclude && id !== explicitTemplate) continue;
     const template = TEMPLATES[id];
     if (template && satisfies(template, event)) return template;
   }

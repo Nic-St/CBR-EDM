@@ -5,6 +5,8 @@ import { utcToCanberraLocalInput } from '../../lib/dates.js';
 import { readEventFields } from '../../lib/eventFields.js';
 import { generateToken, hashToken } from '../../lib/tokens.js';
 import { notFound } from '../../lib/http.js';
+import { resolveTemplate } from '../../flyers/manifest.js';
+import { normaliseEvent } from '../../flyers/normalise.js';
 
 function page(admin, title, body) {
   return new Response(String(adminLayout({ title, bodyContent: body, email: admin.email })), {
@@ -122,6 +124,32 @@ export async function handleEventUpdate(request, env, admin, id) {
 }
 
 /**
+ * FLYER-ENGINE-SPEC.md section 8: if the event has no explicit template
+ * choice, freeze the auto-routed one into flyer_template at publish time
+ * rather than leaving it to resolve fresh on every render -- otherwise the
+ * flyer a visitor sees changes as other events get published later, which
+ * breaks determinism. This is also where the anti-repetition nudge lives:
+ * if the last three published events all resolved to the same template,
+ * this one is nudged to its second choice.
+ */
+async function freezeFlyerTemplate(env, event) {
+  if (event.flyer_template) return;
+
+  const normalised = normaliseEvent(event, {});
+  const { results } = await env.DB.prepare(
+    "SELECT flyer_template FROM events WHERE visibility = 'published' AND id != ? ORDER BY published_at DESC LIMIT 3",
+  ).bind(event.id).all();
+
+  const lastThree = results.map((r) => r.flyer_template);
+  const repeated = lastThree.length === 3 && lastThree[0] && lastThree.every((t) => t === lastThree[0])
+    ? lastThree[0]
+    : null;
+
+  const template = resolveTemplate(normalised, null, { exclude: repeated });
+  await env.DB.prepare('UPDATE events SET flyer_template = ? WHERE id = ?').bind(template.id, event.id).run();
+}
+
+/**
  * POST /admin/events/:id/publish. Section 10.2: needs at least a title and
  * start date.
  */
@@ -141,6 +169,8 @@ export async function handleEventPublish(request, env, admin, id) {
   await env.DB.prepare(
     "UPDATE events SET visibility = 'published', published_at = COALESCE(published_at, ?), sequence = sequence + 1, updated_at = ? WHERE id = ?",
   ).bind(now, now, id).run();
+
+  await freezeFlyerTemplate(env, event);
 
   return Response.redirect(new URL(`/admin/events/${id}/edit`, request.url), 303);
 }

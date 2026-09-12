@@ -1,4 +1,6 @@
 import { render, cacheKeyFor } from '../flyers/index.js';
+import { resolveTemplate } from '../flyers/manifest.js';
+import { normaliseEvent, flyerDataHash } from '../flyers/normalise.js';
 
 /**
  * GET /flyer/:eventId.svg. PROJECT-C-EDM-FLYER-ENGINE-SPEC.md section 4.2.
@@ -24,14 +26,29 @@ export async function handleFlyer(request, env, eventId) {
     ? url.searchParams.get('surface')
     : 'page';
 
+  // Section 4.2: the cache key is a hash of only the fields the flyer
+  // actually reads, so it can be computed (and the edge cache checked)
+  // before paying for a render, and an unrelated edit never busts it.
+  const normalised = normaliseEvent(event, { surface });
+  const template = resolveTemplate(normalised, event.flyer_template);
+  const cacheKey = cacheKeyFor(event, { templateId: template.id, dataHash: flyerDataHash(event) }, surface);
+  const cache = caches.default;
+  const cacheRequest = new Request(new URL(`/__flyer-cache/${encodeURIComponent(cacheKey)}`, url.origin));
+
+  const cached = await cache.match(cacheRequest);
+  if (cached) return cached;
+
   const result = render(event, { surface });
   if (!result) return new Response('Not found', { status: 404 });
 
-  return new Response(result.svg, {
+  const response = new Response(result.svg, {
     headers: {
       'Content-Type': 'image/svg+xml; charset=utf-8',
       'Cache-Control': 'public, max-age=31536000, immutable',
-      'X-Flyer-Cache-Key': cacheKeyFor(event, result, surface),
+      'X-Flyer-Cache-Key': cacheKey,
     },
   });
+
+  await cache.put(cacheRequest, response.clone());
+  return response;
 }

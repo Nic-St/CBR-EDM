@@ -149,6 +149,15 @@ At 5 events a month with compressed WebP flyers (a few hundred KB each), R2
 storage growth is a few MB a month. The forever archive fits comfortably
 inside the free tier for years.
 
+**Generated flyer edge cache.** `GET /flyer/:id.svg` (`src/routes/flyer.js`)
+caches its rendered SVG with the Workers Cache API (`caches.default`),
+keyed by the same event/template/seed/surface/engine-version/data-hash
+tuple the flyer engine uses for its cache key. This cache isn't in the
+table above: it isn't billed or quota-limited the way D1 or R2 are, but
+it's per data centre, not global, so a visitor hitting a colo for the
+first time still triggers one render there. Our SVGs are a few KB, well
+under any size ceiling Cache API entries have.
+
 ## Repo layout
 
 See [SPEC.md](./SPEC.md) section 3.6 for the intended layout. In short:

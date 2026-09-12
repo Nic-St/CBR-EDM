@@ -97,6 +97,33 @@ for (const templateId of Object.keys(TEMPLATES)) {
   });
 }
 
+test('resolveTemplate honours exclude by falling through to the next candidate', () => {
+  // Section 8's anti-repetition nudge: techno routes to consignment, so
+  // excluding it should fall through to the next satisfied candidate
+  // rather than staying on consignment.
+  const event = normaliseEvent({ ...FIXTURES.full, genres: 'techno' }, { now: FIXTURE_NOW });
+  const withoutExclude = resolveTemplate(event, null);
+  assert.equal(withoutExclude.id, 'consignment');
+
+  const nudged = resolveTemplate(event, null, { exclude: 'consignment' });
+  assert.notEqual(nudged.id, 'consignment');
+});
+
+test('resolveTemplate exclude has no effect on an explicit choice', () => {
+  const event = normaliseEvent({ ...FIXTURES.full, genres: 'techno' }, { now: FIXTURE_NOW });
+  const template = resolveTemplate(event, 'consignment', { exclude: 'consignment' });
+  assert.equal(template.id, 'consignment');
+});
+
+test('past events render with an extra grain layer over the full canvas', () => {
+  const grainCount = (svg) => (svg.match(/<filter id="grain-/g) || []).length;
+
+  const current = render({ ...FIXTURES.full, flyer_template: 'medi' }, { now: FIXTURE_NOW });
+  const past = render({ ...FIXTURES.past, flyer_template: 'medi' }, { now: FIXTURE_NOW });
+
+  assert.equal(grainCount(past.svg), grainCount(current.svg) + 1);
+});
+
 test('halftoneField never draws riso yellow directly onto the paper field', () => {
   // Section 9: riso yellow only clears contrast as a field colour with
   // dark type on it, never as a mark on paper. Try enough seeds that a
