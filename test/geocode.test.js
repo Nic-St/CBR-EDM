@@ -46,6 +46,24 @@ test('geocodeVenue returns null when no results are found', async () => {
   });
 });
 
+test('fetchElevationGrid builds a north-up grid: row 0 is north of row 8', async () => {
+  // contour.js's toScreen maps row -> y directly (row 0 at the top of the
+  // canvas), so row 0 must be the grid's north edge -- a real bug found
+  // by checking a rendered flyer against the real geocoded location,
+  // where south was rendering at the top.
+  let firstRowLat = null;
+  let lastRowLat = null;
+  await withFetch(async (url) => {
+    const points = new URL(url).searchParams.get('locations').split('|');
+    firstRowLat = Number(points[0].split(',')[0]);
+    lastRowLat = Number(points[points.length - 1].split(',')[0]);
+    return { ok: true, json: async () => ({ status: 'OK', results: points.map(() => ({ elevation: 580 })) }) };
+  }, async () => {
+    await fetchElevationGrid(-35.3, 149.12);
+  });
+  assert.ok(firstRowLat > lastRowLat, `row 0 (lat ${firstRowLat}) should be north of row 8 (lat ${lastRowLat})`);
+});
+
 test('fetchElevationGrid requests a 9x9 grid and returns the flat values', async () => {
   await withFetch(async (url) => {
     const locations = new URL(url).searchParams.get('locations');

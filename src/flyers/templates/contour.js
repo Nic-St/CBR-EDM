@@ -95,6 +95,9 @@ function renderRealTerrain(ctx, grid) {
   const min = Math.min(...values);
   const max = Math.max(...values);
 
+  // North-up: assumes row 0 is the grid's north edge (geocode.js's
+  // fetchElevationGrid builds it that way), so increasing row moves
+  // south and correctly moves down the canvas.
   const toScreen = ({ r, c }) => ({
     x: -MAP_OVERSCAN + (c / (size - 1)) * (canvas.width + 2 * MAP_OVERSCAN),
     y: -MAP_OVERSCAN + (r / (size - 1)) * (canvas.height + 2 * MAP_OVERSCAN),

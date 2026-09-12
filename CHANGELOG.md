@@ -97,6 +97,14 @@ All notable changes to this project are documented here. Format follows
 Every visual change to the generated flyer engine, in order. See
 `FLYER_ENGINE_VERSION` in `src/flyers/index.js`.
 
+- **0.6.1** - Fixed a real-terrain orientation bug from 0.6.0: the
+  elevation grid was built south-to-north by row, but the renderer maps
+  row directly to y (top to bottom), so every real-terrain flyer was
+  quietly rendering with south at the top and north at the bottom.
+  Found by checking a rendered flyer against its real geocoded location
+  rather than just trusting it looked plausible. `fetchElevationGrid`
+  now builds the grid north-to-south by row, matching the standard
+  raster/DEM convention the renderer already assumed.
 - **0.6.0** - `contour` draws real, marching-squares-traced contour
   lines from a geocoded venue's actual elevation data when available,
   instead of the fully procedural version.

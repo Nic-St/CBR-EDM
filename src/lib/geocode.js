@@ -57,10 +57,15 @@ export async function fetchElevationGrid(lat, lng) {
   const metersPerDegreeLng = METERS_PER_DEGREE_LAT * Math.cos((lat * Math.PI) / 180);
   const half = (GRID_SIZE - 1) / 2;
 
+  // Row 0 is the grid's north edge, increasing row moves south -- the
+  // standard raster/DEM convention, and the one contour.js's row-to-y
+  // mapping assumes (row 0 at the top of the flyer). Getting this
+  // backwards doesn't break anything mechanically, it just quietly
+  // renders every real-terrain flyer with south at the top.
   const points = [];
   for (let row = 0; row < GRID_SIZE; row++) {
     for (let col = 0; col < GRID_SIZE; col++) {
-      const dLat = ((row - half) * GRID_SPACING_METERS) / METERS_PER_DEGREE_LAT;
+      const dLat = ((half - row) * GRID_SPACING_METERS) / METERS_PER_DEGREE_LAT;
       const dLng = ((col - half) * GRID_SPACING_METERS) / metersPerDegreeLng;
       points.push(`${(lat + dLat).toFixed(6)},${(lng + dLng).toFixed(6)}`);
     }
