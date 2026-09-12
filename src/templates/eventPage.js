@@ -1,6 +1,5 @@
 import { html } from '../lib/escape.js';
 import { formatEventDateTime, isEventPast } from '../lib/dates.js';
-import { scrapShapeFor } from '../lib/scrapShape.js';
 import { stampFor, venueTextFor } from '../lib/eventDisplay.js';
 import { config } from '../config.js';
 
@@ -12,7 +11,6 @@ import { config } from '../config.js';
  */
 export function eventPage(event, now = new Date()) {
   const isPast = isEventPast(event, now);
-  const { rotationDeg, clipPath } = scrapShapeFor(event.id);
   const dateText = formatEventDateTime(event.start_at, event.end_at, { includeYear: isPast });
   const stamp = stampFor(event, isPast, now);
   const venueText = venueTextFor(event);
@@ -22,8 +20,7 @@ export function eventPage(event, now = new Date()) {
   const lineupActs = (event.lineup || '').split('\n').map((line) => line.trim()).filter(Boolean);
 
   const body = html`
-    <article class="scrap${isPast ? ' scrap--past' : ''}"
-      style="transform: rotate(${rotationDeg.toFixed(2)}deg); clip-path: ${clipPath};">
+    <article class="scrap${isPast ? ' scrap--past' : ''}">
       <span class="scrap-tape" aria-hidden="true"></span>
       ${event.flyer_key
         ? html`<img src="/img/${event.flyer_key}" alt="Flyer for ${event.title || 'this event'}${dateText ? `, ${dateText}` : ''}${venueText ? `, ${venueText}` : ''}" width="600">`
@@ -35,7 +32,7 @@ export function eventPage(event, now = new Date()) {
       ${event.genres ? html`<p class="scrap-meta">${event.genres}</p>` : ''}
       ${event.price_text ? html`<p class="scrap-meta">${event.price_text}</p>` : ''}
       ${lineupActs.length
-        ? html`<ul>${lineupActs.map((act) => html`<li>${act}</li>`)}</ul>`
+        ? html`<ul class="link-list">${lineupActs.map((act) => html`<li>${act}</li>`)}</ul>`
         : ''}
       ${event.ticket_url ? html`<p><a href="/go/${event.id}">Tickets</a></p>` : ''}
       ${event.age_restriction === '18+' ? html`<p class="scrap-meta">18+</p>` : ''}

@@ -1,6 +1,5 @@
 import { html } from '../lib/escape.js';
 import { formatEventDateTime, isEventPast } from '../lib/dates.js';
-import { scrapShapeFor } from '../lib/scrapShape.js';
 import { stampFor, venueTextFor, lineupPreview } from '../lib/eventDisplay.js';
 import { config } from '../config.js';
 
@@ -12,7 +11,6 @@ import { config } from '../config.js';
  */
 export function eventCard(event, now = new Date()) {
   const isPast = isEventPast(event, now);
-  const { rotationDeg, clipPath } = scrapShapeFor(event.id);
   const dateText = formatEventDateTime(event.start_at, event.end_at, { includeYear: isPast });
   const stamp = stampFor(event, isPast, now);
   const venueText = venueTextFor(event);
@@ -22,8 +20,7 @@ export function eventCard(event, now = new Date()) {
     : (event.crew_name || event.presented_by);
 
   return html`<li>
-    <article class="scrap${isPast ? ' scrap--past' : ''}"
-      style="transform: rotate(${rotationDeg.toFixed(2)}deg); clip-path: ${clipPath};">
+    <article class="scrap${isPast ? ' scrap--past' : ''}">
       <span class="scrap-tape" aria-hidden="true"></span>
       ${event.flyer_thumb_key
         ? html`<img src="/img/${event.flyer_thumb_key}" alt="Flyer for ${event.title || 'this event'}" width="200" loading="lazy">`
