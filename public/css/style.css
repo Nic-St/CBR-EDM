@@ -32,6 +32,9 @@
   --stamp-ink: #8f1d1d;
   --sodium: #b8722a;
   --focus-ring: #e8b04a;
+  /* Matches .site-footer's own divider, so admin list dividers (section
+     16) and other one-off separators use the same subtle line. */
+  --border: rgba(217, 216, 210, 0.2);
 
   /* Type */
   --font-display: 'Big Shoulders Display', 'Arial Narrow', sans-serif;
