@@ -26,12 +26,15 @@ export default {
   needs: [],
   render(ctx) {
     const { event, canvas, palette, random } = ctx;
-    const clipId = `contour-clip-${event.id.replace(/[^a-zA-Z0-9]/g, '')}`;
+    // The venue marker still avoids the headliner's own text block (see
+    // ly2 below) so the two never collide, but the contour lines
+    // themselves now run the full canvas -- owner request, they used to
+    // be clipped out of the upper third and it read as a cut-off map
+    // rather than a whole one.
     const clearZoneBottom = canvas.top + canvas.contentHeight / 3;
 
     const parts = [];
     parts.push(`<rect x="0" y="0" width="${canvas.width}" height="${canvas.height}" fill="${palette.tonerBlack}"/>`);
-    parts.push(`<clipPath id="${clipId}"><rect x="0" y="${clearZoneBottom.toFixed(1)}" width="${canvas.width}" height="${(canvas.height - clearZoneBottom).toFixed(1)}"/></clipPath>`);
 
     const contourCount = 8 + Math.floor(random() * 5);
     const highlighted = Math.floor(random() * contourCount);
@@ -61,7 +64,7 @@ export default {
       const opacity = isHighlight ? 1 : 0.35;
       contourLines += `<path d="${d}Z" fill="none" stroke="${color}" stroke-width="${width}" opacity="${opacity}"/>`;
     }
-    parts.push(`<g clip-path="url(#${clipId})">${contourLines}</g>`);
+    parts.push(`<g>${contourLines}</g>`);
 
     // Venue label on the highlighted contour, like a labelled spot height.
     const venueText = event.locationTba ? 'LOCATION TBA' : event.venueName;

@@ -96,6 +96,14 @@ for (const templateId of Object.keys(TEMPLATES)) {
     const b = render(forced, { surface: 'page', now: FIXTURE_NOW });
     assert.equal(a.svg, b.svg);
   });
+
+  // FLYER-ENGINE-SPEC.md section 11 rule 1: the footer band (or the
+  // template's own equivalent) is present on every template.
+  test(`${templateId}: carries the harm reduction line`, () => {
+    const forced = { ...fixture, flyer_template: templateId };
+    const result = render(forced, { surface: 'page', now: FIXTURE_NOW });
+    assert.ok(result.svg.includes('Look after each other'), `${templateId} is missing the harm reduction line`);
+  });
 }
 
 test('resolveTemplate honours exclude by falling through to the next candidate', () => {

@@ -56,12 +56,13 @@ export default {
       y += lineHeight * 0.3;
     }
 
-    y += 20;
-    parts.push(`<rect x="${canvas.left}" y="${y}" width="${canvas.contentWidth}" height="2" fill="${palette.tonerBlack}"/>`);
-    y += 44;
-
     // Own compact detail block, no shared ticketFooter (section 11: this
-    // template incorporates the info into its own structure).
+    // template incorporates the info into its own structure). The rule
+    // separates the event/crew-specific line above it from the site's own
+    // material below (owner request): the detail line belongs to this
+    // event, "look after each other" and the wordmark are the same on
+    // every flyer.
+    y += 20;
     const detailLine = [
       event.presenter,
       event.dateLong,
@@ -70,7 +71,9 @@ export default {
       event.ageRestriction,
     ].filter(Boolean).join('   ');
     parts.push(`<text x="${canvas.left}" y="${y}" font-family="'Archivo',Arial,sans-serif" font-size="20" fill="${palette.tonerBlack}">${escapeXml(detailLine)}</text>`);
-    y += 40;
+    y += 34;
+    parts.push(`<rect x="${canvas.left}" y="${y}" width="${canvas.contentWidth}" height="2" fill="${palette.tonerBlack}"/>`);
+    y += 30;
     parts.push(`<text x="${canvas.left}" y="${y}" font-family="'Archivo',Arial,sans-serif" font-size="14" fill="${palette.tonerBlack}" opacity="0.6">Look after each other</text>`);
     parts.push(wordmark(ctx, { x: canvas.right, y: canvas.height - 20, color: palette.tonerBlack }));
 

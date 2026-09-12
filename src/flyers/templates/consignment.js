@@ -183,6 +183,12 @@ export default {
       parts.push(`<text x="${barcodeX}" y="${barcodeY}" font-family="${LABEL_FONT}" font-size="18" letter-spacing="0.04em" fill="${palette.tonerBlack}">${escapeXml(event.id)}</text>`);
     }
 
+    // Section 11 rule 1: the footer band's facts are covered by this
+    // template's own cells, but the harm reduction line is not a fact
+    // about this event, it is the same on every flyer -- it belongs on
+    // the kraft paper below the label's own border, next to the
+    // wordmark, not duplicated inside the form.
+    parts.push(`<text x="${box.x}" y="${canvas.bottom - 12}" font-family="'Archivo',Arial,sans-serif" font-size="16" fill="${palette.tonerBlack}" opacity="0.6">Look after each other</text>`);
     parts.push(wordmark(ctx, { x: canvas.right, y: canvas.bottom - 12, color: palette.tonerBlack }));
 
     return `<g>${parts.join('')}</g>`;

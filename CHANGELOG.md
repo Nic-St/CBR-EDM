@@ -78,6 +78,19 @@ All notable changes to this project are documented here. Format follows
 Every visual change to the generated flyer engine, in order. See
 `FLYER_ENGINE_VERSION` in `src/flyers/index.js`.
 
+- **0.5.0** - Footer rule ordering, owner request: on every template, the
+  event/crew-specific facts (doors, close, age, ticket text, a detail
+  line) sit above the footer rule; the harm reduction line and the
+  wordmark, the same on every flyer, sit below it. Fixed in the shared
+  `ticketFooter` (seven templates) and `index-list`'s own footer, both
+  of which had this backwards. Also closed two section-11-rule-1 gaps
+  this surfaced: `terminal` and `consignment` were missing the harm
+  reduction line entirely (the spec only exempts `terminal` and
+  `index-list` from the shared footer band, not from carrying the
+  message some other way) -- both now carry it, `consignment`'s next to
+  its wordmark on the kraft paper below the label.
+  `contour`'s contour lines no longer clip out of the upper third: they
+  now run the full canvas instead of reading as a cut-off map.
 - **0.4.3** - `consignment`: the barcode/ID row now uses the same left
   padding and top offset as every other row (it previously sat flush
   against the border with no padding), and the ID text sits a wider,

@@ -23,7 +23,12 @@ export function ticketFooter(ctx) {
   }
   if (event.ageRestriction === '18+') items.push('18+');
 
-  const labelY = top + 40;
+  // Owner request: the rule separates event/crew-specific facts (above)
+  // from the site's own material (below) -- doors, close and age belong
+  // to this event, but "look after each other" and the wordmark are the
+  // same on every flyer, so they read as the site talking, not the crew.
+  const labelY = top + 26;
+  const ruleY = top + 50;
   const linkY = top + HEIGHT - 22;
 
   const labels = items.map((text, i) => {
@@ -33,8 +38,8 @@ export function ticketFooter(ctx) {
   }).join('');
 
   return `
-    ${rules(ctx, { kind: 'full', x: canvas.left, y: top, width: canvas.contentWidth, color: palette.paper })}
     ${labels}
+    ${rules(ctx, { kind: 'full', x: canvas.left, y: ruleY, width: canvas.contentWidth, color: palette.paper })}
     <text x="${canvas.left}" y="${linkY}" font-family="'Archivo', Arial, sans-serif" font-size="16"
       fill="${palette.paper}" opacity="0.7">Look after each other</text>
   `;
