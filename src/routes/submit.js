@@ -12,7 +12,7 @@ const TURNSTILE_SCRIPT = '<script src="https://challenges.cloudflare.com/turnsti
 
 export async function handleSubmitForm(request, env) {
   const body = submitFormPage(env.TURNSTILE_SITE_KEY);
-  const page = String(layout({ title: 'Put an event on the wall', bodyContent: body, extraHead: TURNSTILE_SCRIPT }));
+  const page = String(layout({ title: 'Submit an event', bodyContent: body, extraHead: TURNSTILE_SCRIPT }));
   return new Response(page, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=60' } });
 }
 

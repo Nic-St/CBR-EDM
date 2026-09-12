@@ -1,10 +1,9 @@
 import { html, raw } from '../lib/escape.js';
 import { config } from '../config.js';
-import pkg from '../../package.json';
 
 function navLinks() {
   return [
-    ['/submit', 'Put an event on the wall'],
+    ['/submit', 'Submit an event'],
     ['/crews', 'Crews'],
     ['/archive', 'Archive'],
     ['/look-after-each-other', config.harmReductionTitle],
