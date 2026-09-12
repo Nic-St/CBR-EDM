@@ -55,7 +55,6 @@ export function eventToVEvent(event, domain, now = new Date()) {
   const descriptionParts = [
     event.crew_name || event.presented_by,
     event.lineup,
-    event.price_text,
     `https://${domain}/e/${event.slug}`,
   ].filter(Boolean);
 

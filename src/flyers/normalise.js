@@ -104,7 +104,9 @@ export function normaliseEvent(event, options = {}) {
       ? [event.location_reveal_at, event.location_how_to_find].filter(Boolean).join(', ') || null
       : null,
     genres: genresFor(event.genres),
-    ticketText: event.price_text || null,
+    // No price field, deliberately: it's on the ticket link, and prices
+    // that tier (presale/door, member/guest...) read as confusing or
+    // stale printed flat on a flyer. Owner request.
     ageRestriction: event.age_restriction === '18+' ? '18+' : null,
     status: statusFor(event, now),
     surface: options.surface || 'page',
@@ -121,7 +123,7 @@ export function flyerDataHash(event) {
   const relevant = [
     event.title, event.presented_by, event.lineup, event.start_at, event.end_at,
     event.venue_name, event.location_tba, event.location_reveal_at, event.location_how_to_find,
-    event.genres, event.price_text, event.age_restriction, event.status,
+    event.genres, event.age_restriction, event.status,
     event.location_revealed_at, event.crew_name, event.flyer_template, event.seed_salt,
   ].map((v) => (v === null || v === undefined ? '' : String(v))).join('|');
 

@@ -6,7 +6,7 @@ const LIST_SQL = `
   SELECT event_changes.*, events.title AS event_title,
     events.title AS current_title, events.start_at AS current_start_at, events.end_at AS current_end_at,
     events.venue_name AS current_venue_name, events.venue_address AS current_venue_address,
-    events.genres AS current_genres, events.price_text AS current_price_text, events.lineup AS current_lineup,
+    events.genres AS current_genres, events.lineup AS current_lineup,
     events.ticket_url AS current_ticket_url, events.notes AS current_notes,
     events.age_restriction AS current_age_restriction, events.status AS current_status
   FROM event_changes JOIN events ON events.id = event_changes.event_id

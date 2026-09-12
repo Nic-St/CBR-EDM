@@ -65,7 +65,6 @@ export function submitFormPage(turnstileSiteKey) {
           <h2>The details</h2>
           ${[
             ['genres', 'Genre', 'text'],
-            ['price_text', 'Price', 'text'],
             ['lineup', 'Lineup (one act per line)', 'textarea'],
             ['ticket_url', 'Ticket URL', 'url'],
             ['notes', 'Anything else worth knowing', 'textarea'],

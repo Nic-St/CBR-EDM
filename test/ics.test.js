@@ -14,7 +14,6 @@ const baseEvent = {
   location_tba: 0,
   crew_name: 'Static Frequency',
   lineup: 'DJ Fictional',
-  price_text: '$20',
   status: 'on',
 };
 

@@ -90,7 +90,7 @@ export async function handleCrewProfileUpdate(request, env) {
 // straight to the crew's own browser session, which is a lower-trust
 // context than the admin panel, section 12.
 const CREW_SAFE_EVENT_SELECT = `
-  SELECT id, title, start_at, end_at, venue_name, venue_address, genres, price_text, lineup,
+  SELECT id, title, start_at, end_at, venue_name, venue_address, genres, lineup,
     ticket_url, notes, age_restriction, status, visibility
   FROM events WHERE crew_id = ? ORDER BY start_at DESC
 `;
@@ -125,12 +125,12 @@ export async function handleCrewEventCreate(request, env) {
 
   await env.DB.prepare(
     `INSERT INTO events (id, slug, title, crew_id, start_at, end_at, venue_name, venue_address, genres,
-       price_text, lineup, ticket_url, notes, age_restriction, status, visibility, source, sequence,
+       lineup, ticket_url, notes, age_restriction, status, visibility, source, sequence,
        created_at, updated_at, published_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'on', ?, 'crew', ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'on', ?, 'crew', ?, ?, ?, ?)`,
   ).bind(
     id, slug, fields.title, crew.id, fields.start_at, fields.end_at, fields.venue_name, fields.venue_address,
-    fields.genres, fields.price_text, fields.lineup, fields.ticket_url, fields.notes, fields.age_restriction,
+    fields.genres, fields.lineup, fields.ticket_url, fields.notes, fields.age_restriction,
     willPublish ? 'published' : 'pending', willPublish ? 1 : 0, now, now, willPublish ? now : null,
   ).run();
 
@@ -166,11 +166,11 @@ export async function handleCrewEventUpdate(request, env, id) {
     const sequenceBump = event.visibility === 'published' ? 'sequence + 1' : 'sequence';
     await env.DB.prepare(
       `UPDATE events SET title = ?, start_at = ?, end_at = ?, venue_name = ?, venue_address = ?, genres = ?,
-         price_text = ?, lineup = ?, ticket_url = ?, notes = ?, age_restriction = ?, sequence = ${sequenceBump},
+         lineup = ?, ticket_url = ?, notes = ?, age_restriction = ?, sequence = ${sequenceBump},
          updated_at = ? WHERE id = ?`,
     ).bind(
       fields.title, fields.start_at, fields.end_at, fields.venue_name, fields.venue_address, fields.genres,
-      fields.price_text, fields.lineup, fields.ticket_url, fields.notes, fields.age_restriction, now, id,
+      fields.lineup, fields.ticket_url, fields.notes, fields.age_restriction, now, id,
     ).run();
 
     await sendAdminAlert(env, {

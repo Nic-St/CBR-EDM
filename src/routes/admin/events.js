@@ -80,13 +80,13 @@ export async function handleEventCreate(request, env, admin) {
 
   await env.DB.prepare(
     `INSERT INTO events (id, slug, title, crew_id, presented_by, start_at, end_at, venue_name, venue_address,
-       location_tba, location_reveal_at, location_how_to_find, genres, price_text, lineup, ticket_url, notes,
+       location_tba, location_reveal_at, location_how_to_find, genres, lineup, ticket_url, notes,
        age_restriction, status, visibility, source, sequence, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'admin', 0, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'admin', 0, ?, ?)`,
   ).bind(
     id, slug, fields.title, fields.crew_id, fields.presented_by, fields.start_at, fields.end_at,
     fields.venue_name, fields.venue_address, fields.location_tba, fields.location_reveal_at,
-    fields.location_how_to_find, fields.genres, fields.price_text, fields.lineup, fields.ticket_url,
+    fields.location_how_to_find, fields.genres, fields.lineup, fields.ticket_url,
     fields.notes, fields.age_restriction, fields.status, now, now,
   ).run();
 
@@ -107,12 +107,12 @@ export async function handleEventUpdate(request, env, admin, id) {
   await env.DB.prepare(
     `UPDATE events SET title = ?, crew_id = ?, presented_by = ?, start_at = ?, end_at = ?, venue_name = ?,
        venue_address = ?, location_tba = ?, location_reveal_at = ?, location_how_to_find = ?, genres = ?,
-       price_text = ?, lineup = ?, ticket_url = ?, notes = ?, age_restriction = ?, status = ?, updated_at = ?
+       lineup = ?, ticket_url = ?, notes = ?, age_restriction = ?, status = ?, updated_at = ?
      WHERE id = ?`,
   ).bind(
     fields.title, fields.crew_id, fields.presented_by, fields.start_at, fields.end_at, fields.venue_name,
     fields.venue_address, fields.location_tba, fields.location_reveal_at, fields.location_how_to_find,
-    fields.genres, fields.price_text, fields.lineup, fields.ticket_url, fields.notes, fields.age_restriction,
+    fields.genres, fields.lineup, fields.ticket_url, fields.notes, fields.age_restriction,
     fields.status, now, id,
   ).run();
 

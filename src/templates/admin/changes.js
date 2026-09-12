@@ -7,7 +7,7 @@ const LABELS = {
 };
 
 const COMPARE_FIELDS = [
-  'title', 'start_at', 'end_at', 'venue_name', 'venue_address', 'genres', 'price_text',
+  'title', 'start_at', 'end_at', 'venue_name', 'venue_address', 'genres',
   'lineup', 'ticket_url', 'notes', 'age_restriction', 'status',
 ];
 

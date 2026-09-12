@@ -28,7 +28,6 @@ export const FIXTURES = {
     venue_name: 'Sideway',
     venue_address: '1 Lonsdale St, Braddon',
     genres: 'dubstep, 140',
-    price_text: 'Tickets via Humanitix',
     lineup: 'Deep Signal\nKylo B2B Mantis\nResidents',
     age_restriction: '18+',
   },

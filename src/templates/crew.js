@@ -7,7 +7,6 @@ const FIELD_DEFS = [
   ['venue_name', 'Venue name', 'text'],
   ['venue_address', 'Venue address', 'text'],
   ['genres', 'Genre', 'text'],
-  ['price_text', 'Price', 'text'],
   ['lineup', 'Lineup (one act per line)', 'textarea'],
   ['ticket_url', 'Ticket URL', 'url'],
   ['notes', 'Anything else worth knowing', 'textarea'],

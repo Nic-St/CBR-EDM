@@ -10,7 +10,6 @@ const FIELD_DEFS = [
   ['location_reveal_at', 'When will the location be announced?', 'text'],
   ['location_how_to_find', 'How will people find out?', 'text'],
   ['genres', 'Genre', 'text'],
-  ['price_text', 'Price', 'text'],
   ['lineup', 'Lineup (one act per line)', 'textarea'],
   ['ticket_url', 'Ticket URL', 'url'],
   ['notes', 'Anything else worth knowing', 'textarea'],

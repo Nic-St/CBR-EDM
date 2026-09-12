@@ -96,14 +96,14 @@ export async function handleSubmissionApi(request, env) {
 
   await env.DB.prepare(
     `INSERT INTO events (id, slug, title, crew_id, presented_by, start_at, end_at, venue_name, venue_address,
-       location_tba, location_reveal_at, location_how_to_find, genres, price_text, lineup, ticket_url, notes,
+       location_tba, location_reveal_at, location_how_to_find, genres, lineup, ticket_url, notes,
        flyer_key, flyer_thumb_key, age_restriction, status, visibility, source, submitter_contact,
        edit_token_hash, sequence, created_at, updated_at, published_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'on', ?, ?, ?, ?, ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'on', ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).bind(
     id, slug, fields.title, crew?.id || null, fields.presented_by, fields.start_at, fields.end_at,
     fields.venue_name, fields.venue_address, fields.location_tba, fields.location_reveal_at,
-    fields.location_how_to_find, fields.genres, fields.price_text, fields.lineup, fields.ticket_url,
+    fields.location_how_to_find, fields.genres, fields.lineup, fields.ticket_url,
     fields.notes, flyerKey, flyerThumbKey, fields.age_restriction, visibility, source, submitterContact,
     editTokenHash, willPublish ? 1 : 0, now, now, willPublish ? now : null,
   ).run();

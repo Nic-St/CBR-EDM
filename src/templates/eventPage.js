@@ -37,7 +37,6 @@ export function eventPage(event, now = new Date()) {
       ${dateText ? html`<p class="scrap-meta">${dateText}</p>` : ''}
       ${venueText ? html`<p class="scrap-meta">${venueText}</p>` : ''}
       ${event.genres ? html`<p class="scrap-meta">${event.genres}</p>` : ''}
-      ${event.price_text ? html`<p class="scrap-meta">${event.price_text}</p>` : ''}
       ${lineupActs.length
         ? html`<ul class="link-list">${lineupActs.map((act) => html`<li>${act}</li>`)}</ul>`
         : ''}
