@@ -18,7 +18,7 @@ import { isEventPast } from '../lib/dates.js';
 // to an existing one, a shared part changing). It is part of the cache
 // key (section 4.2), so forgetting to bump it serves stale artwork. Record
 // every bump under "## Flyers" in CHANGELOG.md.
-export const FLYER_ENGINE_VERSION = '0.4.1';
+export const FLYER_ENGINE_VERSION = '0.4.2';
 
 const SIZE_BUDGETS = {
   scrap: 12 * 1024,

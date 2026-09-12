@@ -78,6 +78,11 @@ All notable changes to this project are documented here. Format follows
 Every visual change to the generated flyer engine, in order. See
 `FLYER_ENGINE_VERSION` in `src/flyers/index.js`.
 
+- **0.4.2** - `consignment`: every header (CONSIGNOR, DATE, CONTENTS,
+  DELIVER TO, WINDOW, HANDLING) now sits the same fixed distance from
+  its own row's top border -- previously two different hand-tuned
+  offsets (34 and 22) depending on which code path drew the label -- and
+  the content below each header sits a wider, consistent gap beneath it.
 - **0.4.1** - `consignment`: each cell's label/value pair is now
   centred on that cell's own vertical axis instead of sitting at a
   fixed offset from the row top, so a 130px row and a 160px row no

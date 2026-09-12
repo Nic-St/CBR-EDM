@@ -43,23 +43,21 @@ const CELL_PADDING = 20;
 const VALUE_MAX_SIZE = 28;
 const VALUE_MIN_SIZE = 16;
 
-// The label/value pair's block height, for centring it on each cell's own
-// vertical axis (section unnamed, owner request): rows are 130-160 tall,
-// and the pair used to sit at a fixed offset from the row's top instead
-// of accounting for the row's actual height, so they landed at visibly
-// different heights from one cell to the next. Kept independent of the
-// value's actual (shrunk) font size, so centring never jitters based on
-// how long a particular value happens to be.
-const CELL_BLOCK_HEIGHT = 64;
-const CELL_LABEL_OFFSET = 16;
-const CELL_VALUE_OFFSET = 58;
+// Every row's header sits at the same fixed distance from its own row's
+// top border, whether it's a cell() label or the CONTENTS row's label --
+// those two were previously two different hand-tuned offsets (34 and 22),
+// which is what read as inconsistent header-to-border spacing. Content
+// then sits a deliberately generous distance below the header rather than
+// close behind it.
+const LABEL_TOP_OFFSET = 34;
+const LABEL_CONTENT_GAP = 50;
 
 const ROW0_HEIGHT = 130;
 const ROW2_HEIGHT = 160;
 const ROW3_HEIGHT = 130;
 const ROW4_HEIGHT = 140;
 const CONTENTS_MIN_HEIGHT = 110;
-const CONTENTS_LABEL_OFFSET = 60;
+const CONTENTS_FIRST_LINE_OFFSET = LABEL_TOP_OFFSET + LABEL_CONTENT_GAP;
 const CONTENTS_BOTTOM_PADDING = 30;
 const WORDMARK_CLEARANCE = 60;
 
@@ -73,7 +71,7 @@ const WORDMARK_CLEARANCE = 60;
  */
 function contentsHeightFor(acts, truncated) {
   if (!acts.length) return CONTENTS_MIN_HEIGHT;
-  let height = CONTENTS_LABEL_OFFSET;
+  let height = CONTENTS_FIRST_LINE_OFFSET;
   for (const act of acts) {
     const size = act.tier === 1 ? 40 : act.tier === 2 ? 30 : 24;
     height += size * 1.5;
@@ -142,7 +140,7 @@ export default {
     const contentsMaxWidth = box.w - CELL_PADDING * 2;
     parts.push(labelText('CONTENTS', contentsX, rowTops[1], palette.tonerBlack));
     if (acts.length) {
-      let y = rowTops[1] + 60;
+      let y = rowTops[1] + CONTENTS_FIRST_LINE_OFFSET;
       for (const act of acts) {
         const nominalSize = act.tier === 1 ? 40 : act.tier === 2 ? 30 : 24;
         const size = fitSingleLine(act.name, contentsMaxWidth, { font: 'archivo', maxSize: nominalSize, minSize: VALUE_MIN_SIZE });
@@ -153,7 +151,7 @@ export default {
         parts.push(`<text x="${contentsX}" y="${y}" font-family="${VALUE_FONT}" font-size="20" fill="${palette.tonerBlack}" opacity="0.6">+ ${event.acts.length - acts.length} more</text>`);
       }
     } else {
-      parts.push(strike(contentsX, rowTops[1] + 60, contentsMaxWidth, palette.tonerBlack));
+      parts.push(strike(contentsX, rowTops[1] + CONTENTS_FIRST_LINE_OFFSET, contentsMaxWidth, palette.tonerBlack));
     }
 
     // Row 2: DELIVER TO | WINDOW
@@ -184,7 +182,7 @@ export default {
 };
 
 function labelText(label, x, y, color) {
-  return `<text x="${x}" y="${y + 22}" font-family="${LABEL_FONT}" font-size="18" letter-spacing="0.04em" fill="${color}">${escapeXml(label)}</text>`;
+  return `<text x="${x}" y="${y + LABEL_TOP_OFFSET}" font-family="${LABEL_FONT}" font-size="18" letter-spacing="0.04em" fill="${color}">${escapeXml(label)}</text>`;
 }
 
 function strike(x, y, width, color) {
@@ -194,9 +192,8 @@ function strike(x, y, width, color) {
 function cell(ctx, { x, y, w, h, label, value }) {
   const { palette } = ctx;
   const padding = CELL_PADDING;
-  const blockTop = y + (h - CELL_BLOCK_HEIGHT) / 2;
-  const labelY = blockTop + CELL_LABEL_OFFSET;
-  const valueY = blockTop + CELL_VALUE_OFFSET;
+  const labelY = y + LABEL_TOP_OFFSET;
+  const valueY = labelY + LABEL_CONTENT_GAP;
   const maxWidth = w - padding * 2;
   const parts = [
     `<text x="${x + padding}" y="${labelY}" font-family="${LABEL_FONT}" font-size="18" letter-spacing="0.04em" fill="${palette.tonerBlack}">${escapeXml(label)}</text>`,
