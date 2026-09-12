@@ -45,7 +45,7 @@ export function layout({ title, bodyContent, extraHead = '', bodyClass = '' }) {
     ${raw(bodyContent)}
   </main>
   ${raw(siteFooter())}
-  <!-- build ${pkg.version} -->
+  <!-- build:CF_VERSION_ID -->
   <script src="/js/board-toggle.js" defer></script>
   <script src="/js/image-resize.js" defer></script>
   <script src="/js/submit-form.js" defer></script>

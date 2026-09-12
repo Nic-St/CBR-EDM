@@ -20,8 +20,9 @@ const CSP = [
 /**
  * @param {Response} response
  * @param {{ noReferrer?: boolean }} [options] - pass noReferrer on edit and crew pages, section 12
+ * @param {import('../env.js').Env} [env] - used to fill in the build comment, see layout.js
  */
-export function withSecurityHeaders(response, options = {}) {
+export async function withSecurityHeaders(response, options = {}, env) {
   const contentType = response.headers.get('Content-Type') || '';
   if (!contentType.includes('text/html')) return response;
 
@@ -31,9 +32,13 @@ export function withSecurityHeaders(response, options = {}) {
   headers.set('Referrer-Policy', options.noReferrer ? 'no-referrer' : 'strict-origin-when-cross-origin');
   headers.set('Permissions-Policy', 'geolocation=(), camera=(), microphone=(), payment=()');
 
-  return new Response(response.body, {
-    status: response.status,
-    statusText: response.statusText,
-    headers,
-  });
+  // layout.js leaves this placeholder in every page; filled in here, in the
+  // one place all HTML responses pass through, rather than threading env
+  // into every route just to render an HTML comment.
+  const buildId = env?.CF_VERSION_METADATA?.id ? env.CF_VERSION_METADATA.id.slice(0, 8) : 'dev';
+
+  return new Response(
+    (await response.text()).replace('CF_VERSION_ID', buildId),
+    { status: response.status, statusText: response.statusText, headers },
+  );
 }

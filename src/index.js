@@ -20,7 +20,7 @@ export default {
     }
 
     const response = await router(request, env);
-    return withSecurityHeaders(response);
+    return withSecurityHeaders(response, {}, env);
   },
 
   /**
