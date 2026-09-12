@@ -1,15 +1,28 @@
 // Template registry and genre routing, PROJECT-C-EDM-FLYER-ENGINE-SPEC.md
-// section 8. Phase 2a ships only medi and consignment; the routing table
-// below is the full section 8 table so it needs no changes in phase 2b,
-// but resolve() skips any match whose template isn't registered yet and
-// falls through to the next rule.
+// section 8. All ten templates, phase 2b.
 
 import medi from './templates/medi.js';
 import consignment from './templates/consignment.js';
+import schematic from './templates/schematic.js';
+import stencil from './templates/stencil.js';
+import terminal from './templates/terminal.js';
+import halftoneField from './templates/halftoneField.js';
+import ransom from './templates/ransom.js';
+import indexList from './templates/indexList.js';
+import cymatic from './templates/cymatic.js';
+import contour from './templates/contour.js';
 
 export const TEMPLATES = {
   medi,
   consignment,
+  schematic,
+  stencil,
+  terminal,
+  halftoneField,
+  ransom,
+  'index-list': indexList,
+  cymatic,
+  contour,
 };
 
 const ROUTES = [

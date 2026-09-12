@@ -72,9 +72,14 @@ function desaturate(hex, amount) {
  * accent saturation dropped 40%, section 9).
  * @param {() => number} random
  * @param {boolean} isPast
+ * @param {{ excludeYellowOnPaper?: boolean }} [options] - pass true for a
+ *   template that paints the accent directly onto the paper colour (e.g.
+ *   halftoneField's dots): section 9 bans riso yellow there, it only
+ *   clears contrast as a field colour with dark type on it.
  */
-export function paletteFor(random, isPast) {
-  const accent = pick(random, ACCENTS);
+export function paletteFor(random, isPast, options = {}) {
+  const pool = options.excludeYellowOnPaper ? ACCENTS.filter((a) => a.name !== 'risoYellow') : ACCENTS;
+  const accent = pick(random, pool);
   return {
     tonerBlack: MATERIAL.tonerBlack,
     paper: isPast ? MATERIAL.fadedPaper : MATERIAL.photocopyPaper,

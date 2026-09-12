@@ -17,7 +17,7 @@ import { isEventPast } from '../lib/dates.js';
 // to an existing one, a shared part changing). It is part of the cache
 // key (section 4.2), so forgetting to bump it serves stale artwork. Record
 // every bump under "## Flyers" in CHANGELOG.md.
-export const FLYER_ENGINE_VERSION = '0.1.0';
+export const FLYER_ENGINE_VERSION = '0.2.0';
 
 const SIZE_BUDGETS = {
   scrap: 12 * 1024,
@@ -26,13 +26,13 @@ const SIZE_BUDGETS = {
   print: 60 * 1024,
 };
 
-function buildCtx(event, rawEvent, surface, now) {
+function buildCtx(event, rawEvent, surface, now, template) {
   const random = rngFor(event.id, event.seedSalt);
   const isPast = isEventPast(rawEvent, now);
   return {
     event,
     random,
-    palette: paletteFor(random, isPast),
+    palette: paletteFor(random, isPast, { excludeYellowOnPaper: template?.paperField }),
     canvas: gridFor(1080, 1350),
     surface,
     isPast,
@@ -96,7 +96,7 @@ export function render(rawEvent, options = {}) {
   const dataHash = flyerDataHash(rawEvent);
 
   try {
-    const svg = renderWithTemplate(template, buildCtx(event, rawEvent, surface, now));
+    const svg = renderWithTemplate(template, buildCtx(event, rawEvent, surface, now, template));
     return { svg, templateId: template.id, dataHash };
   } catch (err) {
     console.error(`Flyer render failed for event ${rawEvent.id} (template ${template.id})`, err);
@@ -105,7 +105,7 @@ export function render(rawEvent, options = {}) {
   if (template.id === 'medi') return null; // medi is itself the fallback; nothing left to try
 
   try {
-    const svg = renderWithTemplate(TEMPLATES.medi, buildCtx(event, rawEvent, surface, now));
+    const svg = renderWithTemplate(TEMPLATES.medi, buildCtx(event, rawEvent, surface, now, TEMPLATES.medi));
     return { svg, templateId: 'medi', dataHash };
   } catch (err) {
     console.error(`Flyer fallback to medi also failed for event ${rawEvent.id}`, err);

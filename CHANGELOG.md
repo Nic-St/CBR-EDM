@@ -6,8 +6,8 @@ All notable changes to this project are documented here. Format follows
 ## [Unreleased]
 
 ### Added
-- Generated flyer engine, phase 2a (`PROJECT-C-EDM-FLYER-ENGINE-SPEC.md`):
-  a deterministic, seeded SVG renderer with two templates (`medi`,
+- Generated flyer engine, phase 2a (`FLYER-ENGINE-SPEC.md`): a
+  deterministic, seeded SVG renderer with two templates (`medi`,
   `consignment`), the shared parts library (grain, hairline rules, a Code
   39 barcode that actually scans, the status stamp, the site wordmark, the
   ticket footer), font-metric-based text fitting (`scripts/build-font-metrics.js`,
@@ -17,6 +17,15 @@ All notable changes to this project are documented here. Format follows
   there's no crew-uploaded one. Self-hosted JetBrains Mono added for the
   engine's monospace face. `seed_salt` and `flyer_template` columns added
   to `events` (migration 0002).
+- Flyer engine phase 2b: the remaining eight templates (`schematic`,
+  `stencil`, `terminal`, `halftoneField`, `ransom`, `index-list`,
+  `cymatic`, `contour`) plus the `tape` and `halftone` shared parts they
+  needed. Genre routing (already written in phase 2a) now resolves to
+  real templates instead of falling through all of them to `medi`.
+  Admin picker added to the event edit page (`FLYER-ENGINE-SPEC.md`
+  section 13): a live preview, a template dropdown showing what auto
+  routing would pick, a Reroll button (`seed_salt + 1`), and a compare
+  grid rendering the event through all ten templates at once.
 - See "## Flyers" below for the visual-change log the engine spec asks
   for, kept separately since visual changes aren't visible in a diff.
 
@@ -25,6 +34,18 @@ All notable changes to this project are documented here. Format follows
 Every visual change to the generated flyer engine, in order. See
 `FLYER_ENGINE_VERSION` in `src/flyers/index.js`.
 
+- **0.2.0** - The remaining eight templates: `schematic` (rig diagram),
+  `stencil` (sprayed warehouse severity), `terminal` (monospace session
+  readout), `halftoneField` (generative dot-screen), `ransom`
+  (photocopied cut-and-paste collage), `index-list` (pure typography
+  lineup sheet), `cymatic` (Lissajous standing-wave pattern), `contour`
+  (procedural Canberra topography, the local one). Found and fixed a
+  contrast bug while building the contact sheet: `halftoneField` could
+  seed riso yellow as its dot colour directly on the paper field, which
+  section 9 explicitly bans (yellow only clears contrast as a field
+  colour with dark type on it, never as a mark on paper) -- `paletteFor`
+  now takes an `excludeYellowOnPaper` option, set on any template whose
+  accent draws straight onto the paper colour.
 - **0.1.0** - First version. `medi` (deep field, the default/fallback) and
   `consignment` (shipping-label form) templates.
 

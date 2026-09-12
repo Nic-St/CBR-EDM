@@ -74,3 +74,36 @@ test('resolveTemplate falls back to medi when no route or explicit choice applie
 test('FLYER_ENGINE_VERSION is a semver string', () => {
   assert.match(FLYER_ENGINE_VERSION, /^\d+\.\d+\.\d+$/);
 });
+
+// Direct coverage for every registered template, forced explicitly --
+// FIXTURES resolving naturally by genre wouldn't necessarily reach all
+// ten. index-list needs 6+ acts to satisfy its own minLineup, so it gets
+// the longLineup fixture instead of full.
+for (const templateId of Object.keys(TEMPLATES)) {
+  const fixture = templateId === 'index-list' ? FIXTURES.longLineup : FIXTURES.full;
+
+  test(`${templateId}: renders the full fixture without throwing`, () => {
+    const forced = { ...fixture, flyer_template: templateId };
+    const result = render(forced, { surface: 'page', now: FIXTURE_NOW });
+    assert.ok(result, `${templateId} returned null`);
+    assert.equal(result.templateId, templateId, `${templateId} did not satisfy its own needs/minLineup against its own suited fixture`);
+  });
+
+  test(`${templateId}: is deterministic`, () => {
+    const forced = { ...fixture, flyer_template: templateId };
+    const a = render(forced, { surface: 'page', now: FIXTURE_NOW });
+    const b = render(forced, { surface: 'page', now: FIXTURE_NOW });
+    assert.equal(a.svg, b.svg);
+  });
+}
+
+test('halftoneField never draws riso yellow directly onto the paper field', () => {
+  // Section 9: riso yellow only clears contrast as a field colour with
+  // dark type on it, never as a mark on paper. Try enough seeds that a
+  // real regression would show up.
+  for (let i = 0; i < 40; i++) {
+    const event = { ...FIXTURES.full, id: `evt_yellowcheck${i}`, flyer_template: 'halftoneField' };
+    const result = render(event, { now: FIXTURE_NOW });
+    assert.doesNotMatch(result.svg, /fill="#ffe800"/, `seed ${i} drew riso yellow on the paper field`);
+  }
+});
