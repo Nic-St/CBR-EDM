@@ -72,6 +72,23 @@ export function fitBlock(text, box, options) {
 }
 
 /**
+ * Largest font size (down to minSize) at which `text` measures no wider
+ * than maxWidth on a single line. For labels/values that must stay on one
+ * line -- a form cell, a lineup name -- where wrapping would break the
+ * row layout, unlike fitBlock's multi-line fit.
+ * @param {string} text
+ * @param {number} maxWidth
+ * @param {{ font: string, maxSize: number, minSize: number, letterSpacing?: number }} options
+ */
+export function fitSingleLine(text, maxWidth, { font, maxSize, minSize, letterSpacing = 0 }) {
+  let size = maxSize;
+  while (size > minSize && measure(text, { font, size, letterSpacing }) > maxWidth) {
+    size -= 1;
+  }
+  return size;
+}
+
+/**
  * The shared grid, section 4.6: 1080x1350, margin 72, 12 columns of 62
  * with 18 gutters, baseline grid of 18.
  * @param {number} [width]

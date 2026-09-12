@@ -58,6 +58,18 @@ All notable changes to this project are documented here. Format follows
   detail one shrunk down; `halftoneField` and `stencil` now both
   truncate scrap-surface support acts to three names, matching the
   other templates and section 4.5's wording.
+- Consignment note rework, owner request: kraft wrapping paper as the
+  full canvas background (a deliberate one-template departure from the
+  shared material palette, section 9), with the bordered form now a
+  distinct, lighter label stuck onto it, sized to its actual content
+  instead of a fixed height. Fixes a real bug found on a sparse
+  postponed event: the CONTENTS cell used to reserve a large fixed
+  height regardless of lineup length, leaving a big dead void for a
+  short lineup. Also fixed a pre-existing, unrelated bug this surfaced:
+  `cell()`'s values and the CONTENTS lineup names were drawn at a fixed
+  font size with no measurement, so a long venue or crew name could run
+  straight through the column divider or the label's border. Both now
+  shrink to fit on one line via a new `fitSingleLine()` in `layout.js`.
 - See "## Flyers" below for the visual-change log the engine spec asks
   for, kept separately since visual changes aren't visible in a diff.
 
@@ -66,6 +78,9 @@ All notable changes to this project are documented here. Format follows
 Every visual change to the generated flyer engine, in order. See
 `FLYER_ENGINE_VERSION` in `src/flyers/index.js`.
 
+- **0.4.0** - `consignment`: kraft-paper canvas with a content-sized
+  label instead of a fixed-height one; values and lineup names shrink to
+  fit their column instead of overflowing into a divider or border.
 - **0.3.0** - Past events get an extra full-canvas grain layer (section
   11.4). `halftoneField`'s scrap surface uses a coarser halftone screen.
   `halftoneField` and `stencil` truncate scrap-surface support acts to

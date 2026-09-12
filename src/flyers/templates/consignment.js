@@ -4,6 +4,19 @@
 // hairline strike through the value area) is exactly how a real form
 // handles a field nobody filled in.
 //
+// The canvas itself is kraft wrapping paper -- a deliberate departure from
+// the shared photocopy-paper/toner-black material palette (section 9),
+// owner request: "tap into the vibe of consignment notice parcels being
+// that brown paper texture". The label (the bordered form) is a distinct,
+// lighter sheet stuck onto it, in the site's normal paper colour, so it
+// reads as a printed label affixed to a parcel rather than the whole page
+// being brown. The label's height is driven by its actual content instead
+// of a fixed figure: a sparse lineup used to leave a large dead void in
+// the CONTENTS cell (found on a real postponed event with almost no
+// data) -- now the label is only as tall as it needs to be and sits
+// centred in the kraft paper margin, which reads as intentional at any
+// lineup length instead of broken at a short one.
+//
 // Deliberate grid deviation (section 4.6 permits this with a comment): the
 // bordered form uses the standard 72 margin rather than the "inset 40"
 // figure in the spec prose, so there is guaranteed room below it for the
@@ -17,10 +30,46 @@ import { rules } from '../parts/rules.js';
 import { barcode } from '../parts/barcode.js';
 import { wordmark } from '../parts/wordmark.js';
 import { grain } from '../parts/grain.js';
+import { fitSingleLine } from '../layout.js';
 import { escapeXml } from '../xml.js';
 
 const LABEL_FONT = "'JetBrains Mono','Courier New',monospace";
 const VALUE_FONT = "'Archivo',Arial,sans-serif";
+
+const KRAFT_PAPER = '#c19a6b';
+const KRAFT_PAPER_FADED = '#a8927a';
+
+const CELL_PADDING = 20;
+const VALUE_MAX_SIZE = 28;
+const VALUE_MIN_SIZE = 16;
+
+const ROW0_HEIGHT = 130;
+const ROW2_HEIGHT = 160;
+const ROW3_HEIGHT = 130;
+const ROW4_HEIGHT = 140;
+const CONTENTS_MIN_HEIGHT = 110;
+const CONTENTS_LABEL_OFFSET = 60;
+const CONTENTS_BOTTOM_PADDING = 30;
+const WORDMARK_CLEARANCE = 60;
+
+/**
+ * The CONTENTS row's height, driven by how many lines it actually needs
+ * (label plus one line per act at its tier size, plus a truncation line
+ * if the scrap surface dropped any), floored so an empty lineup still
+ * gets a normal-looking cell rather than collapsing to nothing.
+ * @param {object[]} acts - already truncated for the current surface
+ * @param {boolean} truncated - whether acts is shorter than the full lineup
+ */
+function contentsHeightFor(acts, truncated) {
+  if (!acts.length) return CONTENTS_MIN_HEIGHT;
+  let height = CONTENTS_LABEL_OFFSET;
+  for (const act of acts) {
+    const size = act.tier === 1 ? 40 : act.tier === 2 ? 30 : 24;
+    height += size * 1.5;
+  }
+  if (truncated) height += 34;
+  return Math.max(CONTENTS_MIN_HEIGHT, height + CONTENTS_BOTTOM_PADDING);
+}
 
 export default {
   id: 'consignment',
@@ -32,17 +81,34 @@ export default {
   needs: [],
   render(ctx) {
     const { event, canvas, palette } = ctx;
-    const box = { x: canvas.left, y: canvas.top, w: canvas.contentWidth, h: canvas.contentHeight - 60 };
+
+    // Row 1 (CONTENTS) truncated to 3 acts on the scrap surface (section
+    // 4.5) to keep the inlined-on-the-board size small; computed here,
+    // ahead of the row geometry, since its height now depends on it.
+    const acts = ctx.surface === 'scrap' ? event.acts.slice(0, 3) : event.acts;
+    const truncated = acts.length < event.acts.length;
+
+    const boxWidth = canvas.contentWidth;
+    const row1Height = contentsHeightFor(acts, truncated);
+    const rowHeights = [ROW0_HEIGHT, row1Height, ROW2_HEIGHT, ROW3_HEIGHT, ROW4_HEIGHT];
+    const boxHeight = rowHeights.reduce((sum, h) => sum + h, 0);
+
+    const availableHeight = canvas.bottom - WORDMARK_CLEARANCE - canvas.top;
+    const boxY = canvas.top + Math.max(0, (availableHeight - boxHeight) / 2);
+    const box = { x: canvas.left, y: boxY, w: boxWidth, h: boxHeight };
     const splitX = box.x + box.w * 0.68;
 
-    const rowHeights = [130, box.h - 130 - 160 - 130 - 140, 160, 130, 140];
     const rowTops = [box.y];
     for (let i = 0; i < rowHeights.length; i++) rowTops.push(rowTops[i] + rowHeights[i]);
 
     const parts = [];
-    parts.push(`<rect x="0" y="0" width="${canvas.width}" height="${canvas.height}" fill="${palette.paper}"/>`);
-    parts.push(grain(ctx, { opacity: 0.02, area: { x: 0, y: 0, width: canvas.width, height: canvas.height } }));
+    const kraftPaper = ctx.isPast ? KRAFT_PAPER_FADED : KRAFT_PAPER;
+    parts.push(`<rect x="0" y="0" width="${canvas.width}" height="${canvas.height}" fill="${kraftPaper}"/>`);
+    parts.push(grain(ctx, { opacity: 0.05, area: { x: 0, y: 0, width: canvas.width, height: canvas.height } }));
 
+    // The label: a distinct, lighter sheet stuck onto the kraft paper.
+    parts.push(`<rect x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}" fill="${palette.paper}"/>`);
+    parts.push(grain(ctx, { opacity: 0.02, area: { x: box.x, y: box.y, width: box.w, height: box.h } }));
     // Outer border, 4px.
     parts.push(`<rect x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}" fill="none" stroke="${palette.tonerBlack}" stroke-width="4"/>`);
     // Row dividers.
@@ -57,22 +123,26 @@ export default {
     parts.push(cell(ctx, { x: box.x, y: rowTops[0], w: splitX - box.x, h: rowHeights[0], label: 'CONSIGNOR', value: event.presenter }));
     parts.push(cell(ctx, { x: splitX, y: rowTops[0], w: box.x + box.w - splitX, h: rowHeights[0], label: 'DATE', value: event.dateNumeric }));
 
-    // Row 1: CONTENTS (lineup). Truncated to 3 acts on the scrap surface,
-    // section 4.5, to keep the inlined-on-the-board size small.
-    const acts = ctx.surface === 'scrap' ? event.acts.slice(0, 3) : event.acts;
-    parts.push(labelText('CONTENTS', box.x, rowTops[1], palette.tonerBlack));
+    // Row 1: CONTENTS (lineup), acts/truncated computed above. Each name
+    // is shrunk to fit on one line rather than wrapping or overflowing
+    // into the border -- a long act name used to run straight through the
+    // right-hand edge of the label with nothing stopping it.
+    const contentsX = box.x + CELL_PADDING;
+    const contentsMaxWidth = box.w - CELL_PADDING * 2;
+    parts.push(labelText('CONTENTS', contentsX, rowTops[1], palette.tonerBlack));
     if (acts.length) {
       let y = rowTops[1] + 60;
       for (const act of acts) {
-        const size = act.tier === 1 ? 40 : act.tier === 2 ? 30 : 24;
-        parts.push(`<text x="${box.x}" y="${y}" font-family="${VALUE_FONT}" font-size="${size}" fill="${palette.tonerBlack}">${escapeXml(act.name)}</text>`);
-        y += size * 1.5;
+        const nominalSize = act.tier === 1 ? 40 : act.tier === 2 ? 30 : 24;
+        const size = fitSingleLine(act.name, contentsMaxWidth, { font: 'archivo', maxSize: nominalSize, minSize: VALUE_MIN_SIZE });
+        parts.push(`<text x="${contentsX}" y="${y}" font-family="${VALUE_FONT}" font-size="${size}" fill="${palette.tonerBlack}">${escapeXml(act.name)}</text>`);
+        y += nominalSize * 1.5;
       }
-      if (acts.length < event.acts.length) {
-        parts.push(`<text x="${box.x}" y="${y}" font-family="${VALUE_FONT}" font-size="20" fill="${palette.tonerBlack}" opacity="0.6">+ ${event.acts.length - acts.length} more</text>`);
+      if (truncated) {
+        parts.push(`<text x="${contentsX}" y="${y}" font-family="${VALUE_FONT}" font-size="20" fill="${palette.tonerBlack}" opacity="0.6">+ ${event.acts.length - acts.length} more</text>`);
       }
     } else {
-      parts.push(strike(box.x, rowTops[1] + 60, box.w, palette.tonerBlack));
+      parts.push(strike(contentsX, rowTops[1] + 60, contentsMaxWidth, palette.tonerBlack));
     }
 
     // Row 2: DELIVER TO | WINDOW
@@ -112,16 +182,21 @@ function strike(x, y, width, color) {
 
 function cell(ctx, { x, y, w, h, label, value }) {
   const { palette } = ctx;
-  const padding = 20;
+  const padding = CELL_PADDING;
   const labelY = y + 34;
   const valueY = y + 76;
+  const maxWidth = w - padding * 2;
   const parts = [
     `<text x="${x + padding}" y="${labelY}" font-family="${LABEL_FONT}" font-size="18" letter-spacing="0.04em" fill="${palette.tonerBlack}">${escapeXml(label)}</text>`,
   ];
   if (value) {
-    parts.push(`<text x="${x + padding}" y="${valueY}" font-family="${VALUE_FONT}" font-size="28" fill="${palette.tonerBlack}">${escapeXml(value)}</text>`);
+    // Shrink to fit rather than overflow into the column divider or the
+    // border -- these values (a venue name, a long crew name) are never
+    // wrapped or measured elsewhere before reaching this template.
+    const size = fitSingleLine(value, maxWidth, { font: 'archivo', maxSize: VALUE_MAX_SIZE, minSize: VALUE_MIN_SIZE });
+    parts.push(`<text x="${x + padding}" y="${valueY}" font-family="${VALUE_FONT}" font-size="${size}" fill="${palette.tonerBlack}">${escapeXml(value)}</text>`);
   } else {
-    parts.push(`<rect x="${x + padding}" y="${valueY - 8}" width="${w - padding * 2}" height="2" fill="${palette.tonerBlack}" opacity="0.4"/>`);
+    parts.push(`<rect x="${x + padding}" y="${valueY - 8}" width="${maxWidth}" height="2" fill="${palette.tonerBlack}" opacity="0.4"/>`);
   }
   return `<g>${parts.join('')}</g>`;
 }

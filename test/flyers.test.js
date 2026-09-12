@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import { render, FLYER_ENGINE_VERSION } from '../src/flyers/index.js';
 import { resolveTemplate, TEMPLATES } from '../src/flyers/manifest.js';
 import { normaliseEvent } from '../src/flyers/normalise.js';
+import { measure } from '../src/flyers/metrics.js';
 import { FIXTURES, FIXTURE_NOW } from '../src/flyers/fixtures.js';
 
 const SIZE_BUDGETS = { page: 60 * 1024, scrap: 12 * 1024 };
@@ -122,6 +123,21 @@ test('past events render with an extra grain layer over the full canvas', () => 
   const past = render({ ...FIXTURES.past, flyer_template: 'medi' }, { now: FIXTURE_NOW });
 
   assert.equal(grainCount(past.svg), grainCount(current.svg) + 1);
+});
+
+test('consignment never lets an Archivo text node overflow the label past the right margin', () => {
+  // A long venue name or crew name used to overflow past the column
+  // divider or the label's own border, since values were drawn at a
+  // fixed size with no measurement. Checks every fixture's rightmost
+  // margin (1008 = canvas.right on the 1080-wide canvas).
+  for (const fixture of Object.values(FIXTURES)) {
+    const result = render({ ...fixture, flyer_template: 'consignment' }, { surface: 'page', now: FIXTURE_NOW });
+    const texts = [...result.svg.matchAll(/<text x="([\d.]+)" y="[\d.]+" font-family="'Archivo',Arial,sans-serif" font-size="(\d+(?:\.\d+)?)"[^>]*>([^<]*)<\/text>/g)];
+    for (const [, x, size, text] of texts) {
+      const rightEdge = Number(x) + measure(text, { font: 'archivo', size: Number(size) });
+      assert.ok(rightEdge <= 1008, `"${text}" at size ${size} overflows to ${rightEdge}`);
+    }
+  }
 });
 
 test('halftoneField never draws riso yellow directly onto the paper field', () => {
