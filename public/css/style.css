@@ -129,7 +129,7 @@ select:focus-visible {
   display: inline-block;
   padding: 0.35em 0.5em;
   transform: rotate(-1deg);
-  flex: 1 1 320px;
+  flex: 0 1 auto;
 }
 
 /* Site nav: the actionable links, up top so people don't need to scroll
@@ -236,6 +236,10 @@ select:focus-visible {
 }
 
 @media (min-width: 1024px) {
+  .slogan-strip {
+    white-space: nowrap;
+  }
+
   .board {
     grid-template-columns: 1fr 1fr;
   }
