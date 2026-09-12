@@ -7,6 +7,9 @@ import { generateId, eventSlugFor } from '../lib/ids.js';
 import { verifyTurnstile } from '../lib/turnstile.js';
 import { checkRateLimit } from '../lib/rateLimit.js';
 import { sendAdminAlert } from '../lib/email.js';
+import { render } from '../flyers/index.js';
+import { resolveTemplate, TEMPLATES } from '../flyers/manifest.js';
+import { normaliseEvent } from '../flyers/normalise.js';
 
 const TURNSTILE_SCRIPT = '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>';
 const NO_STORE_HEADERS = { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' };
@@ -144,7 +147,85 @@ export async function handleCrewEventCreate(request, env) {
 }
 
 async function ownedEvent(env, crew, id) {
-  return env.DB.prepare('SELECT * FROM events WHERE id = ? AND crew_id = ?').bind(id, crew.id).first();
+  return env.DB.prepare(
+    'SELECT events.*, crews.name AS crew_name FROM events LEFT JOIN crews ON crews.id = events.crew_id WHERE events.id = ? AND events.crew_id = ?',
+  ).bind(id, crew.id).first();
+}
+
+/**
+ * FLYER-ENGINE-SPEC.md section 13's admin picker, for crews: a preview,
+ * the auto choice, and the full template list, so a crew can see and pick
+ * their own generated flyer without an admin. Sent as an SVG string
+ * rather than rendered server-side into the page, since the dashboard is
+ * a JSON API -- the client sets it as an <img> src (never innerHTML), so
+ * an untrusted title or lineup landing in the markup can't run as script.
+ */
+function flyerPayload(event) {
+  const normalised = normaliseEvent(event, {});
+  const auto = resolveTemplate(normalised, null);
+  // Matches eventCard.js/eventPage.js: an uploaded flyer always wins, so
+  // there is nothing useful to preview or pick a template for here.
+  const result = event.flyer_thumb_key ? null : render(event, { surface: 'page' });
+  return {
+    ok: true,
+    current: event.flyer_template || null,
+    auto: { id: auto.id, name: auto.name },
+    templates: Object.entries(TEMPLATES).map(([id, t]) => ({ id, name: t.name, blurb: t.blurb })),
+    svg: result ? result.svg : null,
+  };
+}
+
+/**
+ * POST /api/crew/events/:id/flyer. Read-only: current pick, auto choice,
+ * preview, and the template list to build a dropdown from.
+ */
+export async function handleCrewEventFlyer(request, env, id) {
+  const body = await readJson(request);
+  const crew = await requireCrew(request, env, body);
+  if (!crew) return jsonResponse({ ok: false, error: 'Not signed in.' }, 401);
+
+  const event = await ownedEvent(env, crew, id);
+  if (!event) return jsonResponse({ ok: false, error: 'Event not found.' }, 404);
+
+  return jsonResponse(flyerPayload(event));
+}
+
+/**
+ * POST /api/crew/events/:id/flyer-template. Applied directly regardless
+ * of trust level, unlike other edits: it only changes which of the ten
+ * approved templates draws the same factual data, never the facts
+ * themselves, so it carries none of the risk the review queue exists for.
+ */
+export async function handleCrewEventFlyerTemplate(request, env, id) {
+  const body = await readJson(request);
+  const crew = await requireCrew(request, env, body);
+  if (!crew) return jsonResponse({ ok: false, error: 'Not signed in.' }, 401);
+
+  const event = await ownedEvent(env, crew, id);
+  if (!event) return jsonResponse({ ok: false, error: 'Event not found.' }, 404);
+
+  const value = TEMPLATES[body.template] ? body.template : null;
+  await env.DB.prepare('UPDATE events SET flyer_template = ? WHERE id = ?').bind(value, id).run();
+
+  return jsonResponse(flyerPayload({ ...event, flyer_template: value }));
+}
+
+/**
+ * POST /api/crew/events/:id/reroll-flyer. Section 13: the only way a
+ * generated flyer changes appearance without a data or engine change.
+ */
+export async function handleCrewEventRerollFlyer(request, env, id) {
+  const body = await readJson(request);
+  const crew = await requireCrew(request, env, body);
+  if (!crew) return jsonResponse({ ok: false, error: 'Not signed in.' }, 401);
+
+  const event = await ownedEvent(env, crew, id);
+  if (!event) return jsonResponse({ ok: false, error: 'Event not found.' }, 404);
+
+  const nextSalt = (event.seed_salt || 0) + 1;
+  await env.DB.prepare('UPDATE events SET seed_salt = ? WHERE id = ?').bind(nextSalt, id).run();
+
+  return jsonResponse(flyerPayload({ ...event, seed_salt: nextSalt }));
 }
 
 export async function handleCrewEventUpdate(request, env, id) {

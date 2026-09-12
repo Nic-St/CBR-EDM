@@ -42,7 +42,7 @@
       reviewNote.hidden = !isPublished;
 
       ['title', 'presented_by', 'start_at_local', 'end_at_local', 'venue_name', 'venue_address',
-        'location_reveal_at', 'location_how_to_find', 'genres', 'price_text', 'lineup', 'ticket_url',
+        'location_reveal_at', 'location_how_to_find', 'genres', 'lineup', 'ticket_url',
         'notes', 'age_restriction'].forEach(function (name) { setField(name, event[name]); });
       setField('location_tba', event.location_tba);
 

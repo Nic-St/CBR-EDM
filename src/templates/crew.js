@@ -71,6 +71,18 @@ export function crewDashboardPage(turnstileSiteKey) {
         <button type="button" data-crew-unpublish class="danger">Unpublish</button>
       </div>
       <p data-crew-edit-status role="status"></p>
+
+      <div data-crew-flyer hidden>
+        <h3>Generated flyer</h3>
+        <p class="muted">Only shown while there is no uploaded flyer -- ask an admin to upload one to replace it.</p>
+        <img data-crew-flyer-preview alt="Generated flyer preview" style="max-width: 300px; display: block;">
+        <div class="field">
+          <label for="crew-flyer-template">Template</label>
+          <select id="crew-flyer-template" data-crew-flyer-template></select>
+        </div>
+        <button type="button" data-crew-flyer-reroll class="secondary">Reroll (new random variation)</button>
+        <p data-crew-flyer-status role="status"></p>
+      </div>
     </div>
   `;
 }

@@ -12,9 +12,13 @@
   var createStatus = crewArea.querySelector('[data-crew-create-status]');
   var editArea = document.querySelector('[data-crew-edit]');
   var editStatus = editArea.querySelector('[data-crew-edit-status]');
+  var flyerArea = editArea.querySelector('[data-crew-flyer]');
+  var flyerPreview = flyerArea.querySelector('[data-crew-flyer-preview]');
+  var flyerSelect = flyerArea.querySelector('[data-crew-flyer-template]');
+  var flyerStatus = flyerArea.querySelector('[data-crew-flyer-status]');
 
   var FIELD_NAMES = ['title', 'start_at_local', 'end_at_local', 'venue_name', 'venue_address',
-    'genres', 'price_text', 'lineup', 'ticket_url', 'notes'];
+    'genres', 'lineup', 'ticket_url', 'notes'];
 
   var currentKey = sessionStorage.getItem('cedm_crew_key');
   var currentEditId = null;
@@ -58,10 +62,49 @@
         setScopedFields('edit', event);
         editArea.hidden = false;
         editStatus.textContent = '';
+        flyerStatus.textContent = '';
+        loadFlyer(event.id);
         editArea.scrollIntoView({ behavior: 'smooth' });
       });
       li.appendChild(link);
       eventList.appendChild(li);
+    });
+  }
+
+  // Set as an <img> src, never innerHTML: the SVG is trusted (server
+  // generated, XML-escaped), but an <img> src also can't execute script
+  // even if it weren't, unlike parsing the markup into the page's own DOM.
+  function svgDataUri(svg) {
+    return 'data:image/svg+xml,' + encodeURIComponent(svg);
+  }
+
+  function renderFlyer(payload) {
+    if (!payload.svg) {
+      flyerArea.hidden = true;
+      return;
+    }
+    flyerArea.hidden = false;
+    flyerPreview.src = svgDataUri(payload.svg);
+
+    flyerSelect.textContent = '';
+    var autoOption = document.createElement('option');
+    autoOption.value = '';
+    autoOption.textContent = 'Auto (by genre) -- currently ' + payload.auto.name;
+    if (!payload.current) autoOption.selected = true;
+    flyerSelect.appendChild(autoOption);
+
+    payload.templates.forEach(function (t) {
+      var opt = document.createElement('option');
+      opt.value = t.id;
+      opt.textContent = t.name + ': ' + t.blurb;
+      if (payload.current === t.id) opt.selected = true;
+      flyerSelect.appendChild(opt);
+    });
+  }
+
+  function loadFlyer(id) {
+    api('/api/crew/events/' + id + '/flyer', {}).then(function (result) {
+      if (result.ok) renderFlyer(result);
     });
   }
 
@@ -162,6 +205,30 @@
           ? (result.applied === 'pending_review' ? 'Sent for admin review.' : 'Updated.')
           : (result.error || 'Could not update.');
       });
+    });
+  });
+
+  flyerSelect.addEventListener('change', function () {
+    flyerStatus.textContent = 'Saving...';
+    api('/api/crew/events/' + currentEditId + '/flyer-template', { template: flyerSelect.value }).then(function (result) {
+      if (result.ok) {
+        renderFlyer(result);
+        flyerStatus.textContent = 'Saved.';
+      } else {
+        flyerStatus.textContent = result.error || 'Could not save.';
+      }
+    });
+  });
+
+  flyerArea.querySelector('[data-crew-flyer-reroll]').addEventListener('click', function () {
+    flyerStatus.textContent = 'Rerolling...';
+    api('/api/crew/events/' + currentEditId + '/reroll-flyer', {}).then(function (result) {
+      if (result.ok) {
+        renderFlyer(result);
+        flyerStatus.textContent = 'Rerolled.';
+      } else {
+        flyerStatus.textContent = result.error || 'Could not reroll.';
+      }
     });
   });
 
