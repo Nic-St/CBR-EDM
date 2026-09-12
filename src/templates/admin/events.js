@@ -70,7 +70,9 @@ export function eventFormPage(event, crews, options = {}) {
         <label for="${name}">${label}</label>
         ${type === 'textarea'
           ? html`<textarea id="${name}" name="${name}">${event[name] || ''}</textarea>`
-          : html`<input type="${type}" id="${name}" name="${name}" value="${event[name] || ''}">`}
+          : type === 'url'
+            ? html`<input type="text" inputmode="url" id="${name}" name="${name}" value="${event[name] || ''}">`
+            : html`<input type="${type}" id="${name}" name="${name}" value="${event[name] || ''}">`}
       </div>`)}
 
       <div class="field">

@@ -60,6 +60,20 @@ export function asFormDataLike(obj) {
 }
 
 /**
+ * Assumes https:// for a URL typed without a scheme (e.g. "cbredm.org"),
+ * so people submitting a ticket link don't need to know to type it, per
+ * owner request. isHttpUrl still rejects anything that isn't a valid
+ * http(s) URL once this has had a chance to add the scheme.
+ * @param {string} value
+ */
+function withAssumedScheme(value) {
+  if (!value) return value;
+  const trimmed = value.trim();
+  if (!trimmed || /^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+}
+
+/**
  * Reads the shared event fields (section 8.1) from a submitted form, used
  * by both the admin event form and the public submission form. Both take
  * local Canberra time and convert to UTC on save, section 3.4.
@@ -80,7 +94,7 @@ export function readEventFields(formData) {
     genres: formData.get('genres') || null,
     price_text: formData.get('price_text') || null,
     lineup: formData.get('lineup') || null,
-    ticket_url: formData.get('ticket_url') || null,
+    ticket_url: withAssumedScheme(formData.get('ticket_url')) || null,
     notes: formData.get('notes') || null,
     age_restriction: formData.get('age_restriction') || 'unknown',
     status: formData.get('status') || 'on',

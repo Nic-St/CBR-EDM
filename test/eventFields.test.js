@@ -29,3 +29,17 @@ test('asFormDataLike lets a plain object be read with readEventFields', () => {
   assert.equal(fields.title, 'From JSON');
   assert.equal(fields.start_at, '2026-03-14T11:00:00.000Z');
 });
+
+test('readEventFields assumes https:// for a ticket URL typed without a scheme', () => {
+  const fields = readEventFields(asFormDataLike({ ticket_url: 'cbredm.org' }));
+  assert.equal(fields.ticket_url, 'https://cbredm.org');
+});
+
+test('readEventFields leaves an explicit scheme alone, http included', () => {
+  assert.equal(readEventFields(asFormDataLike({ ticket_url: 'https://example.com' })).ticket_url, 'https://example.com');
+  assert.equal(readEventFields(asFormDataLike({ ticket_url: 'http://example.com' })).ticket_url, 'http://example.com');
+});
+
+test('readEventFields leaves an empty ticket URL as null', () => {
+  assert.equal(readEventFields(asFormDataLike({ ticket_url: '' })).ticket_url, null);
+});

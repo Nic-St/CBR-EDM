@@ -82,7 +82,9 @@ function eventFieldsMarkup(scope) {
       <label for="${scope}-${name}">${label}</label>
       ${type === 'textarea'
         ? html`<textarea id="${scope}-${name}" data-field="${name}"></textarea>`
-        : html`<input type="${type}" id="${scope}-${name}" data-field="${name}">`}
+        : type === 'url'
+          ? html`<input type="text" inputmode="url" id="${scope}-${name}" data-field="${name}">`
+          : html`<input type="${type}" id="${scope}-${name}" data-field="${name}">`}
     </div>`)}
   </div>`;
 }
