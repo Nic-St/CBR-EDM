@@ -1,0 +1,76 @@
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import { render, FLYER_ENGINE_VERSION } from '../src/flyers/index.js';
+import { resolveTemplate, TEMPLATES } from '../src/flyers/manifest.js';
+import { normaliseEvent } from '../src/flyers/normalise.js';
+import { FIXTURES, FIXTURE_NOW } from '../src/flyers/fixtures.js';
+
+const SIZE_BUDGETS = { page: 60 * 1024, scrap: 12 * 1024 };
+
+for (const [name, fixture] of Object.entries(FIXTURES)) {
+  test(`${name}: renders without throwing, on both surfaces`, () => {
+    for (const surface of ['page', 'scrap']) {
+      const result = render(fixture, { surface, now: FIXTURE_NOW });
+      assert.ok(result, `${name}/${surface} returned null`);
+    }
+  });
+
+  test(`${name}: is deterministic (byte-identical across two renders)`, () => {
+    const a = render(fixture, { surface: 'page', now: FIXTURE_NOW });
+    const b = render(fixture, { surface: 'page', now: FIXTURE_NOW });
+    assert.equal(a.svg, b.svg);
+  });
+
+  test(`${name}: stays under its surface's size budget`, () => {
+    for (const surface of ['page', 'scrap']) {
+      const result = render(fixture, { surface, now: FIXTURE_NOW });
+      const bytes = new TextEncoder().encode(result.svg).length;
+      assert.ok(bytes <= SIZE_BUDGETS[surface], `${name}/${surface} is ${bytes} bytes, over the ${SIZE_BUDGETS[surface]} budget`);
+    }
+  });
+
+  test(`${name}: produces a valid, self-contained SVG`, () => {
+    const result = render(fixture, { surface: 'page', now: FIXTURE_NOW });
+    assert.ok(result.svg.startsWith('<svg'), 'does not start with <svg');
+    assert.ok(result.svg.includes('viewBox='), 'missing viewBox');
+    assert.ok(result.svg.includes('role="img"'), 'missing role="img"');
+    assert.ok(result.svg.includes('<title>'), 'missing <title>');
+    assert.doesNotMatch(result.svg, /href\s*=\s*"https?:/i, 'contains an external href');
+    assert.doesNotMatch(result.svg, /<script/i, 'contains a <script> element');
+  });
+}
+
+test('different seed_salt values produce different output for the same event', () => {
+  const a = render({ ...FIXTURES.full, seed_salt: 0 }, { now: FIXTURE_NOW });
+  const b = render({ ...FIXTURES.full, seed_salt: 1 }, { now: FIXTURE_NOW });
+  assert.notEqual(a.svg, b.svg);
+});
+
+test('a broken template falls back to medi instead of throwing', () => {
+  const broken = { id: 'broken', name: 'broken', render: () => { throw new Error('deliberately broken'); } };
+  TEMPLATES.__broken_test_template = broken;
+  try {
+    const event = { ...FIXTURES.full, flyer_template: '__broken_test_template' };
+    const result = render(event, { now: FIXTURE_NOW });
+    assert.ok(result, 'expected a fallback render, got null');
+    assert.equal(result.templateId, 'medi');
+  } finally {
+    delete TEMPLATES.__broken_test_template;
+  }
+});
+
+test('resolveTemplate honours an explicit flyer_template over genre routing', () => {
+  const event = normaliseEvent({ ...FIXTURES.full, genres: 'dubstep' }, { now: FIXTURE_NOW });
+  const template = resolveTemplate(event, 'consignment');
+  assert.equal(template.id, 'consignment');
+});
+
+test('resolveTemplate falls back to medi when no route or explicit choice applies', () => {
+  const event = normaliseEvent({ id: 'x', genres: 'a genre nobody uses' }, { now: FIXTURE_NOW });
+  const template = resolveTemplate(event, null);
+  assert.equal(template.id, 'medi');
+});
+
+test('FLYER_ENGINE_VERSION is a semver string', () => {
+  assert.match(FLYER_ENGINE_VERSION, /^\d+\.\d+\.\d+$/);
+});

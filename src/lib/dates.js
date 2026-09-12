@@ -194,4 +194,4 @@ export function utcToCanberraLocalInput(isoUtc) {
   return `${parts.year}-${pad(parts.month)}-${pad(parts.day)}T${pad(parts.hour)}:${pad(parts.minute)}`;
 }
 
-export { WEEKDAYS_SHORT, MONTHS_SHORT };
+export { WEEKDAYS_SHORT, MONTHS_SHORT, toCanberraParts };

@@ -3,6 +3,31 @@
 All notable changes to this project are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+- Generated flyer engine, phase 2a (`PROJECT-C-EDM-FLYER-ENGINE-SPEC.md`):
+  a deterministic, seeded SVG renderer with two templates (`medi`,
+  `consignment`), the shared parts library (grain, hairline rules, a Code
+  39 barcode that actually scans, the status stamp, the site wordmark, the
+  ticket footer), font-metric-based text fitting (`scripts/build-font-metrics.js`,
+  since Workers have no `measureText`), genre-based template routing, and
+  a contact-sheet script for visual review (`scripts/flyer-contact-sheet.js`).
+  A generated flyer now fills in on the board and the event page wherever
+  there's no crew-uploaded one. Self-hosted JetBrains Mono added for the
+  engine's monospace face. `seed_salt` and `flyer_template` columns added
+  to `events` (migration 0002).
+- See "## Flyers" below for the visual-change log the engine spec asks
+  for, kept separately since visual changes aren't visible in a diff.
+
+## Flyers
+
+Every visual change to the generated flyer engine, in order. See
+`FLYER_ENGINE_VERSION` in `src/flyers/index.js`.
+
+- **0.1.0** - First version. `medi` (deep field, the default/fallback) and
+  `consignment` (shipping-label form) templates.
+
 ## [0.5.0] - 2026-09-12
 
 ### Added
