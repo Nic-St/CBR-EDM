@@ -9,10 +9,11 @@ export const config = {
 
   privacyLine: 'No tracking cookies. We count visits, not people.',
 
-  // Board column labels, section 7.1. Defaults from the spec.
+  // Board column labels, section 7.1. Defaults from the spec, "Been and
+  // gone" renamed to "Past events" per owner request.
   boardColumns: {
     upcoming: 'Coming up',
-    past: 'Been and gone',
+    past: 'Past events',
   },
 
   // Acknowledgement of Country, section 15.3. Empty string hides it entirely.
