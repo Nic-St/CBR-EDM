@@ -254,6 +254,14 @@ select:focus-visible {
   background: rgba(217, 216, 210, 0.6);
 }
 
+/* A generated flyer's inlined SVG has no width/height attribute (only a
+   viewBox), so without this it renders at the SVG default of 300x150. */
+.generated-flyer svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
 /* Status stamps: real text, not images. Section 8.2. */
 .stamp {
   display: inline-block;

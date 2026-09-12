@@ -1,7 +1,8 @@
-import { html } from '../lib/escape.js';
+import { html, raw } from '../lib/escape.js';
 import { formatEventDateTime, isEventPast } from '../lib/dates.js';
 import { stampFor, venueTextFor } from '../lib/eventDisplay.js';
 import { config } from '../config.js';
+import { render as renderFlyer } from '../flyers/index.js';
 
 /**
  * The full event page /e/:slug. Section 8.3: everything on the card, plus
@@ -19,12 +20,18 @@ export function eventPage(event, now = new Date()) {
     : (event.crew_name || event.presented_by);
   const lineupActs = (event.lineup || '').split('\n').map((line) => line.trim()).filter(Boolean);
 
+  // A crew flyer always wins if present; a generated one only fills in
+  // when there is none, section 1 of PROJECT-C-EDM-FLYER-ENGINE-SPEC.md.
+  const flyer = event.flyer_key ? null : renderFlyer(event, { surface: 'page', now });
+
   const body = html`
     <article class="scrap${isPast ? ' scrap--past' : ''}">
       <span class="scrap-tape" aria-hidden="true"></span>
       ${event.flyer_key
         ? html`<img src="/img/${event.flyer_key}" alt="Flyer for ${event.title || 'this event'}${dateText ? `, ${dateText}` : ''}${venueText ? `, ${venueText}` : ''}" width="600">`
-        : ''}
+        : flyer
+          ? html`<div class="generated-flyer">${raw(flyer.svg)}</div>`
+          : ''}
       <h1 class="scrap-title">${event.title || 'Untitled event'}</h1>
       ${presentedBy ? html`<p class="scrap-meta">${presentedBy}</p>` : ''}
       ${dateText ? html`<p class="scrap-meta">${dateText}</p>` : ''}

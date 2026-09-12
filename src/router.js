@@ -16,6 +16,7 @@ import {
 import { handleContactForm, handleContactSent, handleContactApi } from './routes/contact.js';
 import { handleCrewsDirectory, handleCrewProfile } from './routes/crews.js';
 import { handlePoster } from './routes/poster.js';
+import { handleFlyer } from './routes/flyer.js';
 import { notFound } from './lib/http.js';
 
 /**
@@ -82,6 +83,9 @@ export async function router(request, env) {
 
   const goEventId = path.match(/^\/go\/([^/]+)$/);
   if (goEventId) return handleGo(request, env, goEventId[1]);
+
+  const flyerEventId = path.match(/^\/flyer\/([^/]+)\.svg$/);
+  if (flyerEventId) return handleFlyer(request, env, flyerEventId[1]);
 
   return env.ASSETS.fetch(request).then((response) => {
     if (response.status !== 404) return response;

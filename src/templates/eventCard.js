@@ -1,7 +1,8 @@
-import { html } from '../lib/escape.js';
+import { html, raw } from '../lib/escape.js';
 import { formatEventDateTime, isEventPast } from '../lib/dates.js';
 import { stampFor, venueTextFor, lineupPreview } from '../lib/eventDisplay.js';
 import { config } from '../config.js';
+import { render as renderFlyer } from '../flyers/index.js';
 
 /**
  * Renders one event as a paper scrap, for the board and the archive.
@@ -19,12 +20,18 @@ export function eventCard(event, now = new Date()) {
     ? html`<a href="/crews/${event.crew_slug}">${event.crew_name}</a>`
     : (event.crew_name || event.presented_by);
 
+  // A crew flyer always wins if present; a generated one only fills in
+  // when there is none, section 1 of PROJECT-C-EDM-FLYER-ENGINE-SPEC.md.
+  const flyer = event.flyer_thumb_key ? null : renderFlyer(event, { surface: 'scrap', now });
+
   return html`<li>
     <article class="scrap${isPast ? ' scrap--past' : ''}">
       <span class="scrap-tape" aria-hidden="true"></span>
       ${event.flyer_thumb_key
         ? html`<img src="/img/${event.flyer_thumb_key}" alt="Flyer for ${event.title || 'this event'}" width="200" loading="lazy">`
-        : ''}
+        : flyer
+          ? html`<div class="generated-flyer">${raw(flyer.svg)}</div>`
+          : ''}
       <h3 class="scrap-title"><a href="/e/${event.slug}">${event.title || 'Untitled event'}</a></h3>
       ${presentedBy ? html`<p class="scrap-meta">${presentedBy}</p>` : ''}
       ${dateText ? html`<p class="scrap-meta">${dateText}</p>` : ''}
