@@ -78,6 +78,12 @@ All notable changes to this project are documented here. Format follows
 Every visual change to the generated flyer engine, in order. See
 `FLYER_ENGINE_VERSION` in `src/flyers/index.js`.
 
+- **0.5.3** - `contour`: the venue marker/label is now clamped into a
+  safe rectangle instead of trusting its seeded ring position. Found on
+  the cancelled fixture sitting right on top of the footer rule; digging
+  further showed the same lack of clamping let it land off-canvas
+  horizontally too, since the highlighted ring's radius can be well
+  past the canvas on any angle. Added a 40-seed regression test.
 - **0.5.2** - The wordmark now sits on the same baseline as "Look after
   each other" on every template (nine of ten; `consignment` already
   paired them). It used to sit in the true outer margin, `canvas.height

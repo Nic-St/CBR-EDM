@@ -148,6 +148,27 @@ test('consignment never lets an Archivo text node overflow the label past the ri
   }
 });
 
+test('contour never places the venue label outside the canvas or in the footer band', () => {
+  // The marker's ring radius/angle are seeded and the ring can be one of
+  // the outer ones, well past the canvas on any angle -- found sitting on
+  // the footer rule on the cancelled fixture. Try enough seeds that a
+  // regression would show up. Canvas is 1080x1350, margin 72, so
+  // canvas.right is 1008 and canvas.bottom is 1278; TICKET_FOOTER_HEIGHT
+  // is 126.
+  const footerTop = 1278 - 126;
+  for (let i = 0; i < 40; i++) {
+    const event = { ...FIXTURES.cancelled, id: `evt_venuecheck${i}`, flyer_template: 'contour' };
+    const result = render(event, { now: FIXTURE_NOW });
+    const match = result.svg.match(/<text x="(-?[\d.]+)" y="([\d.]+)" font-family="'Archivo',Arial,sans-serif" font-size="18" letter-spacing="0.1em"[^>]*>([^<]*)<\/text>/);
+    assert.ok(match, `seed ${i}: venue label text not found`);
+    const [, x, y, text] = match;
+    const textWidth = measure(text, { font: 'archivo', size: 18, letterSpacing: 1.8 });
+    assert.ok(Number(x) >= 72, `seed ${i}: venue label at x=${x} runs off the left edge`);
+    assert.ok(Number(x) + textWidth <= 1008, `seed ${i}: venue label at x=${x} (width ${textWidth.toFixed(1)}) runs off the right edge`);
+    assert.ok(Number(y) < footerTop - 20, `seed ${i}: venue label at y=${y} is inside the footer band (starts at ${footerTop})`);
+  }
+});
+
 test('halftoneField never draws riso yellow directly onto the paper field', () => {
   // Section 9: riso yellow only clears contrast as a field colour with
   // dark type on it, never as a mark on paper. Try enough seeds that a

@@ -5,8 +5,9 @@
 // event itself supplied (a real coordinate for a location-TBA event
 // would be an actual problem, not just a design one).
 
-import { ticketFooter } from '../parts/ticketFooter.js';
+import { ticketFooter, TICKET_FOOTER_HEIGHT } from '../parts/ticketFooter.js';
 import { wordmark } from '../parts/wordmark.js';
+import { measure } from '../metrics.js';
 import { escapeXml } from '../xml.js';
 import { range, pick } from '../seed.js';
 
@@ -32,6 +33,10 @@ export default {
     // be clipped out of the upper third and it read as a cut-off map
     // rather than a whole one.
     const clearZoneBottom = canvas.top + canvas.contentHeight / 3;
+    // The marker's radius is seeded and can land anywhere on its ring, so
+    // without this it could land in (or right on top of) the footer band
+    // -- owner feedback, spotted the venue label sitting on the rule.
+    const footerSafeBottom = canvas.bottom - TICKET_FOOTER_HEIGHT - 30;
 
     const parts = [];
     parts.push(`<rect x="0" y="0" width="${canvas.width}" height="${canvas.height}" fill="${palette.tonerBlack}"/>`);
@@ -67,13 +72,28 @@ export default {
     parts.push(`<g>${contourLines}</g>`);
 
     // Venue label on the highlighted contour, like a labelled spot height.
+    // The ring it sits on can be one of the outer ones (radius up to
+    // 120 + 11*90), well past the canvas on any angle, so the marker's
+    // position is clamped into a safe rectangle rather than trusted to
+    // land in frame -- it no longer sits exactly on the ring when
+    // clamped, but an off-canvas or clipped label is worse than that.
     const venueText = event.locationTba ? 'LOCATION TBA' : event.venueName;
     if (venueText) {
+      const upperVenue = venueText.toUpperCase();
+      const textWidth = measure(upperVenue, { font: 'archivo', size: 18, letterSpacing: 1.8 });
+      const markerToTextGap = 18;
+      const edgeMargin = 24;
+
       const labelAngle = range(random, 0, Math.PI * 2);
       const labelRadius = 120 + highlighted * 90;
-      const lx = cx + labelRadius * Math.cos(labelAngle);
-      const ly = cy + labelRadius * Math.sin(labelAngle);
-      const ly2 = Math.max(clearZoneBottom + 20, ly);
+      const rawX = cx + labelRadius * Math.cos(labelAngle);
+      const rawY = cy + labelRadius * Math.sin(labelAngle);
+      const lx = Math.min(
+        Math.max(rawX, canvas.left + edgeMargin),
+        canvas.right - edgeMargin - markerToTextGap - textWidth,
+      );
+      const ly2 = Math.min(Math.max(clearZoneBottom + 20, rawY), footerSafeBottom);
+
       const markerSize = 8;
       const markerShape = pick(random, ['triangle', 'cross', 'circle']);
       if (markerShape === 'circle') {
@@ -81,7 +101,7 @@ export default {
       } else {
         parts.push(`<path d="${MARKERS[markerShape](lx, ly2, markerSize)}" stroke="${palette.accent}" stroke-width="2" fill="${markerShape === 'triangle' ? palette.accent : 'none'}"/>`);
       }
-      parts.push(`<text x="${(lx + 18).toFixed(1)}" y="${(ly2 + 5).toFixed(1)}" font-family="'Archivo',Arial,sans-serif" font-size="18" letter-spacing="0.1em" fill="${palette.paper}">${escapeXml(venueText.toUpperCase())}</text>`);
+      parts.push(`<text x="${(lx + markerToTextGap).toFixed(1)}" y="${(ly2 + 5).toFixed(1)}" font-family="'Archivo',Arial,sans-serif" font-size="18" letter-spacing="0.1em" fill="${palette.paper}">${escapeXml(upperVenue)}</text>`);
     }
 
     if (event.headliner) {
