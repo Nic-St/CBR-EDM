@@ -89,6 +89,15 @@ main {
   padding: 0 1.25rem 3rem;
 }
 
+/* Every other page (submit, contact, crews, archive, event, admin...) is a
+   single narrow column -- a form, a list, one card -- with nothing to fill
+   the home page's wider 1100px, which just left it stranded against the
+   left edge with a big gap on the right. The home page manages its own
+   width above and is unaffected, since .page-home main is more specific. */
+body:not(.page-home) main {
+  max-width: 760px;
+}
+
 a {
   color: var(--paper);
 }
