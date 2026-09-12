@@ -16,7 +16,9 @@ export const config = {
   },
 
   // Acknowledgement of Country, section 15.3. Empty string hides it entirely.
-  // TBC by owner, see SPEC.md section 18.
+  // Owner has decided to omit this for now rather than guess at wording
+  // without it being checked by an Aboriginal elder first (see SPEC.md
+  // section 18). Revisit if that changes.
   ackText: '',
 
   harmReductionTitle: 'Look after each other',

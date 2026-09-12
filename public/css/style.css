@@ -42,7 +42,7 @@
   --text-small: 14px;
   --text-h3: 20px;
   --text-h2: 28px;
-  --text-h1: clamp(28px, 3.6vw, 48px);
+  --text-h1: clamp(15px, 1.7vw, 26px);
 
   /* Shape and depth */
   --radius: 0;
