@@ -200,8 +200,38 @@ test('contour draws real terrain when the event has an elevation grid, and the m
   const event = { ...FIXTURES.full, flyer_template: 'contour', elevation_grid: JSON.stringify(grid) };
   const result = render(event, { now: FIXTURE_NOW });
   // Grid centre (r=4, c=4 of 9) maps to exactly canvas centre with the
-  // template's overscanned full-bleed mapping.
-  assert.ok(result.svg.includes('cx="540.0" cy="675.0"') || result.svg.includes('M 540.0 675.0'), 'marker is not at the grid centre');
+  // template's overscanned full-bleed mapping. Marker shape is seeded
+  // (circle/triangle/cross); circle emits the centre as cx/cy, the other
+  // two as an "M x y-8" token (markerSize is a fixed 8), so check for
+  // either rather than assuming which shape this seed picks.
+  assert.ok(result.svg.includes('cx="540.0" cy="675.0"') || result.svg.includes('M 540.0 667.0'), 'marker is not at the grid centre');
+});
+
+test('contour highlights the level closest to the venue\'s own elevation, not a random one', () => {
+  // A pure north-south ramp (elevation = row only) makes every contour a
+  // perfectly horizontal line at a known y, and the venue (grid centre,
+  // row 4 of 0-8) sits at elevation 400. Levels are quantised (14-20 of
+  // them across the full range), so the highlighted one won't
+  // necessarily land exactly on the marker's y -- but it must be the
+  // closest of all of them, every time, across enough seeds that
+  // "closest" and "random" would visibly differ.
+  for (let i = 0; i < 20; i++) {
+    const grid = flatGrid(9, (r) => r * 100);
+    const event = { ...FIXTURES.full, id: `evt_elevcheck${i}`, flyer_template: 'contour', elevation_grid: JSON.stringify(grid) };
+    const result = render(event, { now: FIXTURE_NOW });
+
+    const paths = [...result.svg.matchAll(/<path d="M -?[\d.]+ (-?[\d.]+)[^"]*" fill="none" stroke="([^"]+)" stroke-width="(2\.5|1)"/g)];
+    assert.ok(paths.length > 1, `seed ${i}: expected multiple contour levels`);
+    const ys = paths.map(([, y]) => Number(y));
+    const highlightedYs = paths.filter(([, , , w]) => w === '2.5').map(([, y]) => Number(y));
+    assert.equal(highlightedYs.length, 1, `seed ${i}: expected exactly one highlighted level`);
+
+    // A tie (two levels equidistant from the venue's elevation) is
+    // possible and fine either way -- compare distances, not identity.
+    const minDist = Math.min(...ys.map((y) => Math.abs(y - 675)));
+    const highlightedDist = Math.abs(highlightedYs[0] - 675);
+    assert.ok(Math.abs(highlightedDist - minDist) < 0.5, `seed ${i}: highlighted level (y=${highlightedYs[0]}, dist ${highlightedDist.toFixed(1)}) is not the closest to the venue's elevation (closest dist is ${minDist.toFixed(1)})`);
+  }
 });
 
 test('contour falls back to the synthetic map when there is no elevation grid', () => {

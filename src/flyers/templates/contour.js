@@ -16,8 +16,8 @@ import { escapeXml } from '../xml.js';
 import { range, pick } from '../seed.js';
 
 const MARKERS = {
-  triangle: (x, y, s) => `M ${x} ${y - s} L ${x + s} ${y + s} L ${x - s} ${y + s} Z`,
-  cross: (x, y, s) => `M ${x - s} ${y} L ${x + s} ${y} M ${x} ${y - s} L ${x} ${y + s}`,
+  triangle: (x, y, s) => `M ${x.toFixed(1)} ${(y - s).toFixed(1)} L ${(x + s).toFixed(1)} ${(y + s).toFixed(1)} L ${(x - s).toFixed(1)} ${(y + s).toFixed(1)} Z`,
+  cross: (x, y, s) => `M ${(x - s).toFixed(1)} ${y.toFixed(1)} L ${(x + s).toFixed(1)} ${y.toFixed(1)} M ${x.toFixed(1)} ${(y - s).toFixed(1)} L ${x.toFixed(1)} ${(y + s).toFixed(1)}`,
   circle: null, // drawn as <circle>, not a path
 };
 
@@ -141,7 +141,17 @@ function renderRealTerrain(ctx, rawGrid) {
   });
 
   const levelCount = 14 + Math.floor(random() * 7);
-  const highlighted = Math.floor(random() * levelCount);
+
+  // The highlighted contour is the one closest to the venue's own real
+  // elevation (its exact grid centre value), not a random pick -- owner
+  // request. Thresholds run min + 1*(max-min)/(levelCount+1) up to
+  // min + levelCount*(max-min)/(levelCount+1), so inverting that for
+  // venueElevation gives the closest index directly.
+  const half = (size - 1) / 2;
+  const venueElevation = values[half * size + half];
+  const highlighted = max === min
+    ? 0
+    : Math.min(levelCount - 1, Math.max(0, Math.round(((venueElevation - min) / (max - min)) * (levelCount + 1)) - 1));
 
   let contourLines = '';
   let budget = MAX_TERRAIN_SEGMENTS;
@@ -157,7 +167,6 @@ function renderRealTerrain(ctx, rawGrid) {
     if (budget <= 0) break;
   }
 
-  const half = (size - 1) / 2;
   const marker = toScreen({ r: half, c: half });
   return { contourLines, markerX: marker.x, markerY: marker.y };
 }

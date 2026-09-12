@@ -97,6 +97,12 @@ All notable changes to this project are documented here. Format follows
 Every visual change to the generated flyer engine, in order. See
 `FLYER_ENGINE_VERSION` in `src/flyers/index.js`.
 
+- **0.6.4** - `contour`'s highlighted (accent-coloured) real-terrain
+  contour is now the level closest to the venue's own actual elevation
+  (its exact grid centre value) instead of a random pick, so the venue
+  marker now visibly sits on or right next to its own elevation band.
+  Marker paths (triangle/cross) also formatted with the same toFixed(1)
+  convention as the rest of the file.
 - **0.6.3** - `ticketFooter`'s "18+" is now right-aligned, directly
   above the wordmark, instead of sharing an evenly-spaced column layout
   with the doors/close time. Owner request.
