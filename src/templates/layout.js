@@ -1,6 +1,17 @@
 import { html, raw } from '../lib/escape.js';
 import { config } from '../config.js';
 
+function navLinks() {
+  return [
+    ['/submit', 'Put an event on the wall'],
+    ['/crews', 'Crews'],
+    ['/archive', 'Archive'],
+    ['/look-after-each-other', config.harmReductionTitle],
+    ['/contact', 'Get in touch'],
+    ['/calendar.ics', 'Subscribe to the calendar'],
+  ];
+}
+
 /**
  * The shared page shell: header with site name and slogan, footer with the
  * required links (section 6), and a slot for page content.
@@ -25,12 +36,7 @@ export function layout({ title, bodyContent, extraHead = '', bodyClass = '' }) {
     </div>
     <nav aria-label="Main">
       <ul class="site-nav">
-        <li><a href="/submit">Put an event on the wall</a></li>
-        <li><a href="/crews">Crews</a></li>
-        <li><a href="/archive">Archive</a></li>
-        <li><a href="/look-after-each-other">${config.harmReductionTitle}</a></li>
-        <li><a href="/contact">Get in touch</a></li>
-        <li><a href="/calendar.ics">Subscribe to the calendar</a></li>
+        ${navLinks().map(([href, label]) => html`<li><a href="${href}">${label}</a></li>`)}
       </ul>
     </nav>
   </header>
@@ -51,11 +57,7 @@ export function layout({ title, bodyContent, extraHead = '', bodyClass = '' }) {
 function siteFooter() {
   return html`<footer class="site-footer">
     <ul class="site-nav">
-      <li><a href="/crews">Crews</a></li>
-      <li><a href="/look-after-each-other">${config.harmReductionTitle}</a></li>
-      <li><a href="/contact">Get in touch</a></li>
-      <li><a href="/submit">Put an event on the wall</a></li>
-      <li><a href="/calendar.ics">Subscribe to the calendar</a></li>
+      ${navLinks().map(([href, label]) => html`<li><a href="${href}">${label}</a></li>`)}
     </ul>
     <p>${config.privacyLine}</p>
     ${config.ackText ? html`<p>${config.ackText}</p>` : ''}

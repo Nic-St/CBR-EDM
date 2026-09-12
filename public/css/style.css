@@ -288,12 +288,16 @@ select:focus-visible {
     display: contents;
   }
 
+  /* Hero row and nav stay in column 1 (alongside the board below), so the
+     calendar can claim the whole of column 2 from the very top of the
+     page instead of just the board's row -- otherwise the top of column 2
+     sits empty above wherever the calendar starts. */
   .page-home .hero-name-row {
-    grid-column: 1 / -1;
+    grid-column: 1;
   }
 
   .page-home .site-header > nav {
-    grid-column: 1 / -1;
+    grid-column: 1;
   }
 
   .page-home .view-toggle {
@@ -307,7 +311,7 @@ select:focus-visible {
 
   .page-home [data-panel="calendar"] {
     grid-column: 2;
-    grid-row: 3;
+    grid-row: 1 / 4;
   }
 
   .page-home .site-footer {
