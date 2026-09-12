@@ -150,4 +150,7 @@ button.danger, .button.danger {
 .field-error {
   color: var(--danger);
   font-size: 14px;
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
 }

@@ -19,7 +19,7 @@ export function harmReductionPage(links) {
       if (!regionLinks.length) return '';
       return html`
         <h2>${region}</h2>
-        <ul>
+        <ul class="link-list">
           ${regionLinks.map((link) => html`<li>
             <p>${link.url ? html`<a href="${link.url}">${link.title}</a>` : link.title}</p>
             ${link.description ? html`<p>${link.description}</p>` : ''}

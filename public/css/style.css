@@ -59,6 +59,20 @@
   box-sizing: border-box;
 }
 
+/* Only .site-nav and .board-column ul had ever reset list styling, so every
+   other <ul> on the site (archive, crews, crew profiles, harm reduction,
+   the calendar's day lists) rendered with the browser's default bullets
+   and 40px indent -- and, since nothing gave their <li>s any spacing
+   either, adjacent event cards butted up against each other with no gap.
+   Resetting this globally, with a couple of small utility classes below
+   for the spacing individual lists still need, is one fix instead of
+   patching each page that happens to contain a <ul>. */
+ul, ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
 /* The native hidden attribute is meant to always mean display: none, but
    any element that also sets its own display (grid, flex...) would
    otherwise win, since author styles beat the UA stylesheet regardless of
@@ -257,12 +271,21 @@ select:focus-visible {
   text-transform: uppercase;
 }
 
-.board-column ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+/* A vertical list of event/crew scrap cards: the board columns, the
+   archive, the crews directory, a crew's own upcoming/past lists. */
+.board-column ul,
+.card-list {
   display: grid;
   gap: 1.25rem;
+}
+
+/* A plain list of links or short text entries with no card of their own
+   (archive's year index, the calendar's per-day event lists, harm
+   reduction links): needs some breathing room, just less than a card
+   list's. */
+.link-list {
+  display: grid;
+  gap: 0.5rem;
 }
 
 @media (min-width: 1024px) {

@@ -52,7 +52,7 @@ export function calendar(events, year, month, now = new Date()) {
       ? html`<div class="calendar-day-lists">
           ${Object.entries(eventsByDay).map(([dayKey, dayEvents]) => html`<div id="day-${dayKey}">
             <h3>${dayKey}</h3>
-            <ul>
+            <ul class="link-list">
               ${dayEvents.map((event) => html`<li><a href="/e/${event.slug}">${event.title || 'Untitled event'}</a></li>`)}
             </ul>
           </div>`)}

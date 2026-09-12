@@ -9,7 +9,7 @@ export function archiveIndex(years) {
   return html`
     <h1>Archive</h1>
     ${years.length
-      ? html`<ul>${years.map((year) => html`<li><a href="/archive/${year}">${year}</a></li>`)}</ul>`
+      ? html`<ul class="link-list">${years.map((year) => html`<li><a href="/archive/${year}">${year}</a></li>`)}</ul>`
       : html`<p>No past events yet.</p>`}
   `;
 }
@@ -26,7 +26,7 @@ export function archiveYear(year, events, now = new Date()) {
   return html`
     <h1>Archive: ${year}</h1>
     ${sorted.length
-      ? html`<ul>${sorted.map((event) => eventCard(event, now))}</ul>`
+      ? html`<ul class="card-list">${sorted.map((event) => eventCard(event, now))}</ul>`
       : html`<p>No events found for ${year}.</p>`}
     <p><a href="/archive">All years</a></p>
   `;

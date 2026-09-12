@@ -53,7 +53,7 @@ export function crewDashboardPage(turnstileSiteKey) {
       </div>
 
       <h2>Your events</h2>
-      <ul data-crew-event-list></ul>
+      <ul class="link-list" data-crew-event-list></ul>
 
       <h2>Add an event</h2>
       ${eventFieldsMarkup('create')}
