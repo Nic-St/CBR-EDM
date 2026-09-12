@@ -300,6 +300,14 @@ select:focus-visible {
     grid-column: 1;
   }
 
+  /* This nav has less room than on other pages (column 1 only, since
+     column 2 belongs to the calendar), so tighten it enough to keep all
+     the links on one row instead of wrapping. */
+  .page-home .site-header .site-nav {
+    gap: 0.4rem 0.9rem;
+    font-size: 0.85rem;
+  }
+
   .page-home .view-toggle {
     display: none;
   }
