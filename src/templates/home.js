@@ -47,7 +47,7 @@ export function homePage(events, calendarYear, calendarMonth, now = new Date()) 
         </div>
       </div>
       <div data-panel="calendar">
-        ${calendar(events.filter((event) => event.start_at), calendarYear, calendarMonth)}
+        ${calendar(events.filter((event) => event.start_at), calendarYear, calendarMonth, now)}
       </div>
     </div>
   `;

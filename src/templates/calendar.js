@@ -8,14 +8,16 @@ import { canberraDayKey, canberraWeekdayIndex, monthLabel, WEEKDAYS_SHORT } from
  * @param {object[]} events - published, non-removed events with a start_at
  * @param {number} year
  * @param {number} month - 1-indexed
+ * @param {Date} [now]
  */
-export function calendar(events, year, month) {
+export function calendar(events, year, month, now = new Date()) {
   const monthPrefix = `${year}-${String(month).padStart(2, '0')}`;
   const eventsInMonth = events.filter(
     (event) => event.start_at && canberraDayKey(event.start_at).startsWith(monthPrefix),
   );
   const eventsByDay = groupByDay(eventsInMonth);
-  const weeks = buildWeeks(year, month, eventsByDay);
+  const todayKey = canberraDayKey(now.toISOString());
+  const weeks = buildWeeks(year, month, eventsByDay, todayKey);
   const prev = shiftMonth(year, month, -1);
   const next = shiftMonth(year, month, 1);
 
@@ -23,10 +25,11 @@ export function calendar(events, year, month) {
     <div class="calendar">
       <nav class="calendar-nav" aria-label="Change month">
         <a href="/?month=${monthParam(prev.year, prev.month)}" aria-label="Previous month">&lt;</a>
+        <span class="calendar-nav-label">${monthLabel(year, month)}</span>
         <a href="/?month=${monthParam(next.year, next.month)}" aria-label="Next month">&gt;</a>
       </nav>
       <table>
-        <caption>${monthLabel(year, month)}</caption>
+        <caption class="sr-only">${monthLabel(year, month)}</caption>
         <thead>
           <tr>
             ${WEEKDAYS_SHORT.map((day) => html`<th scope="col">${day}</th>`)}
@@ -35,9 +38,11 @@ export function calendar(events, year, month) {
         <tbody>
           ${weeks.map((week) => html`<tr>
             ${week.map((day) => day
-              ? html`<td>${day.hasEvents
-                  ? html`<a href="#day-${day.key}" aria-label="${day.count} event${day.count === 1 ? '' : 's'} on ${day.key}">${day.dayOfMonth}</a>`
-                  : html`<span aria-hidden="true">${day.dayOfMonth}</span>`}</td>`
+              ? html`<td class="${day.isToday ? 'is-today' : ''}">${day.hasEvents
+                  ? html`<a href="#day-${day.key}" aria-label="${day.count} event${day.count === 1 ? '' : 's'} on ${day.key}${day.isToday ? ', today' : ''}" ${day.isToday ? html`aria-current="date"` : ''}>${day.dayOfMonth}</a>`
+                  : day.isToday
+                    ? html`<span aria-current="date">${day.dayOfMonth}<span class="sr-only"> (today)</span></span>`
+                    : html`<span aria-hidden="true">${day.dayOfMonth}</span>`}</td>`
               : html`<td></td>`)}
           </tr>`)}
         </tbody>
@@ -70,7 +75,7 @@ function daysInMonth(year, month) {
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
 
-function buildWeeks(year, month, eventsByDay) {
+function buildWeeks(year, month, eventsByDay, todayKey) {
   const total = daysInMonth(year, month);
   const days = [];
   for (let dayOfMonth = 1; dayOfMonth <= total; dayOfMonth++) {
@@ -78,7 +83,10 @@ function buildWeeks(year, month, eventsByDay) {
     const iso = `${key}T12:00:00Z`; // midday UTC is always the same Canberra calendar day
     const weekdayIndex = canberraWeekdayIndex(iso);
     const dayEvents = eventsByDay[key] || [];
-    days.push({ dayOfMonth, key, weekdayIndex, hasEvents: dayEvents.length > 0, count: dayEvents.length });
+    days.push({
+      dayOfMonth, key, weekdayIndex, hasEvents: dayEvents.length > 0, count: dayEvents.length,
+      isToday: key === todayKey,
+    });
   }
 
   const weeks = [];
