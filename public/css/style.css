@@ -115,6 +115,15 @@ select:focus-visible {
   margin: 0 0 0.5rem;
   text-transform: uppercase;
   letter-spacing: 0.02em;
+  display: inline-block;
+  color: inherit;
+  text-decoration: none;
+  transition: transform var(--motion-interaction);
+}
+
+.site-header .site-name:hover,
+.site-header .site-name:focus-visible {
+  transform: rotate(-1.5deg) scale(1.04);
 }
 
 .hero-name-row {

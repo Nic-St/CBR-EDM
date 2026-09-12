@@ -31,7 +31,7 @@ export function layout({ title, bodyContent, extraHead = '', bodyClass = '' }) {
 <body${bodyClass ? html` class="${bodyClass}"` : ''}>
   <header class="site-header">
     <div class="hero-name-row">
-      <p class="site-name">${config.siteName}</p>
+      <a href="/" class="site-name">${config.siteName}</a>
       <p class="slogan-strip">${config.slogan}</p>
     </div>
     <nav aria-label="Main">
