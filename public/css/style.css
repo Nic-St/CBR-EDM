@@ -309,11 +309,12 @@ select:focus-visible {
     padding: 0 1.25rem 3rem;
   }
 
-  /* Matches the site-header's own rendered height, so the calendar sticks
-     just below it rather than under it. Approximate: revisit if the
-     header's content (and so its height) changes materially. */
+  /* --header-height is set by header-height.js to the header's actual
+     rendered height, which varies with viewport width (the site name's
+     font size is a clamp()) and isn't safe to hardcode. 13rem is only
+     the no-JS fallback. */
   .page-home [data-panel="calendar"] .calendar-panel {
-    top: 13rem;
+    top: var(--header-height, 13rem);
   }
 }
 
