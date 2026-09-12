@@ -78,6 +78,10 @@ All notable changes to this project are documented here. Format follows
 Every visual change to the generated flyer engine, in order. See
 `FLYER_ENGINE_VERSION` in `src/flyers/index.js`.
 
+- **0.4.3** - `consignment`: the barcode/ID row now uses the same left
+  padding and top offset as every other row (it previously sat flush
+  against the border with no padding), and the ID text sits a wider,
+  more consistent gap below the barcode.
 - **0.4.2** - `consignment`: every header (CONSIGNOR, DATE, CONTENTS,
   DELIVER TO, WINDOW, HANDLING) now sits the same fixed distance from
   its own row's top border -- previously two different hand-tuned

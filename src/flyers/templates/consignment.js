@@ -55,7 +55,9 @@ const LABEL_CONTENT_GAP = 50;
 const ROW0_HEIGHT = 130;
 const ROW2_HEIGHT = 160;
 const ROW3_HEIGHT = 130;
-const ROW4_HEIGHT = 140;
+const ROW4_HEIGHT = 150;
+const BARCODE_HEIGHT = 60;
+const BARCODE_ID_GAP = 40;
 const CONTENTS_MIN_HEIGHT = 110;
 const CONTENTS_FIRST_LINE_OFFSET = LABEL_TOP_OFFSET + LABEL_CONTENT_GAP;
 const CONTENTS_BOTTOM_PADDING = 30;
@@ -166,13 +168,19 @@ export default {
 
     // Row 4: barcode + event ID. No barcode on the scrap surface (section
     // 4.5): it's the single most element-heavy part of this template, and
-    // the ID text alone still reads fine at thumbnail size.
-    const barcodeY = rowTops[4] + 30;
+    // the ID text alone still reads fine at thumbnail size. Left edge and
+    // top offset match every other row's (CELL_PADDING, LABEL_TOP_OFFSET)
+    // instead of sitting flush with no padding, and the ID text sits a
+    // full LABEL_CONTENT_GAP-scale gap below the barcode rather than the
+    // cramped 24px it used to.
+    const barcodeX = box.x + CELL_PADDING;
+    const barcodeY = rowTops[4] + LABEL_TOP_OFFSET;
     if (ctx.surface !== 'scrap') {
-      parts.push(barcode(ctx, { value: event.id, x: box.x, y: barcodeY, w: box.w * 0.7, h: 60 }));
-      parts.push(`<text x="${box.x}" y="${barcodeY + 84}" font-family="${LABEL_FONT}" font-size="18" letter-spacing="0.04em" fill="${palette.tonerBlack}">${escapeXml(event.id)}</text>`);
+      parts.push(barcode(ctx, { value: event.id, x: barcodeX, y: barcodeY, w: (box.w - CELL_PADDING * 2) * 0.7, h: BARCODE_HEIGHT }));
+      const idY = barcodeY + BARCODE_HEIGHT + BARCODE_ID_GAP;
+      parts.push(`<text x="${barcodeX}" y="${idY}" font-family="${LABEL_FONT}" font-size="18" letter-spacing="0.04em" fill="${palette.tonerBlack}">${escapeXml(event.id)}</text>`);
     } else {
-      parts.push(`<text x="${box.x}" y="${barcodeY + 24}" font-family="${LABEL_FONT}" font-size="18" letter-spacing="0.04em" fill="${palette.tonerBlack}">${escapeXml(event.id)}</text>`);
+      parts.push(`<text x="${barcodeX}" y="${barcodeY}" font-family="${LABEL_FONT}" font-size="18" letter-spacing="0.04em" fill="${palette.tonerBlack}">${escapeXml(event.id)}</text>`);
     }
 
     parts.push(wordmark(ctx, { x: canvas.right, y: canvas.bottom - 12, color: palette.tonerBlack }));
