@@ -225,6 +225,10 @@ select:focus-visible {
   font-weight: 800;
   font-size: var(--text-h2);
   text-transform: uppercase;
+  /* No top margin, so this lines up exactly with the top of the calendar
+     beside it on desktop (section 7.1) instead of sitting a bit lower
+     than it thanks to the default h2 margin. */
+  margin-top: 0;
 }
 
 .board-column ul {
