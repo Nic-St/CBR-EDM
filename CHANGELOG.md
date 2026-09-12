@@ -78,6 +78,13 @@ All notable changes to this project are documented here. Format follows
 Every visual change to the generated flyer engine, in order. See
 `FLYER_ENGINE_VERSION` in `src/flyers/index.js`.
 
+- **0.5.2** - The wordmark now sits on the same baseline as "Look after
+  each other" on every template (nine of ten; `consignment` already
+  paired them). It used to sit in the true outer margin, `canvas.height
+  - 20`, well below the harm reduction line -- a deliberate choice
+  early on to keep it unambiguously separate from event/crew credit,
+  but in practice it read as floating disconnected near the page edge.
+  Now both are the site's own material on one row below the rule.
 - **0.5.1** - The gap above and below the footer rule is now the same on
   both sides everywhere it appears (`ticketFooter`, `index-list`,
   `terminal`) -- it was 24px above and 54px below in `ticketFooter`,

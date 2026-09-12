@@ -77,7 +77,10 @@ export default {
     parts.push(`<rect x="${canvas.left}" y="${y}" width="${canvas.contentWidth}" height="2" fill="${palette.tonerBlack}"/>`);
     y += gap;
     parts.push(`<text x="${canvas.left}" y="${y}" font-family="'Archivo',Arial,sans-serif" font-size="14" fill="${palette.tonerBlack}" opacity="0.6">Look after each other</text>`);
-    parts.push(wordmark(ctx, { x: canvas.right, y: canvas.height - 20, color: palette.tonerBlack }));
+    // Same baseline as "Look after each other" above -- both the site's
+    // own material, so they read as one row (owner feedback: it used to
+    // float disconnected further down in the margin).
+    parts.push(wordmark(ctx, { x: canvas.right, y, color: palette.tonerBlack }));
 
     return `<g>${parts.join('')}</g>`;
   },

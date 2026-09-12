@@ -92,10 +92,11 @@ export default {
     }
 
     parts.push(ticketFooter(ctx));
-    // In the true margin below the footer band, not inside the content
-    // flow -- so it reads unambiguously as a site watermark, never as
-    // another line of event/crew credit. Owner request.
-    parts.push(wordmark(ctx, { x: canvas.right, y: canvas.height - 20 }));
+    // Same baseline as ticketFooter's "Look after each other" (canvas.bottom
+    // - 22): both are the site's own material below the rule, not the
+    // event's, so they read as one row rather than the wordmark floating
+    // disconnected further down in the margin (owner feedback).
+    parts.push(wordmark(ctx, { x: canvas.right, y: canvas.bottom - 22 }));
 
     return `<g>${parts.join('')}</g>`;
   },
