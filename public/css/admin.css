@@ -154,3 +154,13 @@ button.danger, .button.danger {
   margin: 0 0 1rem;
   padding: 0;
 }
+
+/* Generated flyer preview and compare grid, FLYER-ENGINE-SPEC.md section
+   13: the inlined SVG has no width/height attribute, only a viewBox, so
+   without this it renders at the browser's 300x150 SVG default. */
+.generated-flyer-preview svg,
+.flyer-compare-grid svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}

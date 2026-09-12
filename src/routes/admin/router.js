@@ -3,7 +3,7 @@ import { handleAdminQueue } from './queue.js';
 import {
   handleEventList, handleEventNewForm, handleEventEditForm, handleEventCreate, handleEventUpdate,
   handleEventPublish, handleEventReject, handleEventRemove, handleEventRestore, handleEventDelete,
-  handleEventReissueEditLink, handleEventRevokeEditLink,
+  handleEventReissueEditLink, handleEventRevokeEditLink, handleEventRerollFlyer, handleEventSetFlyerTemplate,
 } from './events.js';
 import { handleChangeList, handleChangeApprove, handleChangeReject } from './changes.js';
 import { handleContactMessageList, handleContactMessageMarkDone } from './contactMessages.js';
@@ -47,13 +47,14 @@ export async function adminRouter(request, env) {
   if (eventEdit && method === 'GET') return handleEventEditForm(request, env, admin, eventEdit[1]);
   if (eventEdit && method === 'POST') return handleEventUpdate(request, env, admin, eventEdit[1]);
 
-  const eventAction = path.match(/^\/admin\/events\/([^/]+)\/(publish|reject|remove|restore|delete|reissue-edit-link|revoke-edit-link)$/);
+  const eventAction = path.match(/^\/admin\/events\/([^/]+)\/(publish|reject|remove|restore|delete|reissue-edit-link|revoke-edit-link|reroll-flyer|flyer-template)$/);
   if (eventAction && method === 'POST') {
     const [, id, action] = eventAction;
     const handlers = {
       publish: handleEventPublish, reject: handleEventReject, remove: handleEventRemove,
       restore: handleEventRestore, delete: handleEventDelete,
       'reissue-edit-link': handleEventReissueEditLink, 'revoke-edit-link': handleEventRevokeEditLink,
+      'reroll-flyer': handleEventRerollFlyer, 'flyer-template': handleEventSetFlyerTemplate,
     };
     return handlers[action](request, env, admin, id);
   }

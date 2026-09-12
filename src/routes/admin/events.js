@@ -61,7 +61,9 @@ export async function handleEventNewForm(request, env, admin) {
  * GET /admin/events/:id/edit
  */
 export async function handleEventEditForm(request, env, admin, id) {
-  const event = await env.DB.prepare('SELECT * FROM events WHERE id = ?').bind(id).first();
+  const event = await env.DB.prepare(
+    'SELECT events.*, crews.name AS crew_name FROM events LEFT JOIN crews ON crews.id = events.crew_id WHERE events.id = ?',
+  ).bind(id).first();
   if (!event) return notFound();
   const crews = await getCrews(env);
   const fromEmail = new URL(request.url).searchParams.get('from_email');
@@ -189,6 +191,31 @@ export async function handleEventRevokeEditLink(request, env, admin, id) {
  * POST /admin/events/:id/delete. Section 9.4: a genuine hard delete,
  * including its R2 images.
  */
+/**
+ * POST /admin/events/:id/reroll-flyer. FLYER-ENGINE-SPEC.md section 13:
+ * the only way a generated flyer changes appearance without a data or
+ * engine change.
+ */
+export async function handleEventRerollFlyer(request, env, admin, id) {
+  const event = await env.DB.prepare('SELECT id FROM events WHERE id = ?').bind(id).first();
+  if (!event) return notFound();
+  await env.DB.prepare('UPDATE events SET seed_salt = seed_salt + 1 WHERE id = ?').bind(id).run();
+  return Response.redirect(new URL(`/admin/events/${id}/edit`, request.url), 303);
+}
+
+/**
+ * POST /admin/events/:id/flyer-template. Section 13: the admin's explicit
+ * template choice, or "Auto" (stored as null) to route by genre again.
+ */
+export async function handleEventSetFlyerTemplate(request, env, admin, id) {
+  const event = await env.DB.prepare('SELECT id FROM events WHERE id = ?').bind(id).first();
+  if (!event) return notFound();
+  const formData = await request.formData();
+  const value = formData.get('flyer_template') || null;
+  await env.DB.prepare('UPDATE events SET flyer_template = ? WHERE id = ?').bind(value, id).run();
+  return Response.redirect(new URL(`/admin/events/${id}/edit`, request.url), 303);
+}
+
 export async function handleEventDelete(request, env, admin, id) {
   const event = await env.DB.prepare('SELECT flyer_key, flyer_thumb_key FROM events WHERE id = ?').bind(id).first();
   if (!event) return notFound();
