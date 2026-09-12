@@ -26,8 +26,44 @@ const MARKERS = {
 // the grid's own size in cells, not anywhere near all of them -- this
 // cap is a safety net against a pathological dataset, not the expected
 // count, matching halftone.js's MAX_ELEMENTS approach.
-const MAX_TERRAIN_SEGMENTS = 800;
+const MAX_TERRAIN_SEGMENTS = 2400;
 const MAP_OVERSCAN = 120;
+// The geocoded grid is only 9x9 (real API points cost a request each);
+// upsampling it before tracing is what makes the lines smooth curves
+// instead of a blocky low-poly outline of the same real data, and lets
+// more contour levels read as distinct lines rather than a solid mass.
+const UPSAMPLE_FACTOR = 4;
+
+/**
+ * Bilinear upsample of a scalar grid to (size - 1) * factor + 1 per
+ * side, same physical span and exact same centre point. Doesn't invent
+ * data the samples don't support -- it's the standard way a coarse DEM
+ * is rendered as smooth contours, not an approximation of the real
+ * values, just a finer mesh through them.
+ * @param {{ size: number, values: number[] }} grid
+ * @param {number} factor
+ */
+function upsampleGrid(grid, factor) {
+  const { size, values } = grid;
+  const newSize = (size - 1) * factor + 1;
+  const at = (r, c) => values[r * size + c];
+  const newValues = new Array(newSize * newSize);
+
+  for (let nr = 0; nr < newSize; nr++) {
+    const fr = nr / factor;
+    const r0 = Math.min(size - 2, Math.floor(fr));
+    const tr = fr - r0;
+    for (let nc = 0; nc < newSize; nc++) {
+      const fc = nc / factor;
+      const c0 = Math.min(size - 2, Math.floor(fc));
+      const tc = fc - c0;
+      const top = at(r0, c0) + (at(r0, c0 + 1) - at(r0, c0)) * tc;
+      const bottom = at(r0 + 1, c0) + (at(r0 + 1, c0 + 1) - at(r0 + 1, c0)) * tc;
+      newValues[nr * newSize + nc] = top + (bottom - top) * tr;
+    }
+  }
+  return { size: newSize, values: newValues };
+}
 
 /**
  * One iso-elevation level's line segments through a scalar grid
@@ -89,8 +125,9 @@ function segmentsToPath(segments) {
  * the synthetic path uses: contourLines markup plus a marker screen
  * position (the grid's centre cell, which is exactly the geocoded venue).
  */
-function renderRealTerrain(ctx, grid) {
+function renderRealTerrain(ctx, rawGrid) {
   const { canvas, palette, random } = ctx;
+  const grid = upsampleGrid(rawGrid, UPSAMPLE_FACTOR);
   const { size, values } = grid;
   const min = Math.min(...values);
   const max = Math.max(...values);
@@ -103,7 +140,7 @@ function renderRealTerrain(ctx, grid) {
     y: -MAP_OVERSCAN + (r / (size - 1)) * (canvas.height + 2 * MAP_OVERSCAN),
   });
 
-  const levelCount = 8 + Math.floor(random() * 5);
+  const levelCount = 14 + Math.floor(random() * 7);
   const highlighted = Math.floor(random() * levelCount);
 
   let contourLines = '';

@@ -97,6 +97,13 @@ All notable changes to this project are documented here. Format follows
 Every visual change to the generated flyer engine, in order. See
 `FLYER_ENGINE_VERSION` in `src/flyers/index.js`.
 
+- **0.6.2** - `contour`'s real-terrain lines are smoother and more
+  frequent, owner request. The geocoded grid is only 9x9 (a real API
+  point costs a request each), which traced as a visibly blocky,
+  low-poly outline; it's now bilinearly upsampled 4x before tracing --
+  the standard way a coarse DEM is rendered as smooth contours, not an
+  approximation of the real values, just a finer mesh through the same
+  samples. Level count raised from 8-12 to 14-20 for a denser map.
 - **0.6.1** - Fixed a real-terrain orientation bug from 0.6.0: the
   elevation grid was built south-to-north by row, but the renderer maps
   row directly to y (top to bottom), so every real-terrain flyer was
