@@ -5,7 +5,7 @@
 
 import { grain } from '../parts/grain.js';
 import { rules } from '../parts/rules.js';
-import { ticketFooter, TICKET_FOOTER_HEIGHT } from '../parts/ticketFooter.js';
+import { ticketFooter } from '../parts/ticketFooter.js';
 import { wordmark } from '../parts/wordmark.js';
 import { fitBlock } from '../layout.js';
 import { escapeXml } from '../xml.js';
@@ -92,7 +92,10 @@ export default {
     }
 
     parts.push(ticketFooter(ctx));
-    parts.push(wordmark(ctx, { x: canvas.right, y: canvas.bottom - TICKET_FOOTER_HEIGHT - 16 }));
+    // In the true margin below the footer band, not inside the content
+    // flow -- so it reads unambiguously as a site watermark, never as
+    // another line of event/crew credit. Owner request.
+    parts.push(wordmark(ctx, { x: canvas.right, y: canvas.height - 20 }));
 
     return `<g>${parts.join('')}</g>`;
   },
