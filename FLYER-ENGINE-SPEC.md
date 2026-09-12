@@ -536,15 +536,17 @@ A scanline overlay at very low opacity. A block cursor at the end. The headliner
 
 **Suits.** outdoor, bush events, doofs, ACT-specific nights, summer
 
-**Layout.** Dark field. Contour lines generated procedurally, not traced from real elevation data, drawn as nested closed curves across the full canvas at a consistent interval. One contour, chosen by the seed, is drawn heavier and in the accent colour, and the venue or suburb name sits on it with a leader line and a small marker, like a labelled spot height. The headliner sits in a clear zone in the upper third where contours are suppressed. Details in the lower third. Footer band.
+**Layout.** Dark field. Contour lines drawn as nested curves across the full canvas at a consistent interval. One contour, chosen by the seed, is drawn heavier and in the accent colour, and the venue name sits on it with a leader line and a small marker, like a labelled spot height. The headliner sits in the upper third; details in the lower third. Footer band.
+
+Two data sources, owner request (2026-09): by default the terrain is procedural, not traced from real elevation data -- an evocation of a map, not a map. If the event has a disclosed venue that's been geocoded (an explicit admin/crew action, `src/lib/geocode.js`, never run for a `location_tba` event), the lines are instead traced (marching squares) from that venue's real elevation data (Nominatim geocoding + OpenTopoData SRTM30m, a 9x9 grid ~1.2km across, cached on the event row rather than fetched at render time), and the marker sits exactly on the real geocoded point. Falls back to the procedural version whenever there's no grid -- a failed lookup, an ungeocoded venue, or a location-TBA event.
 
 **Type.** Archivo. Small caps for the map-style labels, tracked +0.1em, which is the convention on real topographic maps.
 
-**Seeded variation.** Terrain shape. Contour interval and count. Which contour is highlighted. Marker style: triangle, cross or circle. Whether a hairline grid with coordinate ticks is present.
+**Seeded variation.** Procedural mode: terrain shape, contour interval and count, which contour is highlighted, marker style. Real-terrain mode: contour count and which contour is highlighted only -- the shape comes from the actual data.
 
 **Sparse data.** Fine.
 
-**Failure modes.** Do not use real coordinates, real elevations or real place data beyond the venue name the event supplied. It is an evocation of a map, not a map. Real coordinates for a location-TBA event would be an actual problem.
+**Failure modes.** The procedural mode must never use real coordinates, real elevations or real place data beyond the venue name the event supplied. Real-terrain mode is opt-in and only ever for a disclosed venue -- real coordinates or elevation data for a location-TBA event would be an actual problem, enforced independently in both `src/lib/geocode.js` (never called) and `normaliseEvent` (never exposes a stored grid to the template even if one somehow existed).
 
 ---
 

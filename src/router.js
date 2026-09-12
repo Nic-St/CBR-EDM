@@ -13,6 +13,7 @@ import {
   handleCrewPage, handleCrewLogin, handleCrewEventList, handleCrewEventCreate,
   handleCrewEventUpdate, handleCrewEventStatus, handleCrewEventUnpublish, handleCrewProfileUpdate,
   handleCrewEventFlyer, handleCrewEventFlyerTemplate, handleCrewEventRerollFlyer, handleCrewFlyerPreview,
+  handleCrewEventFetchTerrain,
 } from './routes/crew.js';
 import { handleContactForm, handleContactSent, handleContactApi } from './routes/contact.js';
 import { handleCrewsDirectory, handleCrewProfile } from './routes/crews.js';
@@ -57,12 +58,13 @@ export async function router(request, env) {
   if (path === '/api/crew/profile' && method === 'POST') return handleCrewProfileUpdate(request, env);
   if (path === '/api/crew/flyer-preview' && method === 'POST') return handleCrewFlyerPreview(request, env);
 
-  const crewEventAction = path.match(/^\/api\/crew\/events\/([^/]+)\/(update|status|unpublish|flyer|flyer-template|reroll-flyer)$/);
+  const crewEventAction = path.match(/^\/api\/crew\/events\/([^/]+)\/(update|status|unpublish|flyer|flyer-template|reroll-flyer|fetch-terrain)$/);
   if (crewEventAction && method === 'POST') {
     const [, id, action] = crewEventAction;
     const handlers = {
       update: handleCrewEventUpdate, status: handleCrewEventStatus, unpublish: handleCrewEventUnpublish,
       flyer: handleCrewEventFlyer, 'flyer-template': handleCrewEventFlyerTemplate, 'reroll-flyer': handleCrewEventRerollFlyer,
+      'fetch-terrain': handleCrewEventFetchTerrain,
     };
     return handlers[action](request, env, id);
   }

@@ -106,6 +106,14 @@
       if (payload.current === t.id) opt.selected = true;
       select.appendChild(opt);
     });
+
+    var terrainBtn = area.querySelector('[data-crew-flyer-fetch-terrain]');
+    if (terrainBtn) {
+      terrainBtn.hidden = !payload.canFetchTerrain;
+      terrainBtn.textContent = payload.terrainFetched
+        ? 'Re-fetch real terrain (for the contour map template)'
+        : 'Fetch real terrain (for the contour map template)';
+    }
   }
 
   function loadFlyer(id) {
@@ -263,6 +271,21 @@
       }
     });
   });
+
+  var editFetchTerrainBtn = editFlyerArea.querySelector('[data-crew-flyer-fetch-terrain]');
+  if (editFetchTerrainBtn) {
+    editFetchTerrainBtn.addEventListener('click', function () {
+      editFlyerStatus.textContent = 'Fetching real terrain (this can take a few seconds)...';
+      api('/api/crew/events/' + currentEditId + '/fetch-terrain', {}).then(function (result) {
+        if (result.ok) {
+          renderFlyerInto(editFlyerArea, editFlyerPreview, editFlyerSelect, result);
+          editFlyerStatus.textContent = 'Fetched.';
+        } else {
+          editFlyerStatus.textContent = result.error || 'Could not fetch real terrain.';
+        }
+      });
+    });
+  }
 
   editArea.querySelector('[data-crew-unpublish]').addEventListener('click', function () {
     if (!window.confirm('Unpublish this event? It will disappear from the site immediately.')) return;

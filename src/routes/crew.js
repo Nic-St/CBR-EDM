@@ -11,6 +11,7 @@ import { render } from '../flyers/index.js';
 import { resolveTemplate, TEMPLATES } from '../flyers/manifest.js';
 import { normaliseEvent } from '../flyers/normalise.js';
 import { freezeFlyerTemplate } from './admin/events.js';
+import { fetchRealTerrain } from '../lib/geocode.js';
 
 const TURNSTILE_SCRIPT = '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>';
 const NO_STORE_HEADERS = { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' };
@@ -211,6 +212,10 @@ function flyerPayload(event) {
     auto: { id: auto.id, name: auto.name },
     templates: Object.entries(TEMPLATES).map(([id, t]) => ({ id, name: t.name, blurb: t.blurb })),
     svg: result ? result.svg : null,
+    // The contour template's real terrain, owner request: only offered
+    // for a disclosed venue, same rule the template itself follows.
+    canFetchTerrain: !event.location_tba && Boolean(event.venue_name || event.venue_address),
+    terrainFetched: Boolean(event.elevation_grid),
   };
 }
 
@@ -265,6 +270,31 @@ export async function handleCrewEventRerollFlyer(request, env, id) {
   await env.DB.prepare('UPDATE events SET seed_salt = ? WHERE id = ?').bind(nextSalt, id).run();
 
   return jsonResponse(flyerPayload({ ...event, seed_salt: nextSalt }));
+}
+
+/**
+ * POST /api/crew/events/:id/fetch-terrain. Geocodes the venue and fetches
+ * its real elevation grid once, for the contour template. Never for a
+ * location_tba event. Best-effort: fetchRealTerrain never throws, a
+ * failed lookup just leaves the columns as they were.
+ */
+export async function handleCrewEventFetchTerrain(request, env, id) {
+  const body = await readJson(request);
+  const crew = await requireCrew(request, env, body);
+  if (!crew) return jsonResponse({ ok: false, error: 'Not signed in.' }, 401);
+
+  const event = await ownedEvent(env, crew, id);
+  if (!event) return jsonResponse({ ok: false, error: 'Event not found.' }, 404);
+  if (event.location_tba) return jsonResponse({ ok: false, error: 'Location is TBA for this event.' }, 400);
+
+  const terrain = await fetchRealTerrain(event.venue_name, event.venue_address);
+  if (!terrain) return jsonResponse({ ok: false, error: 'Could not find that venue. Try a more specific address.' }, 422);
+
+  const gridJson = JSON.stringify(terrain.grid);
+  await env.DB.prepare('UPDATE events SET venue_lat = ?, venue_lng = ?, elevation_grid = ? WHERE id = ?')
+    .bind(terrain.lat, terrain.lng, gridJson, id).run();
+
+  return jsonResponse(flyerPayload({ ...event, elevation_grid: gridJson }));
 }
 
 export async function handleCrewEventUpdate(request, env, id) {

@@ -33,6 +33,26 @@ function actsFor(lineup) {
 }
 
 /**
+ * The contour template's real-world terrain (section 7, owner request):
+ * only ever surfaced for a disclosed venue, never a location_tba event --
+ * defence in depth, since fetchRealTerrain (src/lib/geocode.js) is also
+ * never called for one. Returns null on any parse failure, same as a
+ * field that was never fetched.
+ * @param {string|null} json
+ * @param {boolean} locationTba
+ */
+function elevationGridFor(json, locationTba) {
+  if (!json || locationTba) return null;
+  try {
+    const parsed = JSON.parse(json);
+    if (!parsed || !Array.isArray(parsed.values) || !parsed.size) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * @param {string|null} genres - free text, comma/slash separated
  */
 function genresFor(genres) {
@@ -110,6 +130,7 @@ export function normaliseEvent(event, options = {}) {
     ageRestriction: event.age_restriction === '18+' ? '18+' : null,
     status: statusFor(event, now),
     surface: options.surface || 'page',
+    elevationGrid: elevationGridFor(event.elevation_grid, Boolean(event.location_tba)),
   };
 }
 
@@ -125,6 +146,7 @@ export function flyerDataHash(event) {
     event.venue_name, event.location_tba, event.location_reveal_at, event.location_how_to_find,
     event.genres, event.age_restriction, event.status,
     event.location_revealed_at, event.crew_name, event.flyer_template, event.seed_salt,
+    event.elevation_grid,
   ].map((v) => (v === null || v === undefined ? '' : String(v))).join('|');
 
   let hash = 0x811c9dc5;

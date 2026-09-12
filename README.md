@@ -158,6 +158,17 @@ it's per data centre, not global, so a visitor hitting a colo for the
 first time still triggers one render there. Our SVGs are a few KB, well
 under any size ceiling Cache API entries have.
 
+**Real terrain for the contour flyer template.** `src/lib/geocode.js`
+calls two free, no-key external services, once per explicit "Fetch real
+terrain" action (admin or crew), never on a schedule or automatically on
+save: [Nominatim](https://nominatim.org/) (OpenStreetMap) for geocoding,
+and [OpenTopoData](https://www.opentopodata.org/)'s public `srtm30m`
+endpoint for elevation. At this project's scale (a handful of lookups a
+month) both are well within their public usage policies, but both are
+community-run with no uptime guarantee -- a failed lookup just leaves
+the event on the procedural contour map, the same as if it were never
+attempted. Never called for a `location_tba` event.
+
 ## Repo layout
 
 See [SPEC.md](./SPEC.md) section 3.6 for the intended layout. In short:

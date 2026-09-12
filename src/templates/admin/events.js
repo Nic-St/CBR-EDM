@@ -199,6 +199,14 @@ function generatedFlyerSection(event) {
       <button type="submit" class="secondary">Reroll (new random variation)</button>
     </form>
 
+    ${!event.location_tba && (event.venue_name || event.venue_address)
+      ? html`<form method="post" action="/admin/events/${event.id}/fetch-terrain">
+          <p class="muted">The contour map template can draw this venue's real terrain instead of a procedural one.</p>
+          <button type="submit" class="secondary">${event.elevation_grid ? 'Re-fetch real terrain' : 'Fetch real terrain'}</button>
+          ${event.elevation_grid ? html`<span class="muted"> Fetched.</span>` : ''}
+        </form>`
+      : ''}
+
     <h3>Compare all templates</h3>
     <div class="flyer-compare-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem;">
       ${Object.values(TEMPLATES).map((t) => {

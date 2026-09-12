@@ -18,6 +18,25 @@ All notable changes to this project are documented here. Format follows
   default; there is no flyer print download.
 
 ### Added
+- Real terrain for the `contour` flyer template, owner request: "the
+  contour map [should] generate based off the real world location of
+  the event." Coarse/regional but as close as realistically possible
+  for a disclosed venue, geocoded at save-time (an explicit action, not
+  automatic on every save, since flyer rendering must stay synchronous)
+  rather than fetched live at render time. `src/lib/geocode.js` geocodes
+  the venue via Nominatim and fetches a 9x9 real elevation grid
+  (~1.2km across, 150m spacing) via OpenTopoData's `srtm30m` dataset,
+  cached on the event row (`venue_lat`, `venue_lng`, `elevation_grid`,
+  migration 0004). `contour` traces real contour lines from that grid
+  via marching squares when it's present, with the venue marker sitting
+  exactly on the real geocoded point, falling back to the fully
+  procedural version whenever there's no grid. Never attempted, and
+  never exposed to the template even if a grid somehow existed on the
+  row, for a `location_tba` event -- enforced independently in
+  `geocode.js` (never called) and `normaliseEvent` (never surfaced) --
+  the spec's own rule that a location-TBA event's real coordinates
+  would be an actual problem, not just a design one, still holds.
+  New admin and crew actions ("Fetch real terrain") trigger it.
 - Generated flyer engine, phase 2a (`FLYER-ENGINE-SPEC.md`): a
   deterministic, seeded SVG renderer with two templates (`medi`,
   `consignment`), the shared parts library (grain, hairline rules, a Code
@@ -78,6 +97,9 @@ All notable changes to this project are documented here. Format follows
 Every visual change to the generated flyer engine, in order. See
 `FLYER_ENGINE_VERSION` in `src/flyers/index.js`.
 
+- **0.6.0** - `contour` draws real, marching-squares-traced contour
+  lines from a geocoded venue's actual elevation data when available,
+  instead of the fully procedural version.
 - **0.5.3** - `contour`: the venue marker/label is now clamped into a
   safe rectangle instead of trusting its seeded ring position. Found on
   the cancelled fixture sitting right on top of the footer rule; digging

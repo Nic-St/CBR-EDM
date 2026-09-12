@@ -97,6 +97,9 @@ function flyerPickerMarkup(scope, { withReroll }) {
       <select id="${scope}-flyer-template" data-crew-flyer-template></select>
     </div>
     ${withReroll ? html`<button type="button" data-crew-flyer-reroll class="secondary">Reroll (new random variation)</button>` : ''}
+    ${withReroll
+      ? html`<button type="button" data-crew-flyer-fetch-terrain class="secondary" hidden>Fetch real terrain (for the contour map template)</button>`
+      : ''}
     <p data-crew-flyer-status role="status"></p>
   </div>`;
 }

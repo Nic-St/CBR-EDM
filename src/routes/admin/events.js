@@ -7,6 +7,7 @@ import { generateToken, hashToken } from '../../lib/tokens.js';
 import { notFound } from '../../lib/http.js';
 import { resolveTemplate } from '../../flyers/manifest.js';
 import { normaliseEvent } from '../../flyers/normalise.js';
+import { fetchRealTerrain } from '../../lib/geocode.js';
 
 function page(admin, title, body) {
   return new Response(String(adminLayout({ title, bodyContent: body, email: admin.email })), {
@@ -230,6 +231,28 @@ export async function handleEventRerollFlyer(request, env, admin, id) {
   const event = await env.DB.prepare('SELECT id FROM events WHERE id = ?').bind(id).first();
   if (!event) return notFound();
   await env.DB.prepare('UPDATE events SET seed_salt = seed_salt + 1 WHERE id = ?').bind(id).run();
+  return Response.redirect(new URL(`/admin/events/${id}/edit`, request.url), 303);
+}
+
+/**
+ * POST /admin/events/:id/fetch-terrain. The contour template's real
+ * terrain (owner request): geocodes the venue and fetches its real
+ * elevation grid once, an explicit action rather than something that
+ * runs on every save. Never for a location_tba event -- the same rule
+ * the template itself follows. Best-effort: fetchRealTerrain never
+ * throws, so a failed lookup just leaves the columns as they were.
+ */
+export async function handleEventFetchTerrain(request, env, admin, id) {
+  const event = await env.DB.prepare('SELECT id, venue_name, venue_address, location_tba FROM events WHERE id = ?').bind(id).first();
+  if (!event) return notFound();
+  if (event.location_tba) return Response.redirect(new URL(`/admin/events/${id}/edit`, request.url), 303);
+
+  const terrain = await fetchRealTerrain(event.venue_name, event.venue_address);
+  if (terrain) {
+    await env.DB.prepare('UPDATE events SET venue_lat = ?, venue_lng = ?, elevation_grid = ? WHERE id = ?')
+      .bind(terrain.lat, terrain.lng, JSON.stringify(terrain.grid), id).run();
+  }
+
   return Response.redirect(new URL(`/admin/events/${id}/edit`, request.url), 303);
 }
 

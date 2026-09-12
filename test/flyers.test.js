@@ -169,6 +169,57 @@ test('contour never places the venue label outside the canvas or in the footer b
   }
 });
 
+function flatGrid(size, fn) {
+  const values = [];
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) values.push(fn(r, c));
+  }
+  return { size, spacingMeters: 150, values };
+}
+
+test('normaliseEvent never exposes an elevation grid for a location_tba event', () => {
+  const grid = flatGrid(9, () => 500);
+  const event = normaliseEvent({ ...FIXTURES.tba, elevation_grid: JSON.stringify(grid) }, { now: FIXTURE_NOW });
+  assert.equal(event.elevationGrid, null);
+});
+
+test('normaliseEvent exposes a valid elevation grid for a disclosed venue', () => {
+  const grid = flatGrid(9, (r, c) => 500 + r + c);
+  const event = normaliseEvent({ ...FIXTURES.full, elevation_grid: JSON.stringify(grid) }, { now: FIXTURE_NOW });
+  assert.equal(event.elevationGrid.size, 9);
+  assert.equal(event.elevationGrid.values.length, 81);
+});
+
+test('normaliseEvent falls back to null on malformed elevation_grid JSON', () => {
+  const event = normaliseEvent({ ...FIXTURES.full, elevation_grid: 'not json' }, { now: FIXTURE_NOW });
+  assert.equal(event.elevationGrid, null);
+});
+
+test('contour draws real terrain when the event has an elevation grid, and the marker sits at the grid centre', () => {
+  const grid = flatGrid(9, (r, c) => 500 + Math.sin(r) * 40 + Math.cos(c) * 40);
+  const event = { ...FIXTURES.full, flyer_template: 'contour', elevation_grid: JSON.stringify(grid) };
+  const result = render(event, { now: FIXTURE_NOW });
+  // Grid centre (r=4, c=4 of 9) maps to exactly canvas centre with the
+  // template's overscanned full-bleed mapping.
+  assert.ok(result.svg.includes('cx="540.0" cy="675.0"') || result.svg.includes('M 540.0 675.0'), 'marker is not at the grid centre');
+});
+
+test('contour falls back to the synthetic map when there is no elevation grid', () => {
+  const event = { ...FIXTURES.full, flyer_template: 'contour', elevation_grid: null };
+  const result = render(event, { now: FIXTURE_NOW });
+  assert.ok(result.svg.startsWith('<svg'));
+});
+
+test('contour caps real-terrain segments on a pathological checkerboard grid', () => {
+  // Alternating high/low values cross a threshold in almost every cell,
+  // the worst case for marching squares' segment count.
+  const grid = flatGrid(9, (r, c) => ((r + c) % 2 === 0 ? 0 : 1000));
+  const event = { ...FIXTURES.full, flyer_template: 'contour', elevation_grid: JSON.stringify(grid) };
+  const result = render(event, { surface: 'page', now: FIXTURE_NOW });
+  const bytes = new TextEncoder().encode(result.svg).length;
+  assert.ok(bytes <= SIZE_BUDGETS.page, `checkerboard terrain produced ${bytes} bytes, over budget`);
+});
+
 test('halftoneField never draws riso yellow directly onto the paper field', () => {
   // Section 9: riso yellow only clears contrast as a field colour with
   // dark type on it, never as a mark on paper. Try enough seeds that a
