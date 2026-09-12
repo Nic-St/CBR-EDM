@@ -12,7 +12,7 @@ import { handleEditPage, handleEditLoad, handleEditUpdate, handleEditCancel, han
 import {
   handleCrewPage, handleCrewLogin, handleCrewEventList, handleCrewEventCreate,
   handleCrewEventUpdate, handleCrewEventStatus, handleCrewEventUnpublish, handleCrewProfileUpdate,
-  handleCrewEventFlyer, handleCrewEventFlyerTemplate, handleCrewEventRerollFlyer,
+  handleCrewEventFlyer, handleCrewEventFlyerTemplate, handleCrewEventRerollFlyer, handleCrewFlyerPreview,
 } from './routes/crew.js';
 import { handleContactForm, handleContactSent, handleContactApi } from './routes/contact.js';
 import { handleCrewsDirectory, handleCrewProfile } from './routes/crews.js';
@@ -55,6 +55,7 @@ export async function router(request, env) {
   if (path === '/api/crew/events/list' && method === 'POST') return handleCrewEventList(request, env);
   if (path === '/api/crew/events/create' && method === 'POST') return handleCrewEventCreate(request, env);
   if (path === '/api/crew/profile' && method === 'POST') return handleCrewProfileUpdate(request, env);
+  if (path === '/api/crew/flyer-preview' && method === 'POST') return handleCrewFlyerPreview(request, env);
 
   const crewEventAction = path.match(/^\/api\/crew\/events\/([^/]+)\/(update|status|unpublish|flyer|flyer-template|reroll-flyer)$/);
   if (crewEventAction && method === 'POST') {

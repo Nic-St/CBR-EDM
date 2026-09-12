@@ -12,10 +12,16 @@
   var createStatus = crewArea.querySelector('[data-crew-create-status]');
   var editArea = document.querySelector('[data-crew-edit]');
   var editStatus = editArea.querySelector('[data-crew-edit-status]');
-  var flyerArea = editArea.querySelector('[data-crew-flyer]');
-  var flyerPreview = flyerArea.querySelector('[data-crew-flyer-preview]');
-  var flyerSelect = flyerArea.querySelector('[data-crew-flyer-template]');
-  var flyerStatus = flyerArea.querySelector('[data-crew-flyer-status]');
+
+  var editFlyerArea = editArea.querySelector('[data-crew-flyer][data-scope="edit"]');
+  var editFlyerPreview = editFlyerArea.querySelector('[data-crew-flyer-preview]');
+  var editFlyerSelect = editFlyerArea.querySelector('[data-crew-flyer-template]');
+  var editFlyerStatus = editFlyerArea.querySelector('[data-crew-flyer-status]');
+
+  var createFlyerArea = crewArea.querySelector('[data-crew-flyer][data-scope="create"]');
+  var createFlyerPreview = createFlyerArea.querySelector('[data-crew-flyer-preview]');
+  var createFlyerSelect = createFlyerArea.querySelector('[data-crew-flyer-template]');
+  var createFlyerStatus = createFlyerArea.querySelector('[data-crew-flyer-status]');
 
   var FIELD_NAMES = ['title', 'start_at_local', 'end_at_local', 'venue_name', 'venue_address',
     'genres', 'lineup', 'ticket_url', 'notes'];
@@ -62,7 +68,7 @@
         setScopedFields('edit', event);
         editArea.hidden = false;
         editStatus.textContent = '';
-        flyerStatus.textContent = '';
+        editFlyerStatus.textContent = '';
         loadFlyer(event.id);
         editArea.scrollIntoView({ behavior: 'smooth' });
       });
@@ -78,35 +84,58 @@
     return 'data:image/svg+xml,' + encodeURIComponent(svg);
   }
 
-  function renderFlyer(payload) {
+  function renderFlyerInto(area, preview, select, payload) {
     if (!payload.svg) {
-      flyerArea.hidden = true;
+      area.hidden = true;
       return;
     }
-    flyerArea.hidden = false;
-    flyerPreview.src = svgDataUri(payload.svg);
+    area.hidden = false;
+    preview.src = svgDataUri(payload.svg);
 
-    flyerSelect.textContent = '';
+    select.textContent = '';
     var autoOption = document.createElement('option');
     autoOption.value = '';
     autoOption.textContent = 'Auto (by genre) -- currently ' + payload.auto.name;
     if (!payload.current) autoOption.selected = true;
-    flyerSelect.appendChild(autoOption);
+    select.appendChild(autoOption);
 
     payload.templates.forEach(function (t) {
       var opt = document.createElement('option');
       opt.value = t.id;
       opt.textContent = t.name + ': ' + t.blurb;
       if (payload.current === t.id) opt.selected = true;
-      flyerSelect.appendChild(opt);
+      select.appendChild(opt);
     });
   }
 
   function loadFlyer(id) {
     api('/api/crew/events/' + id + '/flyer', {}).then(function (result) {
-      if (result.ok) renderFlyer(result);
+      if (result.ok) renderFlyerInto(editFlyerArea, editFlyerPreview, editFlyerSelect, result);
     });
   }
+
+  // The "Add an event" form has no saved row yet, so there's nothing to
+  // own or reroll -- just a live preview built from whatever's typed so
+  // far, refreshed on a short debounce rather than on every keystroke.
+  var createPreviewTimer = null;
+
+  function refreshCreatePreview() {
+    var fields = scopedFields('create');
+    fields.flyer_template = createFlyerSelect.value;
+    api('/api/crew/flyer-preview', fields).then(function (result) {
+      if (result.ok) renderFlyerInto(createFlyerArea, createFlyerPreview, createFlyerSelect, result);
+    });
+  }
+
+  function scheduleCreatePreview() {
+    if (createPreviewTimer) clearTimeout(createPreviewTimer);
+    createPreviewTimer = setTimeout(refreshCreatePreview, 400);
+  }
+
+  document.querySelectorAll('[data-scope="create"] [data-field]').forEach(function (el) {
+    el.addEventListener('input', scheduleCreatePreview);
+  });
+  createFlyerSelect.addEventListener('change', refreshCreatePreview);
 
   var profileSection = crewArea.querySelector('[data-crew-profile]');
   var profileStatus = crewArea.querySelector('[data-crew-profile-status]');
@@ -118,6 +147,7 @@
     api('/api/crew/events/list', {}).then(function (result) {
       if (result.ok) renderEventList(result.events);
     });
+    refreshCreatePreview();
 
     if (crew.trusted) {
       profileSection.hidden = false;
@@ -177,7 +207,9 @@
 
   crewArea.querySelector('[data-crew-create]').addEventListener('click', function () {
     createStatus.textContent = 'Saving...';
-    api('/api/crew/events/create', scopedFields('create')).then(function (result) {
+    var fields = scopedFields('create');
+    fields.flyer_template = createFlyerSelect.value;
+    api('/api/crew/events/create', fields).then(function (result) {
       createStatus.textContent = result.ok
         ? (result.published ? 'Published.' : 'Submitted for admin approval.')
         : (result.error || 'Could not create that event.');
@@ -208,26 +240,26 @@
     });
   });
 
-  flyerSelect.addEventListener('change', function () {
-    flyerStatus.textContent = 'Saving...';
-    api('/api/crew/events/' + currentEditId + '/flyer-template', { template: flyerSelect.value }).then(function (result) {
+  editFlyerSelect.addEventListener('change', function () {
+    editFlyerStatus.textContent = 'Saving...';
+    api('/api/crew/events/' + currentEditId + '/flyer-template', { template: editFlyerSelect.value }).then(function (result) {
       if (result.ok) {
-        renderFlyer(result);
-        flyerStatus.textContent = 'Saved.';
+        renderFlyerInto(editFlyerArea, editFlyerPreview, editFlyerSelect, result);
+        editFlyerStatus.textContent = 'Saved.';
       } else {
-        flyerStatus.textContent = result.error || 'Could not save.';
+        editFlyerStatus.textContent = result.error || 'Could not save.';
       }
     });
   });
 
-  flyerArea.querySelector('[data-crew-flyer-reroll]').addEventListener('click', function () {
-    flyerStatus.textContent = 'Rerolling...';
+  editFlyerArea.querySelector('[data-crew-flyer-reroll]').addEventListener('click', function () {
+    editFlyerStatus.textContent = 'Rerolling...';
     api('/api/crew/events/' + currentEditId + '/reroll-flyer', {}).then(function (result) {
       if (result.ok) {
-        renderFlyer(result);
-        flyerStatus.textContent = 'Rerolled.';
+        renderFlyerInto(editFlyerArea, editFlyerPreview, editFlyerSelect, result);
+        editFlyerStatus.textContent = 'Rerolled.';
       } else {
-        flyerStatus.textContent = result.error || 'Could not reroll.';
+        editFlyerStatus.textContent = result.error || 'Could not reroll.';
       }
     });
   });

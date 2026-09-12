@@ -10,6 +10,7 @@ import { sendAdminAlert } from '../lib/email.js';
 import { render } from '../flyers/index.js';
 import { resolveTemplate, TEMPLATES } from '../flyers/manifest.js';
 import { normaliseEvent } from '../flyers/normalise.js';
+import { freezeFlyerTemplate } from './admin/events.js';
 
 const TURNSTILE_SCRIPT = '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>';
 const NO_STORE_HEADERS = { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' };
@@ -121,6 +122,7 @@ export async function handleCrewEventCreate(request, env) {
   const errors = validateEventFields(fields);
   if (errors.length) return jsonResponse({ ok: false, error: errors[0] }, 400);
 
+  const flyerTemplate = TEMPLATES[body.flyer_template] ? body.flyer_template : null;
   const willPublish = Boolean(crew.trusted && fields.title && fields.start_at);
   const now = new Date().toISOString();
   const id = generateId('evt');
@@ -129,13 +131,24 @@ export async function handleCrewEventCreate(request, env) {
   await env.DB.prepare(
     `INSERT INTO events (id, slug, title, crew_id, start_at, end_at, venue_name, venue_address, genres,
        lineup, ticket_url, notes, age_restriction, status, visibility, source, sequence,
-       created_at, updated_at, published_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'on', ?, 'crew', ?, ?, ?, ?)`,
+       created_at, updated_at, published_at, flyer_template)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'on', ?, 'crew', ?, ?, ?, ?, ?)`,
   ).bind(
     id, slug, fields.title, crew.id, fields.start_at, fields.end_at, fields.venue_name, fields.venue_address,
     fields.genres, fields.lineup, fields.ticket_url, fields.notes, fields.age_restriction,
-    willPublish ? 'published' : 'pending', willPublish ? 1 : 0, now, now, willPublish ? now : null,
+    willPublish ? 'published' : 'pending', willPublish ? 1 : 0, now, now, willPublish ? now : null, flyerTemplate,
   ).run();
+
+  // FLYER-ENGINE-SPEC.md section 8: a trusted crew publishing straight
+  // from creation skips the admin publish handler entirely, so the
+  // anti-repetition freeze has to run here too -- it only acts when
+  // there's no explicit flyer_template, so a crew's own pick (above)
+  // always wins over it.
+  if (willPublish) {
+    await freezeFlyerTemplate(env, { id, title: fields.title, genres: fields.genres, lineup: fields.lineup,
+      start_at: fields.start_at, end_at: fields.end_at, venue_name: fields.venue_name,
+      age_restriction: fields.age_restriction, status: fields.status, flyer_template: flyerTemplate });
+  }
 
   await sendAdminAlert(env, {
     subject: `Crew ${willPublish ? 'publish' : 'submission'}: ${fields.title || 'untitled'}`,
@@ -144,6 +157,32 @@ export async function handleCrewEventCreate(request, env) {
   });
 
   return jsonResponse({ ok: true, published: willPublish });
+}
+
+/**
+ * POST /api/crew/flyer-preview. A live preview for the "Add an event" form,
+ * before the event has been saved -- so there's no owned row to check,
+ * just the crew's own key and whatever they've typed so far. The preview
+ * id is stable per crew (not random per request) so the seed stays put
+ * while they're iterating on the same draft; it has no bearing on the
+ * real event's id or its own seed once actually created.
+ */
+export async function handleCrewFlyerPreview(request, env) {
+  const body = await readJson(request);
+  const crew = await requireCrew(request, env, body);
+  if (!crew) return jsonResponse({ ok: false, error: 'Not signed in.' }, 401);
+
+  const fields = readEventFields(asFormDataLike(body));
+  const event = {
+    ...fields,
+    presented_by: fields.presented_by || crew.name,
+    id: `preview_${crew.id}`,
+    flyer_template: TEMPLATES[body.flyer_template] ? body.flyer_template : null,
+    flyer_thumb_key: null,
+    seed_salt: 0,
+  };
+
+  return jsonResponse(flyerPayload(event));
 }
 
 async function ownedEvent(env, crew, id) {

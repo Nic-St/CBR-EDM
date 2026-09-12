@@ -132,7 +132,7 @@ export async function handleEventUpdate(request, env, admin, id) {
  * if the last three published events all resolved to the same template,
  * this one is nudged to its second choice.
  */
-async function freezeFlyerTemplate(env, event) {
+export async function freezeFlyerTemplate(env, event) {
   if (event.flyer_template) return;
 
   const normalised = normaliseEvent(event, {});

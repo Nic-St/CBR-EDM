@@ -56,6 +56,7 @@ export function crewDashboardPage(turnstileSiteKey) {
 
       <h2>Add an event</h2>
       ${eventFieldsMarkup('create')}
+      ${flyerPickerMarkup('create', { withReroll: false })}
       <button type="button" data-crew-create>Add event</button>
       <p data-crew-create-status role="status"></p>
     </div>
@@ -72,19 +73,32 @@ export function crewDashboardPage(turnstileSiteKey) {
       </div>
       <p data-crew-edit-status role="status"></p>
 
-      <div data-crew-flyer hidden>
-        <h3>Generated flyer</h3>
-        <p class="muted">Only shown while there is no uploaded flyer -- ask an admin to upload one to replace it.</p>
-        <img data-crew-flyer-preview alt="Generated flyer preview" style="max-width: 300px; display: block;">
-        <div class="field">
-          <label for="crew-flyer-template">Template</label>
-          <select id="crew-flyer-template" data-crew-flyer-template></select>
-        </div>
-        <button type="button" data-crew-flyer-reroll class="secondary">Reroll (new random variation)</button>
-        <p data-crew-flyer-status role="status"></p>
-      </div>
+      ${flyerPickerMarkup('edit', { withReroll: true })}
     </div>
   `;
+}
+
+/**
+ * Shared markup for the "add" and "edit" flyer pickers, section 13.
+ * Fields are id-prefixed by scope so both can exist in the DOM at once
+ * without duplicate ids; behaviour is selected by data-scope in
+ * crew-dashboard.js.
+ * @param {'create'|'edit'} scope
+ * @param {{ withReroll: boolean }} options - the create picker has
+ *   nothing to reroll yet, since there's no saved event or seed_salt
+ */
+function flyerPickerMarkup(scope, { withReroll }) {
+  return html`<div data-crew-flyer data-scope="${scope}" hidden>
+    <h3>Generated flyer</h3>
+    <p class="muted">Only shown while there is no uploaded flyer.</p>
+    <img data-crew-flyer-preview alt="Generated flyer preview" style="max-width: 300px; display: block;">
+    <div class="field">
+      <label for="${scope}-flyer-template">Template</label>
+      <select id="${scope}-flyer-template" data-crew-flyer-template></select>
+    </div>
+    ${withReroll ? html`<button type="button" data-crew-flyer-reroll class="secondary">Reroll (new random variation)</button>` : ''}
+    <p data-crew-flyer-status role="status"></p>
+  </div>`;
 }
 
 function eventFieldsMarkup(scope) {
