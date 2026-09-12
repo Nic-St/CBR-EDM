@@ -5,6 +5,18 @@ All notable changes to this project are documented here. Format follows
 
 ## [Unreleased]
 
+### Decided
+- Flyer engine phases 4 (Open Graph rasterisation) and 5 (print
+  download): not building them. Rasterising an SVG to PNG needs either
+  a WASM renderer (`resvg-wasm`) or Cloudflare's Browser Rendering API --
+  this project's Workers Free plan caps CPU time at 10ms/request, which
+  a WASM render realistically can't fit regardless of what triggers it,
+  so that path needs Browser Rendering (free-tier: 10 min/day, no CPU
+  cost since it's a remote call) or the Workers Paid plan. Evaluated and
+  presented both; owner chose not to spend the effort on either. Social
+  cards keep falling back to the crew-uploaded flyer or the site
+  default; there is no flyer print download.
+
 ### Added
 - Generated flyer engine, phase 2a (`FLYER-ENGINE-SPEC.md`): a
   deterministic, seeded SVG renderer with two templates (`medi`,
