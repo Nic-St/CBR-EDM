@@ -115,6 +115,7 @@ select:focus-visible {
 .hero-name-row .site-name {
   margin: 0;
   white-space: nowrap;
+  font-size: clamp(28px, 5vw, 64px);
 }
 
 .slogan-strip {
@@ -123,12 +124,12 @@ select:focus-visible {
   font-size: var(--text-h1);
   line-height: 1.15;
   margin: 0;
-  max-width: 36ch;
   background: var(--paper);
   color: var(--toner);
   display: inline-block;
   padding: 0.35em 0.5em;
   transform: rotate(-1deg);
+  flex: 1 1 320px;
 }
 
 /* Site nav: the actionable links, up top so people don't need to scroll

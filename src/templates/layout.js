@@ -50,11 +50,13 @@ export function layout({ title, bodyContent, extraHead = '', bodyClass = '' }) {
 
 function siteFooter() {
   return html`<footer class="site-footer">
-    <p><a href="/crews">Crews</a></p>
-    <p><a href="/look-after-each-other">${config.harmReductionTitle}</a></p>
-    <p><a href="/contact">Get in touch</a></p>
-    <p><a href="/submit">Put an event on the wall</a></p>
-    <p><a href="/calendar.ics">Subscribe to the calendar</a></p>
+    <ul class="site-nav">
+      <li><a href="/crews">Crews</a></li>
+      <li><a href="/look-after-each-other">${config.harmReductionTitle}</a></li>
+      <li><a href="/contact">Get in touch</a></li>
+      <li><a href="/submit">Put an event on the wall</a></li>
+      <li><a href="/calendar.ics">Subscribe to the calendar</a></li>
+    </ul>
     <p>${config.privacyLine}</p>
     ${config.ackText ? html`<p>${config.ackText}</p>` : ''}
   </footer>`;
