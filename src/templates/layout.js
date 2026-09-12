@@ -55,11 +55,12 @@ export function layout({ title, bodyContent, extraHead = '', bodyClass = '' }) {
 }
 
 function siteFooter() {
+  // Nav links already live in the header, section 6; no need to repeat them
+  // down here. Nothing else to say unless there's Acknowledgement of
+  // Country text to show (see config.js's ackText).
+  if (!config.ackText) return '';
+
   return html`<footer class="site-footer">
-    <ul class="site-nav">
-      ${navLinks().map(([href, label]) => html`<li><a href="${href}">${label}</a></li>`)}
-    </ul>
-    <p>${config.privacyLine}</p>
-    ${config.ackText ? html`<p>${config.ackText}</p>` : ''}
+    <p>${config.ackText}</p>
   </footer>`;
 }

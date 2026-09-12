@@ -7,8 +7,6 @@ export const config = {
 
   slogan: 'No algorithm - The info you need, for those with no feed',
 
-  privacyLine: 'No tracking cookies. We count visits, not people.',
-
   // Board column labels, section 7.1. Defaults from the spec, "Been and
   // gone" renamed to "Past events" per owner request.
   boardColumns: {
