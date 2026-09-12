@@ -45,6 +45,7 @@ export function layout({ title, bodyContent, extraHead = '', bodyClass = '' }) {
   </main>
   ${raw(siteFooter())}
   <!-- build:CF_VERSION_ID -->
+  <script src="/js/header-height.js" defer></script>
   <script src="/js/board-toggle.js" defer></script>
   <script src="/js/image-resize.js" defer></script>
   <script src="/js/submit-form.js" defer></script>

@@ -364,6 +364,21 @@ select:focus-visible {
     grid-column: 1;
   }
 
+  /* --header-height is set by header-height.js to the header's actual
+     rendered height (it varies with viewport width, so a fixed guess would
+     only be right sometimes -- see that file). Frozen alongside the
+     header and the calendar; only the cards underneath actually scroll. */
+  .page-home .board-column h2 {
+    position: sticky;
+    top: var(--header-height, 13rem);
+    z-index: 10;
+    margin: 0;
+    padding: 0.75rem 0;
+    background: var(--wall-base);
+    background-image: url('/textures/concrete-grain.svg');
+    background-repeat: repeat;
+  }
+
   /* Spans both the header's row and the board's row, so this cell is as
      tall as the two of them combined -- giving the sticky calendar panel
      inside it (above) room to stay stuck for the board's full height,
