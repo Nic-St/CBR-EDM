@@ -259,50 +259,33 @@ select:focus-visible {
     top: 1.25rem;
   }
 
-  /* Home page only: promote the header's and main's children into one
-     page-level grid, so the calendar can sit beside the board as a sticky
-     sidebar, without changing the mobile layout (which stays a plain
-     block flow, header then main then footer) or moving anything in the
-     actual markup. display: contents removes a box from the box tree but
-     keeps its children and its own semantics (header/nav/main landmarks
-     are unaffected), so this is a purely visual reflow.
-
-     Board and calendar share the same grid row, so the row's height
-     stretches to fit the board's full height (however many events there
-     are); the calendar's own position: sticky (above) then keeps it
-     pinned near the top of the viewport for that whole height, which is
-     what makes it read as fixed while the board scrolls past it. */
-  .page-home {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    column-gap: 2rem;
-    row-gap: 0.5rem;
+  /* Home page only: the header (site name, slogan, nav) is pinned to the
+     top of the viewport and never scrolls away. The calendar is likewise
+     sticky, pinned just below the header. Only the board actually moves
+     as the page scrolls -- everything else just stays where it is. */
+  .page-home .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--wall-base);
+    background-image: url('/textures/concrete-grain.svg');
+    background-repeat: repeat;
     max-width: 1400px;
     margin: 0 auto;
-    padding: 1.5rem 1.25rem 3rem;
   }
 
-  .page-home .site-header,
-  .page-home main,
-  .page-home .home-layout {
-    display: contents;
+  /* .home-layout takes over centering and max-width for the home page
+     (so it can be wider than the usual 1100px, to fit the calendar
+     beside the board); main itself should just get out of the way. */
+  .page-home main {
+    max-width: none;
+    margin: 0;
+    padding: 0;
   }
 
-  /* Hero row and nav stay in column 1 (alongside the board below), so the
-     calendar can claim the whole of column 2 from the very top of the
-     page instead of just the board's row -- otherwise the top of column 2
-     sits empty above wherever the calendar starts. */
-  .page-home .hero-name-row {
-    grid-column: 1;
-  }
-
-  .page-home .site-header > nav {
-    grid-column: 1;
-  }
-
-  /* This nav has less room than on other pages (column 1 only, since
-     column 2 belongs to the calendar), so tighten it enough to keep all
-     the links on one row instead of wrapping. */
+  /* This nav has less room than on other pages (it shares the row with
+     the site name instead of spanning full width), so tighten it enough
+     to keep all the links on one row instead of wrapping. */
   .page-home .site-header .site-nav {
     gap: 0.4rem 0.9rem;
     font-size: 0.85rem;
@@ -312,18 +295,25 @@ select:focus-visible {
     display: none;
   }
 
-  .page-home [data-panel="board"] {
-    grid-column: 1;
-    grid-row: 3;
+  .page-home .home-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    column-gap: 2rem;
+    /* Deliberately not align-items: start -- board and calendar share this
+       row, and the calendar's wrapper needs to stretch to match the
+       board's full height so there is room for its sticky child (below)
+       to stay stuck for that whole height, instead of running out of
+       room and scrolling away after only its own short natural height. */
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1.25rem 3rem;
   }
 
-  .page-home [data-panel="calendar"] {
-    grid-column: 2;
-    grid-row: 1 / 4;
-  }
-
-  .page-home .site-footer {
-    grid-column: 1 / -1;
+  /* Matches the site-header's own rendered height, so the calendar sticks
+     just below it rather than under it. Approximate: revisit if the
+     header's content (and so its height) changes materially. */
+  .page-home [data-panel="calendar"] .calendar-panel {
+    top: 13rem;
   }
 }
 
@@ -355,8 +345,12 @@ select:focus-visible {
     display: flex;
   }
 
-  [data-panel].is-hidden {
-    display: none;
+  /* The toggle script sets the native hidden attribute; !important is
+     needed here because .board and .calendar-panel set their own display
+     property (grid), which would otherwise silently win over [hidden]'s
+     default styling since author CSS always beats the UA stylesheet. */
+  [data-panel][hidden] {
+    display: none !important;
   }
 }
 
@@ -371,13 +365,6 @@ select:focus-visible {
   border-collapse: collapse;
 }
 
-.calendar caption {
-  font-family: var(--font-display);
-  font-weight: 800;
-  text-align: left;
-  margin-bottom: 0.5rem;
-}
-
 .calendar th,
 .calendar td {
   text-align: center;
@@ -385,20 +372,38 @@ select:focus-visible {
   font-size: var(--text-small);
 }
 
-.calendar td a {
-  display: block;
+/* Every day gets the same size box, whether or not it links anywhere, so
+   the grid reads as uniform rather than some days looking like buttons
+   and others like plain text. */
+.calendar td a,
+.calendar td span {
   min-height: 44px;
   min-width: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.calendar td a {
   background: var(--paper);
   color: var(--toner);
   text-decoration: none;
 }
 
+/* Today's date, section 7.1 */
+.calendar td.is-today {
+  outline: 2px solid var(--sodium);
+  outline-offset: -2px;
+}
+
+.calendar td.is-today span {
+  font-weight: 800;
+  color: var(--sodium);
+}
+
 .calendar-nav {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   margin-bottom: 0.5rem;
 }
@@ -409,6 +414,11 @@ select:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+.calendar-nav-label {
+  font-family: var(--font-display);
+  font-weight: 800;
 }
 
 /* Footer, section 6 */
@@ -514,6 +524,18 @@ button.danger,
 .muted {
   color: #b5b3aa;
   font-size: var(--text-small);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .error {
