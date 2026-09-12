@@ -1,5 +1,6 @@
 import { html, raw } from '../lib/escape.js';
 import { config } from '../config.js';
+import pkg from '../../package.json';
 
 function navLinks() {
   return [
@@ -44,6 +45,7 @@ export function layout({ title, bodyContent, extraHead = '', bodyClass = '' }) {
     ${raw(bodyContent)}
   </main>
   ${raw(siteFooter())}
+  <!-- build ${pkg.version} -->
   <script src="/js/board-toggle.js" defer></script>
   <script src="/js/image-resize.js" defer></script>
   <script src="/js/submit-form.js" defer></script>
