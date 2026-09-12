@@ -27,9 +27,12 @@ export function ticketFooter(ctx) {
   // from the site's own material (below) -- doors, close and age belong
   // to this event, but "look after each other" and the wordmark are the
   // same on every flyer, so they read as the site talking, not the crew.
-  const labelY = top + 26;
-  const ruleY = top + 50;
+  // The gap is the same on both sides of the rule (36px): it used to be
+  // 24px above and 54px below, which read as inconsistent.
   const linkY = top + HEIGHT - 22;
+  const gap = 36;
+  const ruleY = linkY - gap;
+  const labelY = ruleY - gap;
 
   const labels = items.map((text, i) => {
     const x = canvas.left + i * (canvas.contentWidth / Math.max(items.length, 1));

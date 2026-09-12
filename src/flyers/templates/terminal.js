@@ -80,10 +80,12 @@ export default {
     // Section 11 rule 1: terminal has no shared ticketFooter, but still
     // carries the same harm reduction line every template does -- below a
     // rule, same as everywhere else, so the event's own readout stays
-    // above it and the site's own material stays below.
-    y += lineHeight * 0.4;
+    // above it and the site's own material stays below. Same gap on both
+    // sides of the rule, matching ticketFooter.js.
+    const gap = 32;
+    y += gap;
     parts.push(`<rect x="${canvas.left}" y="${y}" width="${canvas.contentWidth}" height="2" fill="${palette.paper}" opacity="0.3"/>`);
-    y += 34;
+    y += gap;
     parts.push(`<text x="${canvas.left}" y="${y}" font-family="${font}" font-size="16" fill="${palette.paper}" opacity="0.6">Look after each other</text>`);
 
     parts.push(wordmark(ctx, { x: canvas.right, y: canvas.height - 20 }));

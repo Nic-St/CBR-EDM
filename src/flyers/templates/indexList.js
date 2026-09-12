@@ -71,9 +71,11 @@ export default {
       event.ageRestriction,
     ].filter(Boolean).join('   ');
     parts.push(`<text x="${canvas.left}" y="${y}" font-family="'Archivo',Arial,sans-serif" font-size="20" fill="${palette.tonerBlack}">${escapeXml(detailLine)}</text>`);
-    y += 34;
+    // Same gap on both sides of the rule, matching ticketFooter.js.
+    const gap = 32;
+    y += gap;
     parts.push(`<rect x="${canvas.left}" y="${y}" width="${canvas.contentWidth}" height="2" fill="${palette.tonerBlack}"/>`);
-    y += 30;
+    y += gap;
     parts.push(`<text x="${canvas.left}" y="${y}" font-family="'Archivo',Arial,sans-serif" font-size="14" fill="${palette.tonerBlack}" opacity="0.6">Look after each other</text>`);
     parts.push(wordmark(ctx, { x: canvas.right, y: canvas.height - 20, color: palette.tonerBlack }));
 

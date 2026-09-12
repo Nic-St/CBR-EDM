@@ -78,6 +78,10 @@ All notable changes to this project are documented here. Format follows
 Every visual change to the generated flyer engine, in order. See
 `FLYER_ENGINE_VERSION` in `src/flyers/index.js`.
 
+- **0.5.1** - The gap above and below the footer rule is now the same on
+  both sides everywhere it appears (`ticketFooter`, `index-list`,
+  `terminal`) -- it was 24px above and 54px below in `ticketFooter`,
+  and similarly mismatched in the other two.
 - **0.5.0** - Footer rule ordering, owner request: on every template, the
   event/crew-specific facts (doors, close, age, ticket text, a detail
   line) sit above the footer rule; the harm reduction line and the
