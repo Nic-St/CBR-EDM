@@ -2,6 +2,62 @@
 (function () {
   var form = document.querySelector('[data-submit-form]');
   if (form) {
+    var steps = Array.prototype.slice.call(form.querySelectorAll('.form-step'));
+    var stepCurrentEl = form.querySelector('[data-step-current]');
+    var currentStepIndex = 0;
+
+    function showStep(index) {
+      currentStepIndex = index;
+      steps.forEach(function (step, i) {
+        step.classList.toggle('is-active', i === index);
+      });
+      if (stepCurrentEl) stepCurrentEl.textContent = String(index + 1);
+
+      // Moves focus (and so the screen reader's attention) to the new
+      // step, since nothing else on the page otherwise indicates the step
+      // changed. h2 isn't focusable by default, hence the tabindex.
+      var heading = steps[index].querySelector('h2');
+      if (heading) {
+        heading.setAttribute('tabindex', '-1');
+        heading.focus();
+      }
+    }
+
+    steps.forEach(function (step, index) {
+      var nextButton = step.querySelector('[data-next]');
+      var backButton = step.querySelector('[data-back]');
+
+      if (nextButton) {
+        nextButton.addEventListener('click', function () {
+          var fields = step.querySelectorAll('input, textarea, select');
+          for (var i = 0; i < fields.length; i++) {
+            if (!fields[i].checkValidity()) {
+              fields[i].reportValidity();
+              return;
+            }
+          }
+          showStep(index + 1);
+        });
+      }
+
+      if (backButton) {
+        backButton.addEventListener('click', function () {
+          showStep(index - 1);
+        });
+      }
+    });
+
+    // Enter, in a text input, would otherwise submit the form via whichever
+    // submit button it finds -- the one on the last step, wherever the user
+    // actually is. Treat it as "next" instead, unless already on the last step.
+    form.addEventListener('keydown', function (event) {
+      if (event.key !== 'Enter' || event.target.tagName === 'TEXTAREA') return;
+      if (currentStepIndex === steps.length - 1) return;
+      event.preventDefault();
+      var nextButton = steps[currentStepIndex].querySelector('[data-next]');
+      if (nextButton) nextButton.click();
+    });
+
     var tbaToggle = form.querySelector('[data-tba-toggle]');
     var tbaFields = form.querySelector('[data-tba-fields]');
     tbaToggle.addEventListener('change', function () {

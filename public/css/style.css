@@ -56,6 +56,15 @@
   box-sizing: border-box;
 }
 
+/* The native hidden attribute is meant to always mean display: none, but
+   any element that also sets its own display (grid, flex...) would
+   otherwise win, since author styles beat the UA stylesheet regardless of
+   specificity. This makes [hidden] reliable everywhere instead of
+   special-casing it per component. */
+[hidden] {
+  display: none !important;
+}
+
 html {
   background: var(--wall-base) url('/textures/concrete-grain.svg') repeat;
 }
@@ -353,14 +362,6 @@ select:focus-visible {
   .view-toggle {
     display: flex;
   }
-
-  /* The toggle script sets the native hidden attribute; !important is
-     needed here because .board and .calendar-panel set their own display
-     property (grid), which would otherwise silently win over [hidden]'s
-     default styling since author CSS always beats the UA stylesheet. */
-  [data-panel][hidden] {
-    display: none !important;
-  }
 }
 
 /* Calendar grid, section 7.1 and 14 */
@@ -528,6 +529,43 @@ button.danger,
   gap: 0.75rem;
   flex-wrap: wrap;
   margin: 0.75rem 0;
+}
+
+/* Step-by-step submission form, section 9.1. .form-wizard is the positioning
+   context for its steps; only the active one takes up space and is
+   reachable. visibility (rather than display) is deliberate: the Turnstile
+   widget lives in the last step and needs real dimensions to render into
+   even before that step is shown, which display: none would prevent. */
+.step-progress {
+  font-weight: 600;
+  margin: 0 0 1rem;
+}
+
+.form-wizard {
+  position: relative;
+}
+
+.form-step {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  visibility: hidden;
+  pointer-events: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.form-step.is-active {
+  position: relative;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.form-step h2 {
+  margin-top: 0;
 }
 
 .muted {
