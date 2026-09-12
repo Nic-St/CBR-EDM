@@ -105,6 +105,18 @@ select:focus-visible {
   letter-spacing: 0.02em;
 }
 
+.hero-name-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+}
+
+.hero-name-row .site-name {
+  margin: 0;
+  white-space: nowrap;
+}
+
 .slogan-strip {
   font-family: var(--font-display);
   font-weight: 900;
@@ -243,24 +255,26 @@ select:focus-visible {
   }
 
   /* Home page only: promote the header's and main's children into one
-     page-level grid, so the calendar can sit beside the slogan instead of
-     under the board, without changing the mobile layout (which stays a
-     plain block flow, header then main then footer) or moving anything
-     in the actual markup. display: contents removes a box from the box
-     tree but keeps its children and its own semantics (header/nav/main
-     landmarks are unaffected), so this is a purely visual reflow. */
+     page-level grid, so the calendar can sit beside the board as a sticky
+     sidebar, without changing the mobile layout (which stays a plain
+     block flow, header then main then footer) or moving anything in the
+     actual markup. display: contents removes a box from the box tree but
+     keeps its children and its own semantics (header/nav/main landmarks
+     are unaffected), so this is a purely visual reflow.
+
+     Board and calendar share the same grid row, so the row's height
+     stretches to fit the board's full height (however many events there
+     are); the calendar's own position: sticky (above) then keeps it
+     pinned near the top of the viewport for that whole height, which is
+     what makes it read as fixed while the board scrolls past it. */
   .page-home {
     display: grid;
     grid-template-columns: 2fr 1fr;
     column-gap: 2rem;
-    row-gap: 0.75rem;
+    row-gap: 0.5rem;
     max-width: 1400px;
     margin: 0 auto;
-    padding: 2.5rem 1.25rem 3rem;
-  }
-
-  .page-home [data-panel="board"] {
-    margin-top: 1.5rem;
+    padding: 1.5rem 1.25rem 3rem;
   }
 
   .page-home .site-header,
@@ -269,21 +283,12 @@ select:focus-visible {
     display: contents;
   }
 
-  .page-home .site-header .site-name {
+  .page-home .hero-name-row {
     grid-column: 1 / -1;
   }
 
-  .page-home .slogan-strip {
-    grid-column: 1;
-  }
-
-  .page-home [data-panel="calendar"] {
-    grid-column: 2;
-    grid-row: 2 / 4;
-  }
-
   .page-home .site-header > nav {
-    grid-column: 1;
+    grid-column: 1 / -1;
   }
 
   .page-home .view-toggle {
@@ -291,7 +296,13 @@ select:focus-visible {
   }
 
   .page-home [data-panel="board"] {
-    grid-column: 1 / -1;
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .page-home [data-panel="calendar"] {
+    grid-column: 2;
+    grid-row: 3;
   }
 
   .page-home .site-footer {

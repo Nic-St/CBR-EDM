@@ -19,8 +19,10 @@ export function layout({ title, bodyContent, extraHead = '', bodyClass = '' }) {
 </head>
 <body${bodyClass ? html` class="${bodyClass}"` : ''}>
   <header class="site-header">
-    <p class="site-name">${config.siteName}</p>
-    <p class="slogan-strip">${config.slogan}</p>
+    <div class="hero-name-row">
+      <p class="site-name">${config.siteName}</p>
+      <p class="slogan-strip">${config.slogan}</p>
+    </div>
     <nav aria-label="Main">
       <ul class="site-nav">
         <li><a href="/submit">Put an event on the wall</a></li>
