@@ -15,13 +15,6 @@ const HEIGHT = 126;
 export function ticketFooter(ctx) {
   const { event, canvas, palette } = ctx;
   const top = canvas.bottom - HEIGHT;
-  const items = [];
-
-  if (event.doors || event.close) {
-    const range = [event.doors, event.close].filter(Boolean).join(' - ');
-    items.push(range);
-  }
-  if (event.ageRestriction === '18+') items.push('18+');
 
   // Owner request: the rule separates event/crew-specific facts (above)
   // from the site's own material (below) -- doors, close and age belong
@@ -34,14 +27,24 @@ export function ticketFooter(ctx) {
   const ruleY = linkY - gap;
   const labelY = ruleY - gap;
 
-  const labels = items.map((text, i) => {
-    const x = canvas.left + i * (canvas.contentWidth / Math.max(items.length, 1));
-    return `<text x="${x}" y="${labelY}" font-family="'Archivo', Arial, sans-serif" font-size="22"
-      fill="${palette.paper}">${escapeXml(text)}</text>`;
-  }).join('');
+  let doorsLabel = '';
+  if (event.doors || event.close) {
+    const range = [event.doors, event.close].filter(Boolean).join(' - ');
+    doorsLabel = `<text x="${canvas.left}" y="${labelY}" font-family="'Archivo', Arial, sans-serif" font-size="22"
+      fill="${palette.paper}">${escapeXml(range)}</text>`;
+  }
+
+  // Right-aligned, directly above the wordmark (also canvas.right,
+  // text-anchor end) -- owner request.
+  let ageLabel = '';
+  if (event.ageRestriction === '18+') {
+    ageLabel = `<text x="${canvas.right}" y="${labelY}" text-anchor="end" font-family="'Archivo', Arial, sans-serif" font-size="22"
+      fill="${palette.paper}">18+</text>`;
+  }
 
   return `
-    ${labels}
+    ${doorsLabel}
+    ${ageLabel}
     ${rules(ctx, { kind: 'full', x: canvas.left, y: ruleY, width: canvas.contentWidth, color: palette.paper })}
     <text x="${canvas.left}" y="${linkY}" font-family="'Archivo', Arial, sans-serif" font-size="16"
       fill="${palette.paper}" opacity="0.7">Look after each other</text>

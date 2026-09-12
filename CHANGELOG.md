@@ -97,6 +97,9 @@ All notable changes to this project are documented here. Format follows
 Every visual change to the generated flyer engine, in order. See
 `FLYER_ENGINE_VERSION` in `src/flyers/index.js`.
 
+- **0.6.3** - `ticketFooter`'s "18+" is now right-aligned, directly
+  above the wordmark, instead of sharing an evenly-spaced column layout
+  with the doors/close time. Owner request.
 - **0.6.2** - `contour`'s real-terrain lines are smoother and more
   frequent, owner request. The geocoded grid is only 9x9 (a real API
   point costs a request each), which traced as a visibly blocky,
