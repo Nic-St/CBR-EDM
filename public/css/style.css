@@ -225,10 +225,6 @@ select:focus-visible {
   font-weight: 800;
   font-size: var(--text-h2);
   text-transform: uppercase;
-  /* No top margin, so this lines up exactly with the top of the calendar
-     beside it on desktop (section 7.1) instead of sitting a bit lower
-     than it thanks to the default h2 margin. */
-  margin-top: 0;
 }
 
 .board-column ul {
@@ -263,28 +259,40 @@ select:focus-visible {
     top: 1.25rem;
   }
 
-  /* Home page only: the header (site name, slogan, nav) is pinned to the
-     top of the viewport and never scrolls away. The calendar is likewise
-     sticky, pinned just below the header. Only the board actually moves
-     as the page scrolls -- everything else just stays where it is. */
+  /* Home page only, section 7.1: the calendar sits beside the slogan, in
+     the page-level grid below, rather than under the board. main and
+     .home-layout are promoted with display: contents so their children
+     (the board and the calendar) become direct items of that grid,
+     without changing the mobile layout (plain block flow, no grid here)
+     or moving anything in the actual markup. */
+  .page-home {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    column-gap: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1.25rem 3rem;
+  }
+
+  .page-home main,
+  .page-home .home-layout {
+    display: contents;
+  }
+
+  /* The header stays a real sticky box (it can't also be display:
+     contents -- that would remove the box there'd be nothing to stick).
+     It occupies column 1 on its own row; the calendar (below) sits next
+     to it in column 2. */
   .page-home .site-header {
+    grid-column: 1;
     position: sticky;
     top: 0;
     z-index: 20;
     background: var(--wall-base);
     background-image: url('/textures/concrete-grain.svg');
     background-repeat: repeat;
-    max-width: 1400px;
-    margin: 0 auto;
-  }
-
-  /* .home-layout takes over centering and max-width for the home page
-     (so it can be wider than the usual 1100px, to fit the calendar
-     beside the board); main itself should just get out of the way. */
-  .page-home main {
-    max-width: none;
-    margin: 0;
-    padding: 0;
+    margin: 0 -1.25rem;
+    padding: 2.5rem 1.25rem 2rem;
   }
 
   /* This nav has less room than on other pages (it shares the row with
@@ -299,26 +307,22 @@ select:focus-visible {
     display: none;
   }
 
-  .page-home .home-layout {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    column-gap: 2rem;
-    /* Deliberately not align-items: start -- board and calendar share this
-       row, and the calendar's wrapper needs to stretch to match the
-       board's full height so there is room for its sticky child (below)
-       to stay stuck for that whole height, instead of running out of
-       room and scrolling away after only its own short natural height. */
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 1.25rem 3rem;
+  .page-home [data-panel="board"] {
+    grid-column: 1;
   }
 
-  /* --header-height is set by header-height.js to the header's actual
-     rendered height, which varies with viewport width (the site name's
-     font size is a clamp()) and isn't safe to hardcode. 13rem is only
-     the no-JS fallback. */
-  .page-home [data-panel="calendar"] .calendar-panel {
-    top: var(--header-height, 13rem);
+  /* Spans both the header's row and the board's row, so this cell is as
+     tall as the two of them combined -- giving the sticky calendar panel
+     inside it (above) room to stay stuck for the board's full height,
+     instead of running out of room and scrolling away after only the
+     header's own short height. */
+  .page-home [data-panel="calendar"] {
+    grid-column: 2;
+    grid-row: 1 / 3;
+  }
+
+  .page-home .site-footer {
+    grid-column: 1 / -1;
   }
 }
 
