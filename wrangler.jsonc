@@ -32,8 +32,8 @@
     }
   ],
   "vars": {
-    "ACCESS_TEAM_DOMAIN": "REPLACE_WITH_ACCESS_TEAM_DOMAIN",
-    "ACCESS_AUD": "REPLACE_WITH_ACCESS_APPLICATION_AUDIENCE_TAG",
+    "ACCESS_TEAM_DOMAIN": "empty-firefly-d848.cloudflareaccess.com",
+    "ACCESS_AUD": "7079c0ab3788691b08159eb7dcfc88cce0836518d9e6e641976c0d4446306873",
     // This is Cloudflare's published "always passes" Turnstile test site key,
     // so local dev and preview deploys work out of the box. Replace with the
     // real site key from step 9 before going live.
