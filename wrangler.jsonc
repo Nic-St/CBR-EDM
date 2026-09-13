@@ -28,7 +28,7 @@
     {
       "name": "EMAIL",
       // Replace with the project mailbox once it is verified on Email Routing.
-      "destination_address": "REPLACE_WITH_PROJECT_MAILBOX@example.com"
+      "destination_address": "cbredmadmin@gmail.com"
     }
   ],
   "vars": {
@@ -37,9 +37,9 @@
     // This is Cloudflare's published "always passes" Turnstile test site key,
     // so local dev and preview deploys work out of the box. Replace with the
     // real site key from step 9 before going live.
-    "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
+    "TURNSTILE_SITE_KEY": "0x4AAAAAAEyZpRNG0EzCAKcn",
     // Must be the same address as the send_email destination_address above.
-    "ADMIN_EMAIL": "REPLACE_WITH_PROJECT_MAILBOX@example.com",
+    "ADMIN_EMAIL": "cbredmadmin@gmail.com",
     // Any random string. Only used to salt rate-limit hashes; rotating it
     // just resets rate-limit history, it does not need to be memorable.
     "RATE_LIMIT_SALT": "REPLACE_WITH_A_RANDOM_STRING"
