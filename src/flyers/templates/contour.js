@@ -12,13 +12,11 @@
 import { ticketFooter, TICKET_FOOTER_HEIGHT } from '../parts/ticketFooter.js';
 import { measure } from '../metrics.js';
 import { escapeXml } from '../xml.js';
-import { range, pick } from '../seed.js';
+import { range } from '../seed.js';
 
-const MARKERS = {
-  triangle: (x, y, s) => `M ${x.toFixed(1)} ${(y - s).toFixed(1)} L ${(x + s).toFixed(1)} ${(y + s).toFixed(1)} L ${(x - s).toFixed(1)} ${(y + s).toFixed(1)} Z`,
-  cross: (x, y, s) => `M ${(x - s).toFixed(1)} ${y.toFixed(1)} L ${(x + s).toFixed(1)} ${y.toFixed(1)} M ${x.toFixed(1)} ${(y - s).toFixed(1)} L ${x.toFixed(1)} ${(y + s).toFixed(1)}`,
-  circle: null, // drawn as <circle>, not a path
-};
+// Owner decision: the venue marker is always this triangle -- no longer
+// picked per-render from triangle/cross/circle.
+const triangleMarker = (x, y, s) => `M ${x.toFixed(1)} ${(y - s).toFixed(1)} L ${(x + s).toFixed(1)} ${(y + s).toFixed(1)} L ${(x - s).toFixed(1)} ${(y + s).toFixed(1)} Z`;
 
 // Real elevation data is smooth at this grid's resolution (30m samples,
 // 150m apart), so a contour level realistically crosses on the order of
@@ -282,7 +280,7 @@ export default {
   maxLineup: 6,
   needs: [],
   render(ctx) {
-    const { event, canvas, palette, random } = ctx;
+    const { event, canvas, palette } = ctx;
     const clearZoneBottom = canvas.top + canvas.contentHeight / 3;
     // The marker's screen position (seeded ring position for the
     // synthetic map, the exact grid centre for a real one) is never
@@ -355,12 +353,7 @@ export default {
       }
 
       const markerSize = 8;
-      const markerShape = pick(random, ['triangle', 'cross', 'circle']);
-      if (markerShape === 'circle') {
-        parts.push(`<circle cx="${lx.toFixed(1)}" cy="${ly2.toFixed(1)}" r="${markerSize}" fill="${palette.accent}"/>`);
-      } else {
-        parts.push(`<path d="${MARKERS[markerShape](lx, ly2, markerSize)}" stroke="${palette.accent}" stroke-width="2" fill="${markerShape === 'triangle' ? palette.accent : 'none'}"/>`);
-      }
+      parts.push(`<path d="${triangleMarker(lx, ly2, markerSize)}" stroke="${palette.accent}" stroke-width="2" fill="${palette.accent}"/>`);
       parts.push(textMaskRect({ x: textX, y: textY, width: textWidth, size: venueSize, anchor: textAnchor, color: palette.tonerBlack }));
       parts.push(`<text x="${textX.toFixed(1)}" y="${textY.toFixed(1)}" text-anchor="${textAnchor}" font-family="'Archivo',Arial,sans-serif" font-size="${venueSize}" letter-spacing="0.1em" fill="${palette.paper}">${escapeXml(upperVenue)}</text>`);
     }

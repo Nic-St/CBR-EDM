@@ -302,11 +302,9 @@ test('contour draws real terrain when the event has an elevation grid, and the m
   const event = { ...FIXTURES.full, flyer_template: 'contour', elevation_grid: JSON.stringify(grid) };
   const result = render(event, { now: FIXTURE_NOW });
   // Grid centre (r=4, c=4 of 9) maps to exactly canvas centre with the
-  // template's overscanned full-bleed mapping. Marker shape is seeded
-  // (circle/triangle/cross); circle emits the centre as cx/cy, the other
-  // two as an "M x y-8" token (markerSize is a fixed 8), so check for
-  // either rather than assuming which shape this seed picks.
-  assert.ok(result.svg.includes('cx="540.0" cy="675.0"') || result.svg.includes('M 540.0 667.0'), 'marker is not at the grid centre');
+  // template's overscanned full-bleed mapping. The marker is always the
+  // triangle (markerSize a fixed 8), so its top point is 8px above centre.
+  assert.ok(result.svg.includes('M 540.0 667.0'), 'marker is not at the grid centre');
 });
 
 test('contour highlights the level closest to the venue\'s own elevation, not a random one', () => {

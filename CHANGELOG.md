@@ -97,6 +97,10 @@ All notable changes to this project are documented here. Format follows
 Every visual change to the generated flyer engine, in order. See
 `FLYER_ENGINE_VERSION` in `src/flyers/index.js`.
 
+- **0.8.3** - `contour`'s venue marker is now always the triangle --
+  owner reviewed the config gallery and picked it as the final look,
+  discarding the cross and circle variants. No longer seed-picked from
+  the three.
 - **0.8.2** - `contour`'s date now sits on the same line as doors/close
   and 18+ (centred between them) instead of its own separate centred
   line above the footer -- owner request, one event-facts row instead
