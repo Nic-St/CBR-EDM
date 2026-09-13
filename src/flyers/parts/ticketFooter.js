@@ -17,14 +17,17 @@ const HARM_WORDMARK_GAP = 24;
 
 /**
  * @param {object} ctx
- * @param {{ color?: string }} [options] - text colour, for the two
- * templates in the seven that use this whose canvas is the light paper
- * colour instead of toner black (ransom, schematic) -- without this,
- * every line in the footer band defaults to palette.paper text on a
- * palette.paper background and is invisible. Defaults to palette.paper,
- * correct for the other five, which are dark.
+ * @param {{ color?: string, date?: string }} [options] - color: text
+ * colour, for the two templates in the seven that use this whose canvas
+ * is the light paper colour instead of toner black (ransom, schematic)
+ * -- without this, every line in the footer band defaults to
+ * palette.paper text on a palette.paper background and is invisible.
+ * Defaults to palette.paper, correct for the other five, which are dark.
+ * date: an optional date string centred on the same line as doors/close
+ * and 18+ (owner request, contour only -- the other templates using
+ * this already show the date in their own dateVenue line elsewhere).
  */
-export function ticketFooter(ctx, { color } = {}) {
+export function ticketFooter(ctx, { color, date } = {}) {
   const { event, canvas, palette } = ctx;
   const textColor = color || palette.paper;
   const top = canvas.bottom - HEIGHT;
@@ -56,6 +59,12 @@ export function ticketFooter(ctx, { color } = {}) {
       fill="${textColor}">18+</text>`;
   }
 
+  let dateLabel = '';
+  if (date) {
+    dateLabel = `<text x="${canvas.centerX}" y="${labelY}" text-anchor="middle" font-family="'Archivo', Arial, sans-serif" font-size="22"
+      fill="${textColor}">${escapeXml(date)}</text>`;
+  }
+
   // Bottom middle, as one centred pair -- owner request: "look after
   // each other" and the wordmark are the site's own material, not the
   // crew's, and centring them (rather than left/right like the crew's
@@ -69,6 +78,7 @@ export function ticketFooter(ctx, { color } = {}) {
   return `
     ${doorsLabel}
     ${ageLabel}
+    ${dateLabel}
     ${rules(ctx, { kind: 'full', x: canvas.left, y: ruleY, width: canvas.contentWidth, color: textColor })}
     <text x="${groupLeft}" y="${linkY}" font-family="'Archivo', Arial, sans-serif" font-size="${HARM_TEXT_SIZE}"
       fill="${textColor}" opacity="0.7">${escapeXml(harmText)}</text>

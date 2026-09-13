@@ -97,6 +97,12 @@ All notable changes to this project are documented here. Format follows
 Every visual change to the generated flyer engine, in order. See
 `FLYER_ENGINE_VERSION` in `src/flyers/index.js`.
 
+- **0.8.2** - `contour`'s date now sits on the same line as doors/close
+  and 18+ (centred between them) instead of its own separate centred
+  line above the footer -- owner request, one event-facts row instead
+  of two. `ticketFooter()` gained an optional `date` param, opt-in so
+  the other six templates using it are unaffected (they already show
+  the date in their own dateVenue line elsewhere).
 - **0.8.1** - `contour` now lists support acts, one line under the
   headliner (`  ·  `-joined, truncating to a trailing `+N MORE` if the
   full list doesn't fit the content width). Previously it drew only

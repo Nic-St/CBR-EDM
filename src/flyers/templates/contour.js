@@ -403,14 +403,10 @@ export default {
       }
     }
 
-    const dateText = event.dateLong;
-    if (dateText) {
-      parts.push(`<text x="${canvas.centerX}" y="${(canvas.bottom - 220).toFixed(1)}" text-anchor="middle" font-family="'Archivo',Arial,sans-serif" font-size="24" fill="${palette.paper}">${escapeXml(dateText)}</text>`);
-    }
-
     // ticketFooter now draws the wordmark itself, centred with "Look
-    // after each other" as one bottom-middle pair (owner request).
-    parts.push(ticketFooter(ctx));
+    // after each other" as one bottom-middle pair, and the date centred
+    // on the same line as doors/close and 18+ (owner request).
+    parts.push(ticketFooter(ctx, { date: event.dateLong }));
 
     return `<g>${parts.join('')}</g>`;
   },

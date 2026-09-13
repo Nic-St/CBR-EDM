@@ -372,6 +372,21 @@ test('ticketFooter centres the harm reduction line and the wordmark together at 
   assert.ok(Math.abs(groupCentre - 540) < 2, `the pair is not centred on canvas.centerX (540): centre is ${groupCentre.toFixed(1)}`);
 });
 
+test('contour centres the date on the same line as doors/close and 18+, not as its own line', () => {
+  // Owner request: previously its own centred line well above the
+  // footer; now shares the doors/close/18+ row so it reads as one
+  // event-facts line instead of two.
+  const result = render({ ...FIXTURES.full, flyer_template: 'contour' }, { now: FIXTURE_NOW });
+
+  const dateMatch = result.svg.match(/<text x="540" y="([\d.]+)" text-anchor="middle" font-family="'Archivo', Arial, sans-serif" font-size="22"\s+fill="[^"]+">([^<]+)<\/text>/);
+  assert.ok(dateMatch, 'no centred date text found in the footer facts row');
+
+  const ageMatch = result.svg.match(/<text x="[\d.]+" y="([\d.]+)" text-anchor="end" font-family="'Archivo', Arial, sans-serif" font-size="22"\s+fill="[^"]+">18\+<\/text>/);
+  assert.ok(ageMatch, 'no 18+ label found');
+
+  assert.equal(dateMatch[1], ageMatch[1], 'date is not on the same line (y) as the 18+ label');
+});
+
 test('halftoneField never draws riso yellow directly onto the paper field', () => {
   // Section 9: riso yellow only clears contrast as a field colour with
   // dark type on it, never as a mark on paper. Try enough seeds that a
