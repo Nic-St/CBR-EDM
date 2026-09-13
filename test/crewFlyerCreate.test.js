@@ -81,7 +81,7 @@ test('a crew can preview a flyer before the event is saved', async () => {
   }), env).then((r) => r.json());
 
   assert.equal(result.ok, true);
-  assert.equal(result.auto.id, 'halftoneField');
+  assert.equal(result.auto.id, 'contour');
   assert.ok(result.svg.startsWith('<svg'));
 });
 

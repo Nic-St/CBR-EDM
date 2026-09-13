@@ -78,7 +78,7 @@ test('publishing an event with no explicit template freezes the auto-routed choi
   await handleEventPublish(request, env, {}, event.id);
 
   assert.equal(event.visibility, 'published');
-  assert.equal(event.flyer_template, 'consignment');
+  assert.equal(event.flyer_template, 'contour');
 });
 
 test('publishing does not touch an explicit flyer_template', async () => {

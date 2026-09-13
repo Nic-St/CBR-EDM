@@ -25,18 +25,6 @@ export const TEMPLATES = {
   contour,
 };
 
-const ROUTES = [
-  { match: ['dubstep', '140', 'halfstep', 'dub', 'sound system'], template: 'medi' },
-  { match: ['dub techno', 'minimal', 'ambient', 'drone'], template: 'cymatic' },
-  { match: ['hard techno', 'industrial', 'hardgroove', 'ebm'], template: 'stencil' },
-  { match: ['techno', 'warehouse'], template: 'consignment' },
-  { match: ['electro', 'idm', 'experimental', 'breakcore'], template: 'terminal' },
-  { match: ['drum and bass', 'dnb', 'jungle'], template: 'terminal' },
-  { match: ['hardcore', 'gabber', 'hard dance', 'rave'], template: 'ransom' },
-  { match: ['house', 'disco', 'garage', 'ukg', '2-step', 'breaks'], template: 'halftoneField' },
-  { match: ['outdoor', 'doof', 'bush', 'picnic'], template: 'contour' },
-];
-
 /**
  * Whether a normalised event satisfies a template's own requirements.
  * @param {object} template
@@ -67,21 +55,16 @@ export function resolveTemplate(event, explicitTemplate, options = {}) {
     candidates.push(explicitTemplate);
   }
 
-  if (event.acts.length >= 6 && TEMPLATES['index-list']) {
-    candidates.push('index-list');
-  }
-
-  for (const route of ROUTES) {
-    if (!TEMPLATES[route.template]) continue;
-    if (route.match.some((genre) => event.genres.includes(genre))) {
-      candidates.push(route.template);
-    }
-  }
-
-  if (event.headliner && event.venueName && event.acts.length >= 2 && TEMPLATES.schematic) {
-    candidates.push('schematic');
-  }
-
+  // Owner decision (2026-09-13): "we're going to just run with the
+  // contour [template]. I love it." contour is now the default for
+  // every event regardless of genre -- the genre-based routing table,
+  // the index-list-by-lineup-length rule and the schematic-by-shape
+  // rule that used to build this candidate list are gone from here, but
+  // every other template is still fully intact in TEMPLATES and stays
+  // reachable via an explicit admin/crew "Set template" choice; they're
+  // archived from auto-routing, not deleted. See git history (this
+  // commit) for the previous routing table if this is ever revisited.
+  candidates.push('contour');
   candidates.push('medi');
 
   for (const id of candidates) {

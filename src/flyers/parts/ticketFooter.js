@@ -32,12 +32,14 @@ export function ticketFooter(ctx, { color } = {}) {
   // Owner request: the rule separates event/crew-specific facts (above)
   // from the site's own material (below) -- doors, close and age belong
   // to this event, but "look after each other" and the wordmark are the
-  // same on every flyer, so they read as the site talking, not the crew.
-  // The gap is the same on both sides of the rule (36px): it used to be
-  // 24px above and 54px below, which read as inconsistent.
-  const linkY = top + HEIGHT - 22;
+  // same on every flyer. The pair now sits right at the bottom of the
+  // page (canvas.height - 20, in the true margin) rather than tucked
+  // just under the rule, so it reads as a footer of the physical page,
+  // not another line of the form -- decoupled from the rule/labelY
+  // gap math below, which still governs the event-facts band only.
+  const linkY = canvas.height - 20;
   const gap = 36;
-  const ruleY = linkY - gap;
+  const ruleY = top + HEIGHT - 22 - gap;
   const labelY = ruleY - gap;
 
   let doorsLabel = '';

@@ -80,7 +80,7 @@ test('a crew can preview the auto-routed flyer for its own event', async () => {
 
   assert.equal(result.ok, true);
   assert.equal(result.current, null);
-  assert.equal(result.auto.id, 'consignment');
+  assert.equal(result.auto.id, 'contour');
   assert.equal(result.templates.length, 10);
   assert.ok(result.svg.startsWith('<svg'));
 });

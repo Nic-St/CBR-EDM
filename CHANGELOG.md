@@ -97,6 +97,20 @@ All notable changes to this project are documented here. Format follows
 Every visual change to the generated flyer engine, in order. See
 `FLYER_ENGINE_VERSION` in `src/flyers/index.js`.
 
+- **0.8.0** - `contour` is now the default template for every event
+  regardless of genre -- owner request: "we're going to just run with
+  the contour. I love it. The others can all be archived." The other
+  nine templates are unchanged and stay reachable via an explicit
+  admin/crew "Set template" choice; only the genre-based auto-routing
+  table (and the index-list-by-lineup-length and schematic-by-shape
+  rules that used to sit alongside it) was removed from
+  `resolveTemplate()` in `manifest.js` -- auto-routing now simply tries
+  `contour`, then falls back to `medi` if the event doesn't fit
+  contour's own lineup limit. Also: the harm reduction line and
+  wordmark pair (see 0.7.0) now sit right at the true bottom page
+  margin (`canvas.height - 20`) instead of tucked just under the rule,
+  decoupled from the doors/close/18+ band above it -- owner request, so
+  it reads as a footer of the physical page.
 - **0.7.0** - The harm reduction line and the wordmark now sit
   centred together at the bottom middle on every template, instead of
   left-aligned/right-aligned like the crew's own facts above the rule
