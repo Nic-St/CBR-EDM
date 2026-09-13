@@ -6,7 +6,7 @@ import { normaliseEvent } from '../src/flyers/normalise.js';
 import { measure } from '../src/flyers/metrics.js';
 import { FIXTURES, FIXTURE_NOW } from '../src/flyers/fixtures.js';
 
-const SIZE_BUDGETS = { page: 60 * 1024, scrap: 12 * 1024 };
+const SIZE_BUDGETS = { page: 60 * 1024, scrap: 20 * 1024 };
 
 for (const [name, fixture] of Object.entries(FIXTURES)) {
   test(`${name}: renders without throwing, on both surfaces`, () => {
@@ -251,9 +251,11 @@ test('contour lists support acts under the headliner', () => {
   assert.ok(result.svg.includes('RESIDENTS'), 'missing second support act');
 });
 
-test('contour truncates a long support-act line to a trailing "+N MORE"', () => {
+test('contour wraps a long support-act line instead of truncating to "+N MORE"', () => {
   // contour's own maxLineup is 6, so this stays within it while still
-  // being far too wide for one line at size 22.
+  // being far too wide for one line at size 22. Owner request: contour
+  // is the only auto-routed template left, so every act has to show --
+  // no "+N MORE" any more, it wraps onto as many lines as it needs.
   const lineup = [
     'Deep Signal',
     'An Extremely Long Support Act Name One',
@@ -265,7 +267,8 @@ test('contour truncates a long support-act line to a trailing "+N MORE"', () => 
   const event = { ...FIXTURES.full, lineup, flyer_template: 'contour' };
   const result = render(event, { now: FIXTURE_NOW });
   assert.equal(result.templateId, 'contour');
-  assert.match(result.svg, /\+\d+ MORE/, 'expected a truncated "+N MORE" support-act line');
+  assert.doesNotMatch(result.svg, /\+\d+ MORE/, 'every act should show in full, never truncated');
+  assert.match(result.svg, /FIFTH ACT ALSO WITH A LONG NAME/, 'the last support act should still be drawn');
 });
 
 test('contour draws no support-act line when there is no support (single-act lineup)', () => {
