@@ -6,7 +6,7 @@ import { normaliseEvent } from '../src/flyers/normalise.js';
 import { measure } from '../src/flyers/metrics.js';
 import { FIXTURES, FIXTURE_NOW } from '../src/flyers/fixtures.js';
 
-const SIZE_BUDGETS = { page: 60 * 1024, scrap: 20 * 1024 };
+const SIZE_BUDGETS = { page: 60 * 1024, scrap: 60 * 1024 };
 
 for (const [name, fixture] of Object.entries(FIXTURES)) {
   test(`${name}: renders without throwing, on both surfaces`, () => {

@@ -97,6 +97,15 @@ All notable changes to this project are documented here. Format follows
 Every visual change to the generated flyer engine, in order. See
 `FLYER_ENGINE_VERSION` in `src/flyers/index.js`.
 
+- **0.9.1** - The `scrap` (board/archive thumbnail) size budget raised
+  again, from 20KB to 60KB (now matching `page`/`social`/`print`).
+  Measuring actual worst-case output showed 20KB, picked without
+  measuring, had only a few hundred bytes of headroom at 25 acts and was
+  already exceeded at 30 -- since support acts are no longer truncated
+  (0.9.0), there's no cap on how long this text block can get, so any
+  fixed budget below `page`'s eventually recreates the exact silent
+  crash-fallback-to-medi bug 0.9.0 was meant to fix, just at a higher
+  act count. Matching `page` removes the risk category outright.
 - **0.9.0** - `contour` now shows the event's own title and its crew/
   presenter name above the headliner (previously shown nowhere on the
   flyer), wraps support acts onto as many lines as the lineup needs
