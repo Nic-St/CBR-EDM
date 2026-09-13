@@ -241,7 +241,11 @@ export default {
     const venueText = event.locationTba ? 'LOCATION TBA' : event.venueName;
     if (venueText) {
       const upperVenue = venueText.toUpperCase();
-      const textWidth = measure(upperVenue, { font: 'archivo', size: 18, letterSpacing: 1.8 });
+      // Halfway between the headliner's 56 and the label's old 18,
+      // owner request: the venue name should read as more obvious.
+      const venueSize = 37;
+      const venueBaselineOffset = venueSize * 0.35; // roughly centres the text against the marker's own centre point
+      const textWidth = measure(upperVenue, { font: 'archivo', size: venueSize, letterSpacing: venueSize * 0.1 });
       const markerToTextGap = 18;
       const edgeMargin = 24;
 
@@ -249,7 +253,11 @@ export default {
         Math.max(markerX, canvas.left + edgeMargin),
         canvas.right - edgeMargin - markerToTextGap - textWidth,
       );
-      const ly2 = Math.min(Math.max(clearZoneBottom + 20, markerY), footerSafeBottom);
+      // The clamp keeps the marker clear of the footer band, but the
+      // text sits venueBaselineOffset below it, so the clamp needs the
+      // same margin subtracted or a big enough font could still push
+      // the label into the footer even though the marker looked clear.
+      const ly2 = Math.min(Math.max(clearZoneBottom + 20, markerY), footerSafeBottom - venueBaselineOffset);
 
       const markerSize = 8;
       const markerShape = pick(random, ['triangle', 'cross', 'circle']);
@@ -258,7 +266,7 @@ export default {
       } else {
         parts.push(`<path d="${MARKERS[markerShape](lx, ly2, markerSize)}" stroke="${palette.accent}" stroke-width="2" fill="${markerShape === 'triangle' ? palette.accent : 'none'}"/>`);
       }
-      parts.push(`<text x="${(lx + markerToTextGap).toFixed(1)}" y="${(ly2 + 5).toFixed(1)}" font-family="'Archivo',Arial,sans-serif" font-size="18" letter-spacing="0.1em" fill="${palette.paper}">${escapeXml(upperVenue)}</text>`);
+      parts.push(`<text x="${(lx + markerToTextGap).toFixed(1)}" y="${(ly2 + venueBaselineOffset).toFixed(1)}" font-family="'Archivo',Arial,sans-serif" font-size="${venueSize}" letter-spacing="0.1em" fill="${palette.paper}">${escapeXml(upperVenue)}</text>`);
     }
 
     if (event.headliner) {
