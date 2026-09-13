@@ -66,12 +66,14 @@ test('resolveTemplate honours an explicit flyer_template over genre routing', ()
   assert.equal(template.id, 'consignment');
 });
 
-test('resolveTemplate falls back to medi when contour cannot take the event', () => {
+test('resolveTemplate still resolves to contour when contour cannot take the event', () => {
   // contour's own maxLineup is 6; longLineup has 12 acts, so contour is
-  // skipped and medi (no lineup limit of its own) takes it.
+  // skipped in the candidate loop, but the unconditional final fallback
+  // (owner decision, 2026-09-13: stick purely to the real contour map)
+  // returns contour regardless.
   const event = normaliseEvent(FIXTURES.longLineup, { now: FIXTURE_NOW });
   const template = resolveTemplate(event, null);
-  assert.equal(template.id, 'medi');
+  assert.equal(template.id, 'contour');
 });
 
 test('resolveTemplate defaults to contour when no explicit choice applies', () => {
@@ -132,15 +134,16 @@ for (const templateId of Object.keys(TEMPLATES)) {
   });
 }
 
-test('resolveTemplate honours exclude by falling through to the next candidate', () => {
-  // contour is the default now regardless of genre, so excluding it
-  // should fall through to medi, the only other auto-routing candidate.
+test('resolveTemplate exclude has no effect on auto-routing now contour is the only candidate', () => {
+  // Owner decision (2026-09-13): stick purely to the real contour map --
+  // contour is the only auto-routing candidate now, and the unconditional
+  // final fallback is also contour, so excluding it changes nothing.
   const event = normaliseEvent({ ...FIXTURES.full, genres: 'techno' }, { now: FIXTURE_NOW });
   const withoutExclude = resolveTemplate(event, null);
   assert.equal(withoutExclude.id, 'contour');
 
   const nudged = resolveTemplate(event, null, { exclude: 'contour' });
-  assert.equal(nudged.id, 'medi');
+  assert.equal(nudged.id, 'contour');
 });
 
 test('resolveTemplate exclude has no effect on an explicit choice', () => {

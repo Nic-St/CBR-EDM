@@ -91,9 +91,13 @@ test('publishing does not touch an explicit flyer_template', async () => {
   assert.equal(event.flyer_template, 'ransom');
 });
 
-test('the fourth event in a row nudges away from three-in-a-row', async () => {
+test('three-in-a-row of the same template no longer nudges the fourth away from contour', async () => {
+  // The anti-repetition nudge is disabled (owner decision, 2026-09-13:
+  // stick purely to the real contour map -- see freezeFlyerTemplate).
+  // Three contour publishes in a row used to force the fourth into medi
+  // ("Deep field"); now it stays contour regardless of history.
   const now = Date.now();
-  const priorPublished = ['consignment', 'consignment', 'consignment'].map((t, i) => pendingEvent({
+  const priorPublished = ['contour', 'contour', 'contour'].map((t, i) => pendingEvent({
     id: `prior${i}`,
     visibility: 'published',
     published_at: new Date(now - (3 - i) * 1000).toISOString(),
@@ -105,5 +109,5 @@ test('the fourth event in a row nudges away from three-in-a-row', async () => {
 
   await handleEventPublish(request, env, {}, event.id);
 
-  assert.notEqual(event.flyer_template, 'consignment');
+  assert.equal(event.flyer_template, 'contour');
 });
