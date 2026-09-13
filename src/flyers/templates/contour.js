@@ -372,6 +372,35 @@ export default {
       const headlinerWidth = measure(headlinerText, { font: 'archivo', size: headlinerSize });
       parts.push(textMaskRect({ x: canvas.centerX, y: headlinerY, width: headlinerWidth, size: headlinerSize, anchor: 'middle', color: palette.tonerBlack }));
       parts.push(`<text x="${canvas.centerX}" y="${headlinerY.toFixed(1)}" text-anchor="middle" font-family="'Archivo',Arial,sans-serif" font-weight="800" font-size="${headlinerSize}" fill="${palette.paper}">${escapeXml(headlinerText)}</text>`);
+
+      // Support acts, one line under the headliner -- owner request: DJ
+      // names below the headliner were dropped entirely when contour
+      // became the sole auto-routed template (medi, the previous
+      // default, lists them; contour only ever drew event.headliner).
+      // Fixed position (not tied to the marker/venue label, which can
+      // land anywhere near the map's centre) so it can't collide with
+      // them: it sits just under the headliner, inside the same
+      // top-third zone the marker/venue label are clamped clear of.
+      const support = event.acts.slice(1);
+      if (support.length) {
+        const supportSize = 22;
+        const names = support.map((act) => act.name.toUpperCase());
+        const typeOptions = { font: 'archivo', size: supportSize, letterSpacing: supportSize * 0.05 };
+        let included = names.length;
+        let supportText = names.join('  ·  ');
+        while (included > 0 && measure(supportText, typeOptions) > canvas.contentWidth) {
+          included--;
+          const shown = names.slice(0, included);
+          const hiddenCount = names.length - included;
+          supportText = included > 0
+            ? `${shown.join('  ·  ')}  +${hiddenCount} MORE`
+            : `+${hiddenCount} MORE`;
+        }
+        const supportY = headlinerY + 50;
+        const supportWidth = measure(supportText, typeOptions);
+        parts.push(textMaskRect({ x: canvas.centerX, y: supportY, width: supportWidth, size: supportSize, anchor: 'middle', color: palette.tonerBlack }));
+        parts.push(`<text x="${canvas.centerX}" y="${supportY.toFixed(1)}" text-anchor="middle" font-family="'Archivo',Arial,sans-serif" font-size="${supportSize}" letter-spacing="0.05em" fill="${palette.paper}">${escapeXml(supportText)}</text>`);
+      }
     }
 
     const dateText = event.dateLong;

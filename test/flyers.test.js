@@ -240,6 +240,37 @@ test('contour masks the contour lines behind the headliner and venue label, snug
   assert.ok(Math.abs(Number(vh) - (37 * 0.72 + 20)) < 2, `venue label mask height ${vh} is not the expected cap-height-plus-padding figure`);
 });
 
+test('contour lists support acts under the headliner', () => {
+  // FIXTURES.full: 'Deep Signal\nKylo B2B Mantis\nResidents' -- Deep
+  // Signal is the headliner, the other two are support.
+  const result = render({ ...FIXTURES.full, flyer_template: 'contour' }, { now: FIXTURE_NOW });
+  assert.ok(result.svg.includes('KYLO B2B MANTIS'), 'missing first support act');
+  assert.ok(result.svg.includes('RESIDENTS'), 'missing second support act');
+});
+
+test('contour truncates a long support-act line to a trailing "+N MORE"', () => {
+  // contour's own maxLineup is 6, so this stays within it while still
+  // being far too wide for one line at size 22.
+  const lineup = [
+    'Deep Signal',
+    'An Extremely Long Support Act Name One',
+    'Another Extremely Long Support Act Name Two',
+    'Yet Another Very Long Named Act Three',
+    'Fourth Long Named Support Act Here',
+    'Fifth Act Also With A Long Name',
+  ].join('\n');
+  const event = { ...FIXTURES.full, lineup, flyer_template: 'contour' };
+  const result = render(event, { now: FIXTURE_NOW });
+  assert.equal(result.templateId, 'contour');
+  assert.match(result.svg, /\+\d+ MORE/, 'expected a truncated "+N MORE" support-act line');
+});
+
+test('contour draws no support-act line when there is no support (single-act lineup)', () => {
+  const event = { ...FIXTURES.full, lineup: 'Deep Signal', flyer_template: 'contour' };
+  const result = render(event, { now: FIXTURE_NOW });
+  assert.ok(!result.svg.includes('MORE'), 'unexpected support-act markup with no support acts');
+});
+
 function flatGrid(size, fn) {
   const values = [];
   for (let r = 0; r < size; r++) {

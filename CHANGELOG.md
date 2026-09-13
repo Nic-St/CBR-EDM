@@ -97,6 +97,15 @@ All notable changes to this project are documented here. Format follows
 Every visual change to the generated flyer engine, in order. See
 `FLYER_ENGINE_VERSION` in `src/flyers/index.js`.
 
+- **0.8.1** - `contour` now lists support acts, one line under the
+  headliner (`  ·  `-joined, truncating to a trailing `+N MORE` if the
+  full list doesn't fit the content width). Previously it drew only
+  `event.headliner`, which went unnoticed while `contour` was one
+  template among ten but dropped every support DJ's name from most
+  auto-generated flyers once it became the sole default (0.8.0).
+  Position is fixed just under the headliner rather than tied to the
+  marker/venue label (which can land anywhere near the map's centre),
+  so it can't collide with them.
 - **0.8.0** - `contour` is now the default template for every event
   regardless of genre -- owner request: "we're going to just run with
   the contour. I love it. The others can all be archived." The other
