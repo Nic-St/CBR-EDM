@@ -18,17 +18,31 @@ import { isEventPast } from '../lib/dates.js';
 // to an existing one, a shared part changing). It is part of the cache
 // key (section 4.2), so forgetting to bump it serves stale artwork. Record
 // every bump under "## Flyers" in CHANGELOG.md.
-export const FLYER_ENGINE_VERSION = '0.9.0';
+export const FLYER_ENGINE_VERSION = '0.9.1';
 
-// scrap raised from 12KB (owner-reported bug: a real-terrain contour flyer
-// with a full lineup could exceed 12KB, silently crash-falling back to
-// medi/"Deep field" below -- the board would show a different template
-// than the admin preview for the same event, for no visible reason. contour
-// also trims its own terrain detail for the scrap surface (see contour.js)
-// as a second line of defence, but the budget itself needed headroom now
-// that support acts are no longer truncated to fit a tighter budget.
+// scrap now matches page/social/print (owner-reported bug: a real-terrain
+// contour flyer with a full lineup could exceed the old 12KB budget,
+// silently crash-falling back to medi/"Deep field" below -- the board
+// would show a different template than the admin preview for the same
+// event, for no visible reason). A first fix raised this to 20KB, but
+// measuring actual worst-case output (long title/presenter, real terrain,
+// a long lineup of long names, contour's own scrap-surface terrain
+// trimming already applied) shows byte size grows roughly linearly with
+// act count -- about 290B/act at the long end -- and a genuinely large
+// but plausible community lineup (20-30 named acts) already lands at
+// 19-22KB on its own, before terrain or the title/presenter lines. 20KB
+// had only a few hundred bytes of headroom at 25 acts and was already
+// exceeded at 30 -- the same silent-fallback bug this was meant to fix,
+// just at a higher act count. Since support acts are no longer truncated
+// (every act has to show, owner request), there's no cap on how long
+// this text block can get, so matching the already-safe page budget
+// removes the risk category rather than picking another number that
+// will eventually be wrong again. contour still trims its own terrain
+// detail for the scrap surface (see contour.js) to keep the common case
+// (a normal-length lineup) meaningfully lighter than a full-detail page
+// render, even though the byte ceiling is now the same.
 const SIZE_BUDGETS = {
-  scrap: 20 * 1024,
+  scrap: 60 * 1024,
   page: 60 * 1024,
   social: 60 * 1024,
   print: 60 * 1024,
