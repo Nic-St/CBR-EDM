@@ -97,6 +97,12 @@ All notable changes to this project are documented here. Format follows
 Every visual change to the generated flyer engine, in order. See
 `FLYER_ENGINE_VERSION` in `src/flyers/index.js`.
 
+- **0.6.6** - `contour`'s real-terrain venue label now sits to
+  whichever side (right/left/up/down) keeps it off the highlighted
+  contour where possible, instead of always to the right -- chosen
+  from the local elevation gradient at the venue's own point, since
+  moving along the gradient (not perpendicular to it) moves away from
+  the current elevation band. Owner feedback.
 - **0.6.5** - `contour`'s venue name label is bigger (37px, halfway
   between the headliner's 56 and the old 18), owner request: it should
   read as more obvious. The footer-band clamp and the text's vertical

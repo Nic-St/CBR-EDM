@@ -168,7 +168,23 @@ function renderRealTerrain(ctx, rawGrid) {
   }
 
   const marker = toScreen({ r: half, c: half });
-  return { contourLines, markerX: marker.x, markerY: marker.y };
+
+  // Which way the label should sit, so it reads outside the highlighted
+  // line rather than crossing it where possible (owner feedback): moving
+  // along the elevation gradient (not perpendicular to it) moves away
+  // from the current contour band in either direction, since perpendicular
+  // movement is what stays ON an isoline. Compares screen-space distance,
+  // not raw grid deltas, since a row and a column don't cover the same
+  // number of pixels here.
+  const east = toScreen({ r: half, c: half + 1 });
+  const south = toScreen({ r: half + 1, c: half });
+  const dValueDx = (values[half * size + (half + 1)] - venueElevation) / (east.x - marker.x);
+  const dValueDy = (values[(half + 1) * size + half] - venueElevation) / (south.y - marker.y);
+  const labelDir = Math.abs(dValueDx) >= Math.abs(dValueDy)
+    ? (dValueDx >= 0 ? 'right' : 'left')
+    : (dValueDy >= 0 ? 'down' : 'up');
+
+  return { contourLines, markerX: marker.x, markerY: marker.y, labelDir };
 }
 
 /** The original fully-synthetic version: seeded wobble rings around a seeded centre. */
@@ -209,7 +225,9 @@ function renderSyntheticTerrain(ctx) {
       markerY = cy + baseRadius * Math.sin(labelAngle);
     }
   }
-  return { contourLines, markerX, markerY };
+  // No local gradient concept in the synthetic version -- keeps the
+  // original placement, to the right of the marker.
+  return { contourLines, markerX, markerY, labelDir: 'right' };
 }
 
 export default {
@@ -232,7 +250,7 @@ export default {
     const parts = [];
     parts.push(`<rect x="0" y="0" width="${canvas.width}" height="${canvas.height}" fill="${palette.tonerBlack}"/>`);
 
-    const { contourLines, markerX, markerY } = event.elevationGrid
+    const { contourLines, markerX, markerY, labelDir } = event.elevationGrid
       ? renderRealTerrain(ctx, event.elevationGrid)
       : renderSyntheticTerrain(ctx);
     parts.push(`<g>${contourLines}</g>`);
@@ -244,20 +262,54 @@ export default {
       // Halfway between the headliner's 56 and the label's old 18,
       // owner request: the venue name should read as more obvious.
       const venueSize = 37;
-      const venueBaselineOffset = venueSize * 0.35; // roughly centres the text against the marker's own centre point
       const textWidth = measure(upperVenue, { font: 'archivo', size: venueSize, letterSpacing: venueSize * 0.1 });
       const markerToTextGap = 18;
       const edgeMargin = 24;
 
-      const lx = Math.min(
-        Math.max(markerX, canvas.left + edgeMargin),
-        canvas.right - edgeMargin - markerToTextGap - textWidth,
-      );
-      // The clamp keeps the marker clear of the footer band, but the
-      // text sits venueBaselineOffset below it, so the clamp needs the
-      // same margin subtracted or a big enough font could still push
-      // the label into the footer even though the marker looked clear.
-      const ly2 = Math.min(Math.max(clearZoneBottom + 20, markerY), footerSafeBottom - venueBaselineOffset);
+      // Which side of the marker the text sits on depends on labelDir
+      // (owner feedback: keep it off the highlighted line where
+      // possible) -- each direction needs its own text-anchor and its
+      // own edge/zone clamp, since "past the edge" means something
+      // different depending on which way the text runs.
+      let lx;
+      let ly2;
+      let textAnchor = 'start';
+      let textX;
+      let textY;
+
+      if (labelDir === 'left') {
+        textAnchor = 'end';
+        lx = Math.min(
+          Math.max(markerX, canvas.left + edgeMargin + markerToTextGap + textWidth),
+          canvas.right - edgeMargin,
+        );
+        ly2 = Math.min(Math.max(clearZoneBottom + 20, markerY), footerSafeBottom);
+        textX = lx - markerToTextGap;
+        textY = ly2 + venueSize * 0.35;
+      } else if (labelDir === 'up' || labelDir === 'down') {
+        textAnchor = 'middle';
+        lx = Math.min(Math.max(markerX, canvas.left + edgeMargin + textWidth / 2), canvas.right - edgeMargin - textWidth / 2);
+        if (labelDir === 'up') {
+          ly2 = Math.min(Math.max(clearZoneBottom + 20 + markerToTextGap + venueSize, markerY), footerSafeBottom);
+          textY = ly2 - markerToTextGap;
+        } else {
+          ly2 = Math.min(Math.max(clearZoneBottom + 20, markerY), footerSafeBottom - markerToTextGap - venueSize);
+          textY = ly2 + markerToTextGap + venueSize * 0.8;
+        }
+        textX = lx;
+      } else {
+        lx = Math.min(
+          Math.max(markerX, canvas.left + edgeMargin),
+          canvas.right - edgeMargin - markerToTextGap - textWidth,
+        );
+        // The clamp keeps the marker clear of the footer band, but the
+        // text sits venueSize * 0.35 below it, so the clamp needs the
+        // same margin subtracted or a big enough font could still push
+        // the label into the footer even though the marker looked clear.
+        ly2 = Math.min(Math.max(clearZoneBottom + 20, markerY), footerSafeBottom - venueSize * 0.35);
+        textX = lx + markerToTextGap;
+        textY = ly2 + venueSize * 0.35;
+      }
 
       const markerSize = 8;
       const markerShape = pick(random, ['triangle', 'cross', 'circle']);
@@ -266,7 +318,7 @@ export default {
       } else {
         parts.push(`<path d="${MARKERS[markerShape](lx, ly2, markerSize)}" stroke="${palette.accent}" stroke-width="2" fill="${markerShape === 'triangle' ? palette.accent : 'none'}"/>`);
       }
-      parts.push(`<text x="${(lx + markerToTextGap).toFixed(1)}" y="${(ly2 + venueBaselineOffset).toFixed(1)}" font-family="'Archivo',Arial,sans-serif" font-size="${venueSize}" letter-spacing="0.1em" fill="${palette.paper}">${escapeXml(upperVenue)}</text>`);
+      parts.push(`<text x="${textX.toFixed(1)}" y="${textY.toFixed(1)}" text-anchor="${textAnchor}" font-family="'Archivo',Arial,sans-serif" font-size="${venueSize}" letter-spacing="0.1em" fill="${palette.paper}">${escapeXml(upperVenue)}</text>`);
     }
 
     if (event.headliner) {

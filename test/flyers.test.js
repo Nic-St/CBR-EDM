@@ -159,13 +159,38 @@ test('contour never places the venue label outside the canvas or in the footer b
   for (let i = 0; i < 40; i++) {
     const event = { ...FIXTURES.cancelled, id: `evt_venuecheck${i}`, flyer_template: 'contour' };
     const result = render(event, { now: FIXTURE_NOW });
-    const match = result.svg.match(/<text x="(-?[\d.]+)" y="([\d.]+)" font-family="'Archivo',Arial,sans-serif" font-size="37" letter-spacing="0.1em"[^>]*>([^<]*)<\/text>/);
+    const match = result.svg.match(/<text x="(-?[\d.]+)" y="([\d.]+)" text-anchor="start" font-family="'Archivo',Arial,sans-serif" font-size="37" letter-spacing="0.1em"[^>]*>([^<]*)<\/text>/);
     assert.ok(match, `seed ${i}: venue label text not found`);
     const [, x, y, text] = match;
     const textWidth = measure(text, { font: 'archivo', size: 37, letterSpacing: 3.7 });
     assert.ok(Number(x) >= 72, `seed ${i}: venue label at x=${x} runs off the left edge`);
     assert.ok(Number(x) + textWidth <= 1008, `seed ${i}: venue label at x=${x} (width ${textWidth.toFixed(1)}) runs off the right edge`);
     assert.ok(Number(y) < footerTop - 20, `seed ${i}: venue label at y=${y} is inside the footer band (starts at ${footerTop})`);
+  }
+});
+
+test('contour keeps the venue label within the canvas and clear of the footer/header in every label direction', () => {
+  // Owner feedback: keep the label off the highlighted line where
+  // possible, done by placing it in the direction of the local
+  // elevation gradient away from the venue's own point. A pure
+  // one-axis gradient forces each of the four directions deterministically.
+  const footerTop = 1278 - 126;
+  const gradients = { right: (r, c) => c * 100, left: (r, c) => -c * 100, down: (r) => r * 100, up: (r) => -r * 100 };
+  for (const [dir, fn] of Object.entries(gradients)) {
+    const grid = flatGrid(9, fn);
+    const event = { ...FIXTURES.full, id: `evt_dircheck_${dir}`, flyer_template: 'contour', elevation_grid: JSON.stringify(grid) };
+    const result = render(event, { now: FIXTURE_NOW });
+
+    const match = result.svg.match(/<text x="(-?[\d.]+)" y="([\d.]+)" text-anchor="([a-z]+)" font-family="'Archivo',Arial,sans-serif" font-size="37" letter-spacing="0.1em"[^>]*>([^<]*)<\/text>/);
+    assert.ok(match, `${dir}: venue label not found`);
+    const [, x, y, anchor, text] = match;
+    const textWidth = measure(text, { font: 'archivo', size: 37, letterSpacing: 3.7 });
+    const left = anchor === 'end' ? Number(x) - textWidth : anchor === 'middle' ? Number(x) - textWidth / 2 : Number(x);
+    const right = anchor === 'end' ? Number(x) : anchor === 'middle' ? Number(x) + textWidth / 2 : Number(x) + textWidth;
+
+    assert.ok(left >= 71, `${dir}: label runs off the left edge (left=${left})`);
+    assert.ok(right <= 1009, `${dir}: label runs off the right edge (right=${right})`);
+    assert.ok(Number(y) < footerTop - 20, `${dir}: label is inside the footer band (y=${y})`);
   }
 });
 
