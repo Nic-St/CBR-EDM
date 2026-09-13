@@ -10,7 +10,6 @@
 // what's in the database.
 
 import { ticketFooter, TICKET_FOOTER_HEIGHT } from '../parts/ticketFooter.js';
-import { wordmark } from '../parts/wordmark.js';
 import { measure } from '../metrics.js';
 import { escapeXml } from '../xml.js';
 import { range, pick } from '../seed.js';
@@ -380,10 +379,9 @@ export default {
       parts.push(`<text x="${canvas.centerX}" y="${(canvas.bottom - 220).toFixed(1)}" text-anchor="middle" font-family="'Archivo',Arial,sans-serif" font-size="24" fill="${palette.paper}">${escapeXml(dateText)}</text>`);
     }
 
+    // ticketFooter now draws the wordmark itself, centred with "Look
+    // after each other" as one bottom-middle pair (owner request).
     parts.push(ticketFooter(ctx));
-    // Same baseline as ticketFooter's "Look after each other" (owner
-    // feedback: it used to float disconnected further down in the margin).
-    parts.push(wordmark(ctx, { x: canvas.right, y: canvas.bottom - 22 }));
 
     return `<g>${parts.join('')}</g>`;
   },

@@ -31,7 +31,9 @@ import { barcode } from '../parts/barcode.js';
 import { wordmark } from '../parts/wordmark.js';
 import { grain } from '../parts/grain.js';
 import { fitSingleLine } from '../layout.js';
+import { measure } from '../metrics.js';
 import { escapeXml } from '../xml.js';
+import { config } from '../../config.js';
 
 const LABEL_FONT = "'JetBrains Mono','Courier New',monospace";
 const VALUE_FONT = "'Archivo',Arial,sans-serif";
@@ -186,10 +188,19 @@ export default {
     // Section 11 rule 1: the footer band's facts are covered by this
     // template's own cells, but the harm reduction line is not a fact
     // about this event, it is the same on every flyer -- it belongs on
-    // the kraft paper below the label's own border, next to the
-    // wordmark, not duplicated inside the form.
-    parts.push(`<text x="${box.x}" y="${canvas.bottom - 12}" font-family="'Archivo',Arial,sans-serif" font-size="16" fill="${palette.tonerBlack}" opacity="0.6">Look after each other</text>`);
-    parts.push(wordmark(ctx, { x: canvas.right, y: canvas.bottom - 12, color: palette.tonerBlack }));
+    // the kraft paper below the label's own border. Bottom middle, as
+    // one centred pair with the wordmark (owner request): both are the
+    // site's own material, not the crew's, so they sit apart from the
+    // form above rather than at its left/right edges.
+    const harmSize = 16;
+    const wordmarkSize = 20;
+    const harmWordmarkGap = 20;
+    const harmY = canvas.bottom - 12;
+    const harmWidth = measure(config.harmReductionTitle, { font: 'archivo', size: harmSize });
+    const wordmarkWidth = measure(config.siteName, { font: 'big-shoulders-display', size: wordmarkSize, letterSpacing: wordmarkSize * 0.06 });
+    const groupLeft = canvas.centerX - (harmWidth + harmWordmarkGap + wordmarkWidth) / 2;
+    parts.push(`<text x="${groupLeft}" y="${harmY}" font-family="'Archivo',Arial,sans-serif" font-size="${harmSize}" fill="${palette.tonerBlack}" opacity="0.6">${escapeXml(config.harmReductionTitle)}</text>`);
+    parts.push(wordmark(ctx, { x: groupLeft + harmWidth + harmWordmarkGap, y: harmY, size: wordmarkSize, align: 'start', color: palette.tonerBlack }));
 
     return `<g>${parts.join('')}</g>`;
   },

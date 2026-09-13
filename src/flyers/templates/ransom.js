@@ -8,7 +8,6 @@
 import { tape } from '../parts/tape.js';
 import { grain } from '../parts/grain.js';
 import { ticketFooter } from '../parts/ticketFooter.js';
-import { wordmark } from '../parts/wordmark.js';
 import { fitBlock } from '../layout.js';
 import { escapeXml } from '../xml.js';
 import { range } from '../seed.js';
@@ -76,10 +75,10 @@ export default {
       }
     });
 
-    parts.push(ticketFooter(ctx));
-    // Same baseline as ticketFooter's "Look after each other" (owner
-    // feedback: it used to float disconnected further down in the margin).
-    parts.push(wordmark(ctx, { x: canvas.right, y: canvas.bottom - 22, color: palette.tonerBlack }));
+    // ticketFooter now draws the wordmark itself, centred with "Look
+    // after each other" as one bottom-middle pair (owner request). This
+    // canvas is the light paper colour, so both need the dark ink.
+    parts.push(ticketFooter(ctx, { color: palette.tonerBlack }));
 
     return `<g>${parts.join('')}</g>`;
   },

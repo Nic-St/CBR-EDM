@@ -5,15 +5,28 @@
 // honesty rule): this is not the place to print placeholder text.
 
 import { rules } from './rules.js';
+import { wordmark } from './wordmark.js';
+import { measure } from '../metrics.js';
 import { escapeXml } from '../xml.js';
+import { config } from '../../config.js';
 
 const HEIGHT = 126;
+const HARM_TEXT_SIZE = 16;
+const WORDMARK_SIZE = 20;
+const HARM_WORDMARK_GAP = 24;
 
 /**
  * @param {object} ctx
+ * @param {{ color?: string }} [options] - text colour, for the two
+ * templates in the seven that use this whose canvas is the light paper
+ * colour instead of toner black (ransom, schematic) -- without this,
+ * every line in the footer band defaults to palette.paper text on a
+ * palette.paper background and is invisible. Defaults to palette.paper,
+ * correct for the other five, which are dark.
  */
-export function ticketFooter(ctx) {
+export function ticketFooter(ctx, { color } = {}) {
   const { event, canvas, palette } = ctx;
+  const textColor = color || palette.paper;
   const top = canvas.bottom - HEIGHT;
 
   // Owner request: the rule separates event/crew-specific facts (above)
@@ -31,23 +44,33 @@ export function ticketFooter(ctx) {
   if (event.doors || event.close) {
     const range = [event.doors, event.close].filter(Boolean).join(' - ');
     doorsLabel = `<text x="${canvas.left}" y="${labelY}" font-family="'Archivo', Arial, sans-serif" font-size="22"
-      fill="${palette.paper}">${escapeXml(range)}</text>`;
+      fill="${textColor}">${escapeXml(range)}</text>`;
   }
 
-  // Right-aligned, directly above the wordmark (also canvas.right,
-  // text-anchor end) -- owner request.
+  // Right-aligned, mirroring doors/close on the left -- owner request.
   let ageLabel = '';
   if (event.ageRestriction === '18+') {
     ageLabel = `<text x="${canvas.right}" y="${labelY}" text-anchor="end" font-family="'Archivo', Arial, sans-serif" font-size="22"
-      fill="${palette.paper}">18+</text>`;
+      fill="${textColor}">18+</text>`;
   }
+
+  // Bottom middle, as one centred pair -- owner request: "look after
+  // each other" and the wordmark are the site's own material, not the
+  // crew's, and centring them (rather than left/right like the crew's
+  // own facts above the rule) is what makes that separation actually
+  // read, instead of just being true in the code.
+  const harmText = config.harmReductionTitle;
+  const harmWidth = measure(harmText, { font: 'archivo', size: HARM_TEXT_SIZE });
+  const wordmarkWidth = measure(config.siteName, { font: 'big-shoulders-display', size: WORDMARK_SIZE, letterSpacing: WORDMARK_SIZE * 0.06 });
+  const groupLeft = canvas.centerX - (harmWidth + HARM_WORDMARK_GAP + wordmarkWidth) / 2;
 
   return `
     ${doorsLabel}
     ${ageLabel}
-    ${rules(ctx, { kind: 'full', x: canvas.left, y: ruleY, width: canvas.contentWidth, color: palette.paper })}
-    <text x="${canvas.left}" y="${linkY}" font-family="'Archivo', Arial, sans-serif" font-size="16"
-      fill="${palette.paper}" opacity="0.7">Look after each other</text>
+    ${rules(ctx, { kind: 'full', x: canvas.left, y: ruleY, width: canvas.contentWidth, color: textColor })}
+    <text x="${groupLeft}" y="${linkY}" font-family="'Archivo', Arial, sans-serif" font-size="${HARM_TEXT_SIZE}"
+      fill="${textColor}" opacity="0.7">${escapeXml(harmText)}</text>
+    ${wordmark(ctx, { x: groupLeft + harmWidth + HARM_WORDMARK_GAP, y: linkY, size: WORDMARK_SIZE, align: 'start', color: textColor })}
   `;
 }
 

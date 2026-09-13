@@ -6,7 +6,6 @@
 
 import { halftone, pickField } from '../parts/halftone.js';
 import { ticketFooter } from '../parts/ticketFooter.js';
-import { wordmark } from '../parts/wordmark.js';
 import { escapeXml } from '../xml.js';
 import { pick, range } from '../seed.js';
 
@@ -60,10 +59,9 @@ export default {
       parts.push(`<text x="${canvas.centerX}" y="${y}" text-anchor="middle" font-family="'Archivo',Arial,sans-serif" font-size="22" fill="${palette.paper}">${escapeXml(dateVenue)}</text>`);
     }
 
+    // ticketFooter now draws the wordmark itself, centred with "Look
+    // after each other" as one bottom-middle pair (owner request).
     parts.push(ticketFooter(ctx));
-    // Same baseline as ticketFooter's "Look after each other" (owner
-    // feedback: it used to float disconnected further down in the margin).
-    parts.push(wordmark(ctx, { x: canvas.right, y: canvas.bottom - 22 }));
 
     return `<g>${parts.join('')}</g>`;
   },

@@ -104,6 +104,24 @@ for (const templateId of Object.keys(TEMPLATES)) {
     const result = render(forced, { surface: 'page', now: FIXTURE_NOW });
     assert.ok(result.svg.includes('Look after each other'), `${templateId} is missing the harm reduction line`);
   });
+
+  // Found by hand on schematic/ransom: their canvas is the light paper
+  // colour, but ticketFooter always drew this line in palette.paper,
+  // the same colour, so it was invisible. Generic across every
+  // template, not just those two, since the same class of bug could
+  // recur for any of them. Skips halftoneField: it draws its own darker
+  // band over the base canvas specifically behind the footer, so the
+  // full-canvas rect this checks isn't the actual local background there.
+  if (templateId === 'halftoneField') continue;
+  test(`${templateId}: the harm reduction line is visible against its own background`, () => {
+    const forced = { ...fixture, flyer_template: templateId };
+    const result = render(forced, { surface: 'page', now: FIXTURE_NOW });
+    const bgMatch = result.svg.match(/<rect x="0" y="0" width="1080" height="1350" fill="([^"]+)"/);
+    assert.ok(bgMatch, `${templateId}: no full-canvas background rect found`);
+    const harmMatch = result.svg.match(/<text x="[\d.]+" y="[\d.]+"[^>]*fill="([^"]+)"[^>]*>Look after each other<\/text>/s);
+    assert.ok(harmMatch, `${templateId}: harm reduction text not found`);
+    assert.notEqual(harmMatch[1], bgMatch[1], `${templateId}: harm reduction text is the same colour as the background`);
+  });
 }
 
 test('resolveTemplate honours exclude by falling through to the next candidate', () => {
@@ -294,6 +312,26 @@ test('contour caps real-terrain segments on a pathological checkerboard grid', (
   const result = render(event, { surface: 'page', now: FIXTURE_NOW });
   const bytes = new TextEncoder().encode(result.svg).length;
   assert.ok(bytes <= SIZE_BUDGETS.page, `checkerboard terrain produced ${bytes} bytes, over budget`);
+});
+
+test('ticketFooter centres the harm reduction line and the wordmark together at the bottom middle', () => {
+  // Owner request: both are the site's own material, not the crew's,
+  // so they sit as one centred pair below the rule rather than at the
+  // left/right edges like the crew's own doors/close/age facts above it.
+  const result = render({ ...FIXTURES.full, flyer_template: 'medi' }, { now: FIXTURE_NOW });
+  const harmMatch = result.svg.match(/<text x="([\d.]+)" y="[\d.]+" font-family="'Archivo', Arial, sans-serif" font-size="16"\s+fill="[^"]+" opacity="0.7">Look after each other<\/text>/);
+  assert.ok(harmMatch, 'harm reduction text not found');
+  const wordmarkMatch = result.svg.match(/<text x="([\d.]+)" y="[\d.]+" text-anchor="start" font-family="'Big Shoulders Display'/);
+  assert.ok(wordmarkMatch, 'wordmark text not found');
+
+  const harmX = Number(harmMatch[1]);
+  const wordmarkX = Number(wordmarkMatch[1]);
+  const harmWidth = measure('Look after each other', { font: 'archivo', size: 16 });
+  const wordmarkWidth = measure('CBR EDM', { font: 'big-shoulders-display', size: 20, letterSpacing: 1.2 });
+  const groupCentre = (harmX + (wordmarkX + wordmarkWidth)) / 2;
+
+  assert.ok(harmX < wordmarkX, 'harm reduction text should come before the wordmark, left to right');
+  assert.ok(Math.abs(groupCentre - 540) < 2, `the pair is not centred on canvas.centerX (540): centre is ${groupCentre.toFixed(1)}`);
 });
 
 test('halftoneField never draws riso yellow directly onto the paper field', () => {

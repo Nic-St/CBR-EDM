@@ -97,6 +97,22 @@ All notable changes to this project are documented here. Format follows
 Every visual change to the generated flyer engine, in order. See
 `FLYER_ENGINE_VERSION` in `src/flyers/index.js`.
 
+- **0.7.0** - The harm reduction line and the wordmark now sit
+  centred together at the bottom middle on every template, instead of
+  left-aligned/right-aligned like the crew's own facts above the rule
+  -- owner request, so the site's own material reads as visibly
+  separate from the event details, not like the site is taking the
+  promoter's credit. `ticketFooter()` (seven templates) now draws the
+  wordmark itself as part of that centred pair, rather than each
+  template placing it separately; `index-list`, `terminal` and
+  `consignment` (which don't use the shared footer) got the same
+  treatment by hand. Found and fixed a real bug along the way:
+  `ticketFooter()` always drew its text in `palette.paper`, which is
+  invisible on `ransom` and `schematic`'s light paper-coloured canvas --
+  it now takes an explicit text colour, defaulting to `palette.paper`
+  for the five dark templates, `palette.tonerBlack` for those two.
+  Added a generic per-template regression test asserting the harm
+  reduction line's colour never matches its own background.
 - **0.6.8** - `contour`'s real-terrain lines are less faceted: the grid
   upsample switched from bilinear to bicubic (Catmull-Rom), which
   curves between the real samples instead of running straight lines

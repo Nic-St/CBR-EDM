@@ -6,8 +6,10 @@
 
 import { grain } from '../parts/grain.js';
 import { wordmark } from '../parts/wordmark.js';
+import { measure } from '../metrics.js';
 import { escapeXml } from '../xml.js';
 import { pick } from '../seed.js';
+import { config } from '../../config.js';
 
 const COMMANDS = ['events --show', 'wall --lookup', 'listing --fetch', 'board --query'];
 const STATUS_TEMPLATES = [
@@ -86,12 +88,18 @@ export default {
     y += gap;
     parts.push(`<rect x="${canvas.left}" y="${y}" width="${canvas.contentWidth}" height="2" fill="${palette.paper}" opacity="0.3"/>`);
     y += gap;
-    parts.push(`<text x="${canvas.left}" y="${y}" font-family="${font}" font-size="16" fill="${palette.paper}" opacity="0.6">Look after each other</text>`);
-
-    // Same baseline as "Look after each other" above -- both the site's
-    // own material, so they read as one row (owner feedback: it used to
-    // float disconnected further down in the margin).
-    parts.push(wordmark(ctx, { x: canvas.right, y }));
+    // Bottom middle, as one centred pair (owner request): "look after
+    // each other" and the wordmark are the site's own material, not the
+    // event's, and centring them under the crew's own left-aligned
+    // readout is what makes that separation actually read.
+    const harmSize = 16;
+    const wordmarkSize = 20;
+    const harmWordmarkGap = 20;
+    const harmWidth = measure(config.harmReductionTitle, { font: 'mono', size: harmSize });
+    const wordmarkWidth = measure(config.siteName, { font: 'big-shoulders-display', size: wordmarkSize, letterSpacing: wordmarkSize * 0.06 });
+    const groupLeft = canvas.centerX - (harmWidth + harmWordmarkGap + wordmarkWidth) / 2;
+    parts.push(`<text x="${groupLeft}" y="${y}" font-family="${font}" font-size="${harmSize}" fill="${palette.paper}" opacity="0.6">${escapeXml(config.harmReductionTitle)}</text>`);
+    parts.push(wordmark(ctx, { x: groupLeft + harmWidth + harmWordmarkGap, y, size: wordmarkSize, align: 'start' }));
 
     return `<g>${parts.join('')}</g>`;
   },
