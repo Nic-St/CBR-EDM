@@ -97,6 +97,22 @@ All notable changes to this project are documented here. Format follows
 Every visual change to the generated flyer engine, in order. See
 `FLYER_ENGINE_VERSION` in `src/flyers/index.js`.
 
+- **0.9.0** - `contour` now shows the event's own title and its crew/
+  presenter name above the headliner (previously shown nowhere on the
+  flyer), wraps support acts onto as many lines as the lineup needs
+  instead of truncating to a trailing "+N MORE" (contour is the only
+  auto-routed template left, so every act has to show), and gained an
+  "Equal billing" option (a new `lineup_equal_billing` column, checked
+  from the admin or public submission form) that lists every act at the
+  same size with no headliner emphasis at all -- owner request, for
+  lineups that don't have one. Also fixes a real bug this surfaced: a
+  real-terrain contour flyer with a full lineup could exceed the board/
+  archive thumbnail's old 12KB size budget, silently crash-falling back
+  to `medi` ("Deep field") there while the same event rendered as
+  contour everywhere else with a bigger budget -- same event, two
+  different templates, for no visible reason. Fixed at the source
+  (contour trims its own terrain detail on the `scrap` surface) and
+  the budget itself raised to 20KB for headroom.
 - **0.8.3** - `contour`'s venue marker is now always the triangle --
   owner reviewed the config gallery and picked it as the final look,
   discarding the cross and circle variants. No longer seed-picked from

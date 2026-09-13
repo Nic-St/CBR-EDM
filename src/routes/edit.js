@@ -93,11 +93,11 @@ export async function handleEditUpdate(request, env) {
     await env.DB.prepare(
       `UPDATE events SET title = ?, presented_by = ?, start_at = ?, end_at = ?, venue_name = ?, venue_address = ?,
          location_tba = ?, location_reveal_at = ?, location_how_to_find = ?, genres = ?,
-         lineup = ?, ticket_url = ?, notes = ?, age_restriction = ?, updated_at = ? WHERE id = ?`,
+         lineup = ?, lineup_equal_billing = ?, ticket_url = ?, notes = ?, age_restriction = ?, updated_at = ? WHERE id = ?`,
     ).bind(
       fields.title, fields.presented_by, fields.start_at, fields.end_at, fields.venue_name, fields.venue_address,
       fields.location_tba, fields.location_reveal_at, fields.location_how_to_find, fields.genres,
-      fields.lineup, fields.ticket_url, fields.notes, fields.age_restriction, now, event.id,
+      fields.lineup, fields.lineup_equal_billing, fields.ticket_url, fields.notes, fields.age_restriction, now, event.id,
     ).run();
 
     return jsonResponse({ ok: true, applied: 'direct' });

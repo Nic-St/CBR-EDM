@@ -31,6 +31,22 @@ const MAP_OVERSCAN = 120;
 // more contour levels read as distinct lines rather than a solid mass.
 const UPSAMPLE_FACTOR = 4;
 
+// A full-detail real-terrain map (14-20 levels over a 33x33 upsampled
+// grid) can land well north of the board/archive thumbnail's size budget
+// once a full, untruncated lineup is added under the headliner too --
+// bug the owner reported: same event, contour in the admin preview
+// (surface 'page', a much bigger budget) but "Deep field" on the board,
+// because contour's own SVG blew the thumbnail budget and render()'s
+// crash-safety net silently substituted medi. Trimming detail for the
+// scrap surface is the fix at the source, on top of raising that budget
+// in index.js -- belt and braces, since a lineup can still be long.
+function terrainDetailFor(surface) {
+  if (surface === 'scrap') {
+    return { upsampleFactor: 2, levelBase: 8, levelSpread: 4, maxSegments: 900 };
+  }
+  return { upsampleFactor: UPSAMPLE_FACTOR, levelBase: 14, levelSpread: 7, maxSegments: MAX_TERRAIN_SEGMENTS };
+}
+
 /**
  * Catmull-Rom cubic through four collinear samples (p1 to p2, p0 and p3
  * giving it a tangent to match), t in [0, 1]. Exact at t=0 (p1) and t=1
@@ -162,13 +178,171 @@ function textMaskRect({ x, y, width, size, anchor, color }) {
 }
 
 /**
+ * Greedy line-packer for a list of names, like layout.js's wrap() but
+ * treating each name as one atomic token joined by a middle dot -- a
+ * name is never split mid-word the way word-level wrapping would.
+ * Owner request: contour is the only auto-routed template left, so every
+ * act has to show, never truncated to "+N MORE" -- this is what lets a
+ * long lineup spill onto more lines instead of being cut.
+ * @param {string[]} names - already display-cased
+ * @param {number} maxWidth
+ * @param {{ font: string, size: number, letterSpacing?: number }} typeOptions
+ */
+function packNames(names, maxWidth, typeOptions) {
+  const lines = [];
+  let current = '';
+  for (const name of names) {
+    const candidate = current ? `${current}  ·  ${name}` : name;
+    if (current && measure(candidate, typeOptions) > maxWidth) {
+      lines.push(current);
+      current = name;
+    } else {
+      current = candidate;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
+/**
+ * Binary-search font size (mirrors layout.js's fitBlock) so a whole list
+ * of names fits a box without ever dropping one -- at minSize, whatever
+ * doesn't fit the box height is left to spill rather than lose a name,
+ * since showing everyone is the point.
+ * @param {string[]} names
+ * @param {{ width: number, height: number }} box
+ * @param {{ minSize: number, maxSize: number, font: string, leading: number, letterSpacingRatio?: number }} options
+ */
+function fitNamesBlock(names, box, options) {
+  const { minSize, maxSize, font, leading, letterSpacingRatio = 0 } = options;
+
+  function tryFit(size) {
+    const typeOptions = { font, size, letterSpacing: size * letterSpacingRatio };
+    const lines = packNames(names, box.width, typeOptions);
+    const lineHeight = size * leading;
+    const blockHeight = lines.length * lineHeight;
+    const widestLine = Math.max(...lines.map((line) => measure(line, typeOptions)), 0);
+    return { lines, lineHeight, blockHeight, widestLine };
+  }
+
+  let lo = minSize;
+  let hi = maxSize;
+  let best = { size: minSize, ...tryFit(minSize) };
+
+  for (let i = 0; i < 8 && hi - lo > 0.5; i++) {
+    const mid = (lo + hi) / 2;
+    const attempt = tryFit(mid);
+    const fits = attempt.blockHeight <= box.height && attempt.widestLine <= box.width;
+    if (fits) {
+      best = { size: mid, ...attempt };
+      lo = mid;
+    } else {
+      hi = mid;
+    }
+  }
+
+  return best;
+}
+
+/**
+ * Pushes one centred, masked line of text and returns the y just past it
+ * (for the next line's cursor). Shared by the title/presenter line, the
+ * equal-billing block and the headliner's support-act lines below.
+ */
+function pushCenteredLine(parts, ctx, text, y, size, options = {}) {
+  const { canvas, palette } = ctx;
+  const { weight, letterSpacing = 0 } = options;
+  const width = measure(text, { font: 'archivo', size, letterSpacing });
+  parts.push(textMaskRect({ x: canvas.centerX, y, width, size, anchor: 'middle', color: palette.tonerBlack }));
+  parts.push(`<text x="${canvas.centerX}" y="${y.toFixed(1)}" text-anchor="middle" font-family="'Archivo',Arial,sans-serif"${weight ? ` font-weight="${weight}"` : ''} font-size="${size}" letter-spacing="${letterSpacing / size || 0}em" fill="${palette.paper}">${escapeXml(text)}</text>`);
+}
+
+/**
+ * The block of text above the map: an optional small title/presenter
+ * line, then either one big headliner plus every support act wrapped
+ * underneath (no "+N MORE" -- contour is the only template left, so
+ * everyone has to show), or, with equalBilling, every act at the same
+ * size and no headliner emphasis at all (owner request: a lot of small
+ * community lineups put equal weight on every act). Returns the y just
+ * past the bottom of whatever it drew, so the caller can keep the venue
+ * marker/label clear of it dynamically instead of a fixed guess.
+ */
+function buildActsBlock(ctx, event) {
+  const { canvas } = ctx;
+  const parts = [];
+  // The cursor tracks the next line's TOP edge, not its baseline -- text
+  // sizes jump a lot in this block (20px title down to 56px headliner),
+  // and a fixed baseline-to-baseline increment tuned for one size silently
+  // overlaps at the next, which is exactly what happened here before this
+  // was cap-height aware: the "Presented by" line collided with DEEP
+  // SIGNAL because +16px wasn't enough clearance for 56px type. Deriving
+  // the baseline from the top edge via CAP_HEIGHT_RATIO (same constant
+  // textMaskRect uses) means each transition self-adjusts to whatever
+  // size comes next.
+  const lineGap = 12;
+  let top = canvas.top + 40;
+
+  function line(text, size, options = {}) {
+    const baseline = top + size * CAP_HEIGHT_RATIO;
+    pushCenteredLine(parts, ctx, text, baseline, size, options);
+    top = baseline + TEXT_MASK_PADDING + lineGap;
+  }
+
+  // Owner ask: contour never showed the event's own title or its crew/
+  // presenter name -- only ever event.headliner (the lineup's first
+  // act). Skipped when it would just repeat the headliner (no lineup:
+  // normalise.js falls back to event.title as the headliner itself).
+  const smallLines = [];
+  if (event.title && event.title.toUpperCase() !== (event.headliner || '').toUpperCase()) {
+    smallLines.push(event.title);
+  }
+  if (event.presenter) smallLines.push(`Presented by ${event.presenter}`);
+
+  const smallSize = 20;
+  for (const smallLine of smallLines) {
+    line(smallLine.toUpperCase(), smallSize, { letterSpacing: smallSize * 0.06 });
+  }
+  if (smallLines.length) top += 12;
+
+  if (event.equalBilling && event.acts.length) {
+    const names = event.acts.map((act) => act.name.toUpperCase());
+    const fit = fitNamesBlock(names, { width: canvas.contentWidth, height: 460 }, {
+      minSize: 24, maxSize: 52, font: 'archivo', leading: 1.25, letterSpacingRatio: 0.02,
+    });
+    for (const fitLine of fit.lines) {
+      line(fitLine, fit.size, { weight: 800, letterSpacing: fit.size * 0.02 });
+    }
+    return { svg: parts.join(''), bottomY: top };
+  }
+
+  if (event.headliner) {
+    line(event.headliner.toUpperCase(), 56, { weight: 800 });
+    top += 8;
+
+    const support = event.acts.slice(1);
+    if (support.length) {
+      const names = support.map((act) => act.name.toUpperCase());
+      const fit = fitNamesBlock(names, { width: canvas.contentWidth, height: 380 }, {
+        minSize: 16, maxSize: 22, font: 'archivo', leading: 1.6, letterSpacingRatio: 0.05,
+      });
+      for (const fitLine of fit.lines) {
+        line(fitLine, fit.size, { letterSpacing: fit.size * 0.05 });
+      }
+    }
+  }
+
+  return { svg: parts.join(''), bottomY: top };
+}
+
+/**
  * Renders the real-elevation-derived version. Returns the same shape
  * the synthetic path uses: contourLines markup plus a marker screen
  * position (the grid's centre cell, which is exactly the geocoded venue).
  */
 function renderRealTerrain(ctx, rawGrid) {
-  const { canvas, palette, random } = ctx;
-  const grid = upsampleGrid(rawGrid, UPSAMPLE_FACTOR);
+  const { canvas, palette, random, surface } = ctx;
+  const detail = terrainDetailFor(surface);
+  const grid = upsampleGrid(rawGrid, detail.upsampleFactor);
   const { size, values } = grid;
   const min = Math.min(...values);
   const max = Math.max(...values);
@@ -181,7 +355,7 @@ function renderRealTerrain(ctx, rawGrid) {
     y: -MAP_OVERSCAN + (r / (size - 1)) * (canvas.height + 2 * MAP_OVERSCAN),
   });
 
-  const levelCount = 14 + Math.floor(random() * 7);
+  const levelCount = detail.levelBase + Math.floor(random() * detail.levelSpread);
 
   // The highlighted contour is the one closest to the venue's own real
   // elevation (its exact grid centre value), not a random pick -- owner
@@ -195,7 +369,7 @@ function renderRealTerrain(ctx, rawGrid) {
     : Math.min(levelCount - 1, Math.max(0, Math.round(((venueElevation - min) / (max - min)) * (levelCount + 1)) - 1));
 
   let contourLines = '';
-  let budget = MAX_TERRAIN_SEGMENTS;
+  let budget = detail.maxSegments;
   for (let i = 0; i < levelCount; i++) {
     const threshold = min + ((i + 1) * (max - min)) / (levelCount + 1);
     const segments = marchingSquaresSegments(grid, threshold, toScreen, budget);
@@ -230,8 +404,12 @@ function renderRealTerrain(ctx, rawGrid) {
 
 /** The original fully-synthetic version: seeded wobble rings around a seeded centre. */
 function renderSyntheticTerrain(ctx) {
-  const { canvas, palette, random } = ctx;
-  const contourCount = 8 + Math.floor(random() * 5);
+  const { canvas, palette, random, surface } = ctx;
+  // Same thumbnail-budget reasoning as terrainDetailFor for real terrain
+  // -- fewer, coarser rings on the scrap surface, well below what's
+  // perceptible at a 200px-wide board card anyway.
+  const isScrap = surface === 'scrap';
+  const contourCount = (isScrap ? 6 : 8) + Math.floor(random() * (isScrap ? 3 : 5));
   const highlighted = Math.floor(random() * contourCount);
   const harmonics = [1 + Math.floor(random() * 3), 2 + Math.floor(random() * 3)];
   const amp = range(random, 40, 90);
@@ -247,7 +425,7 @@ function renderSyntheticTerrain(ctx) {
     const baseRadius = 120 + c * 90;
     const isHighlight = c === highlighted;
     let d = '';
-    const samples = 72;
+    const samples = isScrap ? 40 : 72;
     for (let i = 0; i <= samples; i++) {
       const t = (i / samples) * Math.PI * 2;
       const wobble = amp * (Math.sin(t * harmonics[0] + phaseX) + Math.sin(t * harmonics[1] + phaseY)) / 2;
@@ -281,7 +459,14 @@ export default {
   needs: [],
   render(ctx) {
     const { event, canvas, palette } = ctx;
-    const clearZoneBottom = canvas.top + canvas.contentHeight / 3;
+    // The acts/title block is built first (rather than at its old fixed
+    // headlinerY) so its actual measured height -- now that support acts
+    // wrap to as many lines as a full lineup needs instead of being
+    // truncated to "+N MORE" -- decides how much of the top of the
+    // canvas the venue marker/label has to stay clear of, rather than a
+    // fixed guess tuned for a one-line lineup.
+    const actsBlock = buildActsBlock(ctx, event);
+    const clearZoneBottom = Math.max(canvas.top + canvas.contentHeight / 3, actsBlock.bottomY + 20);
     // The marker's screen position (seeded ring position for the
     // synthetic map, the exact grid centre for a real one) is never
     // trusted to land in a safe spot on its own -- clamped clear of the
@@ -358,43 +543,7 @@ export default {
       parts.push(`<text x="${textX.toFixed(1)}" y="${textY.toFixed(1)}" text-anchor="${textAnchor}" font-family="'Archivo',Arial,sans-serif" font-size="${venueSize}" letter-spacing="0.1em" fill="${palette.paper}">${escapeXml(upperVenue)}</text>`);
     }
 
-    if (event.headliner) {
-      const headlinerSize = 56;
-      const headlinerText = event.headliner.toUpperCase();
-      const headlinerY = canvas.top + 140;
-      const headlinerWidth = measure(headlinerText, { font: 'archivo', size: headlinerSize });
-      parts.push(textMaskRect({ x: canvas.centerX, y: headlinerY, width: headlinerWidth, size: headlinerSize, anchor: 'middle', color: palette.tonerBlack }));
-      parts.push(`<text x="${canvas.centerX}" y="${headlinerY.toFixed(1)}" text-anchor="middle" font-family="'Archivo',Arial,sans-serif" font-weight="800" font-size="${headlinerSize}" fill="${palette.paper}">${escapeXml(headlinerText)}</text>`);
-
-      // Support acts, one line under the headliner -- owner request: DJ
-      // names below the headliner were dropped entirely when contour
-      // became the sole auto-routed template (medi, the previous
-      // default, lists them; contour only ever drew event.headliner).
-      // Fixed position (not tied to the marker/venue label, which can
-      // land anywhere near the map's centre) so it can't collide with
-      // them: it sits just under the headliner, inside the same
-      // top-third zone the marker/venue label are clamped clear of.
-      const support = event.acts.slice(1);
-      if (support.length) {
-        const supportSize = 22;
-        const names = support.map((act) => act.name.toUpperCase());
-        const typeOptions = { font: 'archivo', size: supportSize, letterSpacing: supportSize * 0.05 };
-        let included = names.length;
-        let supportText = names.join('  ·  ');
-        while (included > 0 && measure(supportText, typeOptions) > canvas.contentWidth) {
-          included--;
-          const shown = names.slice(0, included);
-          const hiddenCount = names.length - included;
-          supportText = included > 0
-            ? `${shown.join('  ·  ')}  +${hiddenCount} MORE`
-            : `+${hiddenCount} MORE`;
-        }
-        const supportY = headlinerY + 50;
-        const supportWidth = measure(supportText, typeOptions);
-        parts.push(textMaskRect({ x: canvas.centerX, y: supportY, width: supportWidth, size: supportSize, anchor: 'middle', color: palette.tonerBlack }));
-        parts.push(`<text x="${canvas.centerX}" y="${supportY.toFixed(1)}" text-anchor="middle" font-family="'Archivo',Arial,sans-serif" font-size="${supportSize}" letter-spacing="0.05em" fill="${palette.paper}">${escapeXml(supportText)}</text>`);
-      }
-    }
+    parts.push(actsBlock.svg);
 
     // ticketFooter now draws the wordmark itself, centred with "Look
     // after each other" as one bottom-middle pair, and the date centred
