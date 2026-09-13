@@ -76,6 +76,10 @@ export function eventFormPage(event, crews, options = {}) {
       </div>`)}
 
       <div class="field">
+        <label><input type="checkbox" name="lineup_equal_billing" value="1" ${event.lineup_equal_billing ? raw('checked') : ''}> Equal billing (no headliner -- list every act on the flyer at the same size)</label>
+      </div>
+
+      <div class="field">
         <label for="crew_id">Crew</label>
         <select id="crew_id" name="crew_id">
           <option value="">None (use presented by, above)</option>

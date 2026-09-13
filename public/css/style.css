@@ -217,6 +217,16 @@ select:focus-visible {
   border-radius: var(--radius);
 }
 
+/* The global `a { color: var(--paper) }` rule below is for the dark wall
+   background -- on a scrap's own paper-coloured background it left every
+   link (Tickets, Add to calendar, Something wrong with this listing?, Look
+   after each other) the same colour as the card itself, invisible except
+   when selected. .scrap-title already special-cased this; every other
+   link inside a scrap needs the same fix. */
+.scrap a {
+  color: inherit;
+}
+
 .scrap--past {
   background: var(--paper-faded);
 }
@@ -448,6 +458,13 @@ select:focus-visible {
 
 .calendar table {
   width: 100%;
+  /* Fixed so the 7 day columns always divide the table's own width evenly
+     -- without this, the day boxes' own min-width below (set for a decent
+     touch target) could force the table itself wider than its container
+     on a narrow phone screen, pushing the last column or two off the
+     right edge of the page (owner-reported bug). Fixed layout means a
+     narrow viewport shrinks every column instead of overflowing. */
+  table-layout: fixed;
   border-collapse: collapse;
 }
 
@@ -460,11 +477,14 @@ select:focus-visible {
 
 /* Every day gets the same size box, whether or not it links anywhere, so
    the grid reads as uniform rather than some days looking like buttons
-   and others like plain text. */
+   and others like plain text. width: 100% (not a fixed min-width) fills
+   whatever the fixed table-layout above gives this column -- it can
+   still shrink on a narrow screen instead of forcing the table wider
+   than the page. */
 .calendar td a,
 .calendar td span {
   min-height: 44px;
-  min-width: 44px;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;

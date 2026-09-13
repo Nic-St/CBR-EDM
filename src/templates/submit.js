@@ -70,6 +70,9 @@ export function submitFormPage(turnstileSiteKey) {
             ['notes', 'Anything else worth knowing', 'textarea'],
           ].map(renderField)}
           <div class="field">
+            <label><input type="checkbox" name="lineup_equal_billing" value="1"> Equal billing (no headliner -- list every act on the flyer at the same size)</label>
+          </div>
+          <div class="field">
             <label for="age_restriction">Age restriction</label>
             <select id="age_restriction" name="age_restriction">
               <option value="unknown" selected>Not sure / not set</option>

@@ -84,6 +84,10 @@ export function normaliseEvent(event, options = {}) {
   const now = options.now || new Date();
   const acts = actsFor(event.lineup);
   const headliner = acts[0]?.name || event.title || null;
+  // Owner request: small community events often put equal emphasis on
+  // every act rather than one headliner -- an explicit admin/crew choice
+  // (the "Equal billing" checkbox), not inferred from the lineup itself.
+  const equalBilling = Boolean(event.lineup_equal_billing);
 
   let dateLong = null;
   let dateShort = null;
@@ -109,6 +113,7 @@ export function normaliseEvent(event, options = {}) {
     id: event.id,
     seedSalt: event.seed_salt || 0,
     headliner,
+    equalBilling,
     title: event.title || null,
     presenter: event.crew_name || event.presented_by || null,
     acts,
@@ -142,7 +147,7 @@ export function normaliseEvent(event, options = {}) {
  */
 export function flyerDataHash(event) {
   const relevant = [
-    event.title, event.presented_by, event.lineup, event.start_at, event.end_at,
+    event.title, event.presented_by, event.lineup, event.lineup_equal_billing, event.start_at, event.end_at,
     event.venue_name, event.location_tba, event.location_reveal_at, event.location_how_to_find,
     event.genres, event.age_restriction, event.status,
     event.location_revealed_at, event.crew_name, event.flyer_template, event.seed_salt,

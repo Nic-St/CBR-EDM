@@ -18,10 +18,17 @@ import { isEventPast } from '../lib/dates.js';
 // to an existing one, a shared part changing). It is part of the cache
 // key (section 4.2), so forgetting to bump it serves stale artwork. Record
 // every bump under "## Flyers" in CHANGELOG.md.
-export const FLYER_ENGINE_VERSION = '0.8.3';
+export const FLYER_ENGINE_VERSION = '0.9.0';
 
+// scrap raised from 12KB (owner-reported bug: a real-terrain contour flyer
+// with a full lineup could exceed 12KB, silently crash-falling back to
+// medi/"Deep field" below -- the board would show a different template
+// than the admin preview for the same event, for no visible reason. contour
+// also trims its own terrain detail for the scrap surface (see contour.js)
+// as a second line of defence, but the budget itself needed headroom now
+// that support acts are no longer truncated to fit a tighter budget.
 const SIZE_BUDGETS = {
-  scrap: 12 * 1024,
+  scrap: 20 * 1024,
   page: 60 * 1024,
   social: 60 * 1024,
   print: 60 * 1024,

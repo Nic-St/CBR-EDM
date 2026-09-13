@@ -92,6 +92,11 @@ export function readEventFields(formData) {
     location_how_to_find: formData.get('location_how_to_find') || null,
     genres: formData.get('genres') || null,
     lineup: formData.get('lineup') || null,
+    // Owner request: small community events often put equal emphasis on
+    // every act rather than one headliner -- checked, contour.js renders
+    // every act in event.acts at the same size instead of a big
+    // headliner plus smaller support acts.
+    lineup_equal_billing: formData.get('lineup_equal_billing') ? 1 : 0,
     ticket_url: withAssumedScheme(formData.get('ticket_url')) || null,
     notes: formData.get('notes') || null,
     age_restriction: formData.get('age_restriction') || 'unknown',
