@@ -194,6 +194,27 @@ test('contour keeps the venue label within the canvas and clear of the footer/he
   }
 });
 
+test('contour masks the contour lines behind the headliner and venue label, snug to the text', () => {
+  // Owner request: an opaque box behind each, sized to the text plus
+  // minor padding rather than a generic wide band.
+  const result = render({ ...FIXTURES.full, flyer_template: 'contour' }, { now: FIXTURE_NOW });
+
+  const headliner = FIXTURES.full.lineup.split('\n')[0].toUpperCase();
+  const headlinerWidth = measure(headliner, { font: 'archivo', size: 56 });
+  const headlinerRect = result.svg.match(/<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)" fill="#0a0a0a"\/><text[^>]*font-weight="800"/);
+  assert.ok(headlinerRect, 'no mask rect found immediately before the headliner text');
+  const [, , , hw, hh] = headlinerRect;
+  assert.ok(Math.abs(Number(hw) - (headlinerWidth + 20)) < 2, `headliner mask width ${hw} is not snug to the measured text width (${headlinerWidth.toFixed(1)} + padding)`);
+  // Cap height (0.72em) plus padding, not the full font size plus
+  // padding -- a looser box would read as a generic band, not text-snug.
+  assert.ok(Math.abs(Number(hh) - (56 * 0.72 + 20)) < 2, `headliner mask height ${hh} is not the expected cap-height-plus-padding figure`);
+
+  const venueRect = result.svg.match(/<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)" fill="#0a0a0a"\/><text[^>]*font-size="37"/);
+  assert.ok(venueRect, 'no mask rect found immediately before the venue label text');
+  const [, , , , vh] = venueRect;
+  assert.ok(Math.abs(Number(vh) - (37 * 0.72 + 20)) < 2, `venue label mask height ${vh} is not the expected cap-height-plus-padding figure`);
+});
+
 function flatGrid(size, fn) {
   const values = [];
   for (let r = 0; r < size; r++) {

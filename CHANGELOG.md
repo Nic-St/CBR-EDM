@@ -97,6 +97,12 @@ All notable changes to this project are documented here. Format follows
 Every visual change to the generated flyer engine, in order. See
 `FLYER_ENGINE_VERSION` in `src/flyers/index.js`.
 
+- **0.6.7** - `contour`'s headliner and venue label now sit on an
+  opaque mask (the same toner-black as the canvas) instead of directly
+  over the contour lines, owner request, for readability. The mask is
+  sized to the text's own measured cap height and width plus a fixed
+  10px padding, not a generic band, so it reads as a clean break in the
+  lines rather than a visible box.
 - **0.6.6** - `contour`'s real-terrain venue label now sits to
   whichever side (right/left/up/down) keeps it off the highlighted
   contour where possible, instead of always to the right -- chosen

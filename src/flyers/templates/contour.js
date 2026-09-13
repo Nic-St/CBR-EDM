@@ -120,6 +120,29 @@ function segmentsToPath(segments) {
   return segments.map(([a, b]) => `M ${a.x.toFixed(1)} ${a.y.toFixed(1)} L ${b.x.toFixed(1)} ${b.y.toFixed(1)}`).join(' ');
 }
 
+const TEXT_MASK_PADDING = 10;
+// All-caps Archivo has no descenders, so the cap height alone (roughly
+// 0.72em) is the actual ink -- this approximates that rather than using
+// full font-metrics ascent/descent, which would pad the box well past
+// the visible letterforms.
+const CAP_HEIGHT_RATIO = 0.72;
+
+/**
+ * An opaque rect sized to the text it sits behind, plus a fixed minor
+ * padding -- owner request: mask the contour lines under the title and
+ * venue label for readability, but keep the box tight to the text
+ * rather than a generic wide band.
+ * @param {{ x: number, y: number, width: number, size: number, anchor: 'start'|'middle'|'end', color: string }} options
+ */
+function textMaskRect({ x, y, width, size, anchor, color }) {
+  const boxWidth = width + TEXT_MASK_PADDING * 2;
+  const boxHeight = size * CAP_HEIGHT_RATIO + TEXT_MASK_PADDING * 2;
+  const left = anchor === 'end' ? x - width : anchor === 'middle' ? x - width / 2 : x;
+  const boxX = left - TEXT_MASK_PADDING;
+  const boxY = y - size * CAP_HEIGHT_RATIO - TEXT_MASK_PADDING;
+  return `<rect x="${boxX.toFixed(1)}" y="${boxY.toFixed(1)}" width="${boxWidth.toFixed(1)}" height="${boxHeight.toFixed(1)}" fill="${color}"/>`;
+}
+
 /**
  * Renders the real-elevation-derived version. Returns the same shape
  * the synthetic path uses: contourLines markup plus a marker screen
@@ -318,11 +341,17 @@ export default {
       } else {
         parts.push(`<path d="${MARKERS[markerShape](lx, ly2, markerSize)}" stroke="${palette.accent}" stroke-width="2" fill="${markerShape === 'triangle' ? palette.accent : 'none'}"/>`);
       }
+      parts.push(textMaskRect({ x: textX, y: textY, width: textWidth, size: venueSize, anchor: textAnchor, color: palette.tonerBlack }));
       parts.push(`<text x="${textX.toFixed(1)}" y="${textY.toFixed(1)}" text-anchor="${textAnchor}" font-family="'Archivo',Arial,sans-serif" font-size="${venueSize}" letter-spacing="0.1em" fill="${palette.paper}">${escapeXml(upperVenue)}</text>`);
     }
 
     if (event.headliner) {
-      parts.push(`<text x="${canvas.centerX}" y="${(canvas.top + 140).toFixed(1)}" text-anchor="middle" font-family="'Archivo',Arial,sans-serif" font-weight="800" font-size="56" fill="${palette.paper}">${escapeXml(event.headliner.toUpperCase())}</text>`);
+      const headlinerSize = 56;
+      const headlinerText = event.headliner.toUpperCase();
+      const headlinerY = canvas.top + 140;
+      const headlinerWidth = measure(headlinerText, { font: 'archivo', size: headlinerSize });
+      parts.push(textMaskRect({ x: canvas.centerX, y: headlinerY, width: headlinerWidth, size: headlinerSize, anchor: 'middle', color: palette.tonerBlack }));
+      parts.push(`<text x="${canvas.centerX}" y="${headlinerY.toFixed(1)}" text-anchor="middle" font-family="'Archivo',Arial,sans-serif" font-weight="800" font-size="${headlinerSize}" fill="${palette.paper}">${escapeXml(headlinerText)}</text>`);
     }
 
     const dateText = event.dateLong;
