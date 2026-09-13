@@ -1,7 +1,5 @@
 import { html, raw } from '../../lib/escape.js';
 import { render as renderFlyer } from '../../flyers/index.js';
-import { resolveTemplate, ACTIVE_TEMPLATES } from '../../flyers/manifest.js';
-import { normaliseEvent } from '../../flyers/normalise.js';
 
 /**
  * GET /admin/events. List with search by title, section 10.2.
@@ -167,39 +165,32 @@ function adminEventActions(event, options = {}) {
 }
 
 /**
- * The admin picker, FLYER-ENGINE-SPEC.md section 13: a live preview, a
- * template dropdown ("Auto" shows what genre routing actually picked), a
- * Reroll button, and a compare grid rendering the event through all ten
- * templates -- rendering is cheap, so this is the fastest way to choose.
+ * The admin picker, FLYER-ENGINE-SPEC.md section 13. Used to be a live
+ * preview plus a template dropdown ("Auto" shows what genre routing
+ * actually picked), a Reroll button, and a compare grid rendering the
+ * event through all ten templates.
  *
- * Owner decision (2026-09-13): stick purely to the real contour map --
- * the dropdown and compare grid below now iterate ACTIVE_TEMPLATES
- * (just contour) instead of the full TEMPLATES registry. The other nine
- * templates are archived, not deleted: swap ACTIVE_TEMPLATES back for
- * TEMPLATES in the two Object.values() calls below to bring them back.
+ * Owner decision (2026-09-13): stick purely to the real contour map, with
+ * no way to choose anything else on this screen -- every event always
+ * renders with contour, so the dropdown and compare grid are removed
+ * here entirely (archived below in a comment, not deleted: TEMPLATES,
+ * ACTIVE_TEMPLATES, resolveTemplate and the /flyer-template route are
+ * all still intact and this markup drops back in unchanged if template
+ * choice is ever wanted again). The Reroll and Fetch real terrain
+ * buttons stay -- they're not about choosing a template, just about this
+ * one, contour.
  * @param {object} event
  */
 function generatedFlyerSection(event) {
-  const normalised = normaliseEvent(event, {});
-  const autoChoice = resolveTemplate(normalised, null);
   const preview = renderFlyer(event, { surface: 'page' });
 
   return html`
     <h2>Generated flyer</h2>
-    <p class="muted">Used only while there is no uploaded flyer above -- an uploaded one always wins.</p>
+    <p class="muted">Used only while there is no uploaded flyer above -- an uploaded one always wins. Always rendered with the contour map template.</p>
 
     ${preview
       ? html`<div class="generated-flyer-preview" style="max-width: 300px;">${raw(preview.svg)}</div>`
       : html`<p class="error">Could not render a flyer for this event.</p>`}
-
-    <form method="post" action="/admin/events/${event.id}/flyer-template" class="field">
-      <label for="flyer_template">Template</label>
-      <select id="flyer_template" name="flyer_template">
-        <option value="">Auto (by genre) -- currently ${autoChoice.name}</option>
-        ${Object.values(ACTIVE_TEMPLATES).map((t) => html`<option value="${t.id}" ${event.flyer_template === t.id ? raw('selected') : ''}>${t.name}: ${t.blurb}</option>`)}
-      </select>
-      <button type="submit">Set template</button>
-    </form>
 
     <form method="post" action="/admin/events/${event.id}/reroll-flyer">
       <button type="submit" class="secondary">Reroll (new random variation)</button>
@@ -213,18 +204,12 @@ function generatedFlyerSection(event) {
         </form>`
       : ''}
 
-    <h3>Compare templates</h3>
-    <div class="flyer-compare-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem;">
-      ${Object.values(ACTIVE_TEMPLATES).map((t) => {
-        const result = renderFlyer({ ...event, flyer_template: t.id }, { surface: 'page' });
-        return html`<form method="post" action="/admin/events/${event.id}/flyer-template">
-          <input type="hidden" name="flyer_template" value="${t.id}">
-          <button type="submit" style="padding: 0; border: 2px solid ${event.flyer_template === t.id ? 'var(--accent)' : 'transparent'}; width: 100%; display: block;">
-            ${result ? raw(result.svg) : ''}
-          </button>
-          <p class="muted" style="text-align: center; margin: 0.25rem 0 0;">${t.name}${result && result.templateId !== t.id ? ` (needs more data)` : ''}</p>
-        </form>`;
-      })}
-    </div>
   `;
 }
+
+// The archived template picker (the "Set template" dropdown and the
+// "Compare templates" grid) was removed here, owner decision 2026-09-13:
+// no way to choose anything but contour on this screen. See git history
+// (the commit before this comment was added) for the removed markup --
+// TEMPLATES, ACTIVE_TEMPLATES, resolveTemplate and the /flyer-template
+// route it posted to are all still intact, so it drops back in unchanged.
