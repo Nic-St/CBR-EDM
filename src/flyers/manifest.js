@@ -26,6 +26,16 @@ export const TEMPLATES = {
 };
 
 /**
+ * Owner decision (2026-09-13): stick purely to the real contour map --
+ * every other template is archived from admin selection (not deleted; the
+ * full TEMPLATES registry above stays intact so they're one edit away from
+ * coming back). Admin UI surfaces (the "Set template" dropdown and the
+ * "Compare all templates" grid) should iterate this instead of
+ * Object.values(TEMPLATES).
+ */
+export const ACTIVE_TEMPLATES = { contour };
+
+/**
  * Whether a normalised event satisfies a template's own requirements.
  * @param {object} template
  * @param {object} event - normalised event, see normalise.js
@@ -56,16 +66,19 @@ export function resolveTemplate(event, explicitTemplate, options = {}) {
   }
 
   // Owner decision (2026-09-13): "we're going to just run with the
-  // contour [template]. I love it." contour is now the default for
-  // every event regardless of genre -- the genre-based routing table,
-  // the index-list-by-lineup-length rule and the schematic-by-shape
-  // rule that used to build this candidate list are gone from here, but
-  // every other template is still fully intact in TEMPLATES and stays
-  // reachable via an explicit admin/crew "Set template" choice; they're
-  // archived from auto-routing, not deleted. See git history (this
-  // commit) for the previous routing table if this is ever revisited.
+  // contour [template]. I love it." Then (also 2026-09-13): "stick purely
+  // to the real contour map" -- so contour is now the ONLY auto-routed
+  // template, full stop. The genre-based routing table, the
+  // index-list-by-lineup-length rule, the schematic-by-shape rule, and the
+  // medi ("Deep field") fallback that used to build/close this candidate
+  // list are gone from here, but every other template is still fully
+  // intact in TEMPLATES and stays reachable via an explicit admin/crew
+  // "Set template" choice; they're archived from auto-routing, not
+  // deleted. See git history (this commit) for the previous routing table
+  // if this is ever revisited:
+  //   candidates.push('contour');
+  //   candidates.push('medi');
   candidates.push('contour');
-  candidates.push('medi');
 
   for (const id of candidates) {
     if (id === options.exclude && id !== explicitTemplate) continue;
@@ -73,5 +86,5 @@ export function resolveTemplate(event, explicitTemplate, options = {}) {
     if (template && satisfies(template, event)) return template;
   }
 
-  return TEMPLATES.medi;
+  return TEMPLATES.contour;
 }

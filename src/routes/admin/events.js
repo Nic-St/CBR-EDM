@@ -129,22 +129,29 @@ export async function handleEventUpdate(request, env, admin, id) {
  * choice, freeze the auto-routed one into flyer_template at publish time
  * rather than leaving it to resolve fresh on every render -- otherwise the
  * flyer a visitor sees changes as other events get published later, which
- * breaks determinism. This is also where the anti-repetition nudge lives:
- * if the last three published events all resolved to the same template,
- * this one is nudged to its second choice.
+ * breaks determinism.
+ *
+ * This used to also be where an anti-repetition nudge lived: if the last
+ * three published events all resolved to the same template, this one was
+ * nudged to its second choice. Now that resolveTemplate() only has one
+ * auto-routed candidate (contour), that nudge just forced a fallback to
+ * medi ("Deep field") every time contour published three times running --
+ * which is the "defaulting to the deep field" bug the owner flagged
+ * (2026-09-13). Disabled rather than deleted; restore by un-commenting the
+ * block below if auto-routing ever gets more than one live candidate again.
  */
 export async function freezeFlyerTemplate(env, event) {
   if (event.flyer_template) return;
 
   const normalised = normaliseEvent(event, {});
-  const { results } = await env.DB.prepare(
-    "SELECT flyer_template FROM events WHERE visibility = 'published' AND id != ? ORDER BY published_at DESC LIMIT 3",
-  ).bind(event.id).all();
-
-  const lastThree = results.map((r) => r.flyer_template);
-  const repeated = lastThree.length === 3 && lastThree[0] && lastThree.every((t) => t === lastThree[0])
-    ? lastThree[0]
-    : null;
+  // const { results } = await env.DB.prepare(
+  //   "SELECT flyer_template FROM events WHERE visibility = 'published' AND id != ? ORDER BY published_at DESC LIMIT 3",
+  // ).bind(event.id).all();
+  // const lastThree = results.map((r) => r.flyer_template);
+  // const repeated = lastThree.length === 3 && lastThree[0] && lastThree.every((t) => t === lastThree[0])
+  //   ? lastThree[0]
+  //   : null;
+  const repeated = null;
 
   const template = resolveTemplate(normalised, null, { exclude: repeated });
   await env.DB.prepare('UPDATE events SET flyer_template = ? WHERE id = ?').bind(template.id, event.id).run();

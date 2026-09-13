@@ -1,6 +1,6 @@
 import { html, raw } from '../../lib/escape.js';
 import { render as renderFlyer } from '../../flyers/index.js';
-import { resolveTemplate, TEMPLATES } from '../../flyers/manifest.js';
+import { resolveTemplate, ACTIVE_TEMPLATES } from '../../flyers/manifest.js';
 import { normaliseEvent } from '../../flyers/normalise.js';
 
 /**
@@ -171,6 +171,12 @@ function adminEventActions(event, options = {}) {
  * template dropdown ("Auto" shows what genre routing actually picked), a
  * Reroll button, and a compare grid rendering the event through all ten
  * templates -- rendering is cheap, so this is the fastest way to choose.
+ *
+ * Owner decision (2026-09-13): stick purely to the real contour map --
+ * the dropdown and compare grid below now iterate ACTIVE_TEMPLATES
+ * (just contour) instead of the full TEMPLATES registry. The other nine
+ * templates are archived, not deleted: swap ACTIVE_TEMPLATES back for
+ * TEMPLATES in the two Object.values() calls below to bring them back.
  * @param {object} event
  */
 function generatedFlyerSection(event) {
@@ -190,7 +196,7 @@ function generatedFlyerSection(event) {
       <label for="flyer_template">Template</label>
       <select id="flyer_template" name="flyer_template">
         <option value="">Auto (by genre) -- currently ${autoChoice.name}</option>
-        ${Object.values(TEMPLATES).map((t) => html`<option value="${t.id}" ${event.flyer_template === t.id ? raw('selected') : ''}>${t.name}: ${t.blurb}</option>`)}
+        ${Object.values(ACTIVE_TEMPLATES).map((t) => html`<option value="${t.id}" ${event.flyer_template === t.id ? raw('selected') : ''}>${t.name}: ${t.blurb}</option>`)}
       </select>
       <button type="submit">Set template</button>
     </form>
@@ -207,9 +213,9 @@ function generatedFlyerSection(event) {
         </form>`
       : ''}
 
-    <h3>Compare all templates</h3>
+    <h3>Compare templates</h3>
     <div class="flyer-compare-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem;">
-      ${Object.values(TEMPLATES).map((t) => {
+      ${Object.values(ACTIVE_TEMPLATES).map((t) => {
         const result = renderFlyer({ ...event, flyer_template: t.id }, { surface: 'page' });
         return html`<form method="post" action="/admin/events/${event.id}/flyer-template">
           <input type="hidden" name="flyer_template" value="${t.id}">
