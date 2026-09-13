@@ -35,31 +35,52 @@ const MAP_OVERSCAN = 120;
 const UPSAMPLE_FACTOR = 4;
 
 /**
- * Bilinear upsample of a scalar grid to (size - 1) * factor + 1 per
- * side, same physical span and exact same centre point. Doesn't invent
- * data the samples don't support -- it's the standard way a coarse DEM
- * is rendered as smooth contours, not an approximation of the real
- * values, just a finer mesh through them.
+ * Catmull-Rom cubic through four collinear samples (p1 to p2, p0 and p3
+ * giving it a tangent to match), t in [0, 1]. Exact at t=0 (p1) and t=1
+ * (p2) -- unlike bilinear, curves between samples instead of running
+ * straight lines through them, which is what actually removes the
+ * faceted look rather than just making the facets smaller.
+ */
+function catmullRom1D(p0, p1, p2, p3, t) {
+  const t2 = t * t;
+  const t3 = t2 * t;
+  return 0.5 * (
+    2 * p1
+    + (p2 - p0) * t
+    + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2
+    + (3 * p1 - p0 - 3 * p2 + p3) * t3
+  );
+}
+
+/**
+ * Bicubic (Catmull-Rom) upsample of a scalar grid to (size - 1) * factor
+ * + 1 per side, same physical span and exact same centre point. Doesn't
+ * invent data the samples don't support -- it's a standard way to
+ * render a coarse DEM as smooth contours, curving between the real
+ * values rather than a piecewise-linear approximation of them.
  * @param {{ size: number, values: number[] }} grid
  * @param {number} factor
  */
 function upsampleGrid(grid, factor) {
   const { size, values } = grid;
   const newSize = (size - 1) * factor + 1;
-  const at = (r, c) => values[r * size + c];
+  const at = (r, c) => values[Math.min(size - 1, Math.max(0, r)) * size + Math.min(size - 1, Math.max(0, c))];
   const newValues = new Array(newSize * newSize);
 
   for (let nr = 0; nr < newSize; nr++) {
     const fr = nr / factor;
-    const r0 = Math.min(size - 2, Math.floor(fr));
-    const tr = fr - r0;
+    const r1 = Math.min(size - 2, Math.floor(fr));
+    const tr = fr - r1;
     for (let nc = 0; nc < newSize; nc++) {
       const fc = nc / factor;
-      const c0 = Math.min(size - 2, Math.floor(fc));
-      const tc = fc - c0;
-      const top = at(r0, c0) + (at(r0, c0 + 1) - at(r0, c0)) * tc;
-      const bottom = at(r0 + 1, c0) + (at(r0 + 1, c0 + 1) - at(r0 + 1, c0)) * tc;
-      newValues[nr * newSize + nc] = top + (bottom - top) * tr;
+      const c1 = Math.min(size - 2, Math.floor(fc));
+      const tc = fc - c1;
+
+      const rowValues = [];
+      for (let dr = -1; dr <= 2; dr++) {
+        rowValues.push(catmullRom1D(at(r1 + dr, c1 - 1), at(r1 + dr, c1), at(r1 + dr, c1 + 1), at(r1 + dr, c1 + 2), tc));
+      }
+      newValues[nr * newSize + nc] = catmullRom1D(rowValues[0], rowValues[1], rowValues[2], rowValues[3], tr);
     }
   }
   return { size: newSize, values: newValues };

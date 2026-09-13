@@ -97,6 +97,13 @@ All notable changes to this project are documented here. Format follows
 Every visual change to the generated flyer engine, in order. See
 `FLYER_ENGINE_VERSION` in `src/flyers/index.js`.
 
+- **0.6.8** - `contour`'s real-terrain lines are less faceted: the grid
+  upsample switched from bilinear to bicubic (Catmull-Rom), which
+  curves between the real samples instead of running straight lines
+  through them. Same upsample factor (4x), same exact values at the
+  real sample points; tried a higher factor too (6x) but it cost ~50%
+  more file size for a marginal visual gain over what the interpolation
+  change alone already delivered, so kept the factor as it was.
 - **0.6.7** - `contour`'s headliner and venue label now sit on an
   opaque mask (the same toner-black as the canvas) instead of directly
   over the contour lines, owner request, for readability. The mask is
