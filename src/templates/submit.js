@@ -11,7 +11,7 @@ function renderField([name, label, type]) {
   </div>`;
 }
 
-const STEP_COUNT = 5;
+const STEP_COUNT = 4;
 
 /**
  * GET /submit. Section 9.1: no field is required. The private contact
@@ -87,18 +87,6 @@ export function submitFormPage(turnstileSiteKey) {
         </fieldset>
 
         <fieldset class="form-step" data-step="4">
-          <h2>Flyer</h2>
-          <div class="field">
-            <label for="flyer-file">Flyer image</label>
-            <input type="file" id="flyer-file" name="flyer" accept="image/*">
-          </div>
-          <div class="actions">
-            <button type="button" class="secondary" data-back>Back</button>
-            <button type="button" data-next>Next</button>
-          </div>
-        </fieldset>
-
-        <fieldset class="form-step" data-step="5">
           <h2>Last thing</h2>
           <details class="field">
             <summary>Got a crew key?</summary>
@@ -134,7 +122,7 @@ export function submitFormPage(turnstileSiteKey) {
           .form-step { position: static !important; visibility: visible !important; pointer-events: auto !important; }
           .step-progress, .form-step .actions { display: none !important; }
         </style>
-        <p class="error">This form needs JavaScript, since it checks you are not a robot and resizes your flyer image before it uploads.</p>
+        <p class="error">This form needs JavaScript, since it checks you are not a robot.</p>
       </noscript>
     </form>
   `;

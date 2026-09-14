@@ -39,7 +39,7 @@ function fakeDb({ crews, events }) {
                   venue_address: venueAddress, genres, lineup, ticket_url: ticketUrl, notes,
                   age_restriction: ageRestriction, status: 'on', visibility, published: publishedFlag,
                   created_at: createdAt, updated_at: updatedAt, published_at: publishedAt,
-                  flyer_template: flyerTemplate, seed_salt: 0, flyer_thumb_key: null,
+                  flyer_template: flyerTemplate, seed_salt: 0,
                 });
                 return {};
               }
@@ -89,7 +89,7 @@ test('an untrusted crew\'s creation-time template choice is stored but the event
   const { env, key } = await setup({ trusted: false });
   const result = await handleCrewEventCreate(postJson('http://localhost/api/crew/events/create', {
     key, title: 'Deep Signal', genres: 'techno', lineup: 'DJ One', start_at_local: '2026-06-01T22:00',
-    venue_name: 'Sideway', flyer_template: 'ransom',
+    venue_name: 'Sideway', flyer_template: 'contour',
   }), env).then((r) => r.json());
 
   assert.equal(result.ok, true);

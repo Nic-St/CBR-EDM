@@ -20,18 +20,14 @@ export function eventPage(event, now = new Date()) {
     : (event.crew_name || event.presented_by);
   const lineupActs = (event.lineup || '').split('\n').map((line) => line.trim()).filter(Boolean);
 
-  // A crew flyer always wins if present; a generated one only fills in
-  // when there is none, section 1 of PROJECT-C-EDM-FLYER-ENGINE-SPEC.md.
-  const flyer = event.flyer_key ? null : renderFlyer(event, { surface: 'page', now });
+  // Every flyer is generated, owner request: uploads are gone, so this is
+  // the only flyer a page ever has.
+  const flyer = renderFlyer(event, { surface: 'page', now });
 
   const body = html`
     <article class="scrap${isPast ? ' scrap--past' : ''}">
       <span class="scrap-tape" aria-hidden="true"></span>
-      ${event.flyer_key
-        ? html`<img src="/img/${event.flyer_key}" alt="Flyer for ${event.title || 'this event'}${dateText ? `, ${dateText}` : ''}${venueText ? `, ${venueText}` : ''}" width="600">`
-        : flyer
-          ? html`<div class="generated-flyer">${raw(flyer.svg)}</div>`
-          : ''}
+      ${flyer ? html`<div class="generated-flyer">${raw(flyer.svg)}</div>` : ''}
       <h1 class="scrap-title">${event.title || 'Untitled event'}</h1>
       ${presentedBy ? html`<p class="scrap-meta">${presentedBy}</p>` : ''}
       ${dateText ? html`<p class="scrap-meta">${dateText}</p>` : ''}
@@ -65,6 +61,5 @@ export function eventOgTags(event, dateText) {
     <meta property="og:title" content="${event.title || 'Untitled event'}">
     ${description ? html`<meta property="og:description" content="${description}">` : ''}
     <meta name="twitter:card" content="summary_large_image">
-    ${event.flyer_key ? html`<meta property="og:image" content="/img/${event.flyer_key}">` : ''}
   `;
 }

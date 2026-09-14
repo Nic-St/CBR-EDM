@@ -11,7 +11,7 @@ import { render } from '../flyers/index.js';
 import { resolveTemplate, TEMPLATES } from '../flyers/manifest.js';
 import { normaliseEvent } from '../flyers/normalise.js';
 import { freezeFlyerTemplate } from './admin/events.js';
-import { fetchRealTerrain } from '../lib/geocode.js';
+import { terrainFieldsFor } from '../lib/geocode.js';
 
 const TURNSTILE_SCRIPT = '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>';
 const NO_STORE_HEADERS = { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' };
@@ -128,16 +128,18 @@ export async function handleCrewEventCreate(request, env) {
   const now = new Date().toISOString();
   const id = generateId('evt');
   const slug = eventSlugFor(fields.title, fields.start_at);
+  const terrain = await terrainFieldsFor(fields);
 
   await env.DB.prepare(
     `INSERT INTO events (id, slug, title, crew_id, start_at, end_at, venue_name, venue_address, genres,
        lineup, lineup_equal_billing, ticket_url, notes, age_restriction, status, visibility, source, sequence,
-       created_at, updated_at, published_at, flyer_template)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'on', ?, 'crew', ?, ?, ?, ?, ?)`,
+       created_at, updated_at, published_at, flyer_template, location_tba, venue_lat, venue_lng, elevation_grid)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'on', ?, 'crew', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).bind(
     id, slug, fields.title, crew.id, fields.start_at, fields.end_at, fields.venue_name, fields.venue_address,
     fields.genres, fields.lineup, fields.lineup_equal_billing, fields.ticket_url, fields.notes, fields.age_restriction,
     willPublish ? 'published' : 'pending', willPublish ? 1 : 0, now, now, willPublish ? now : null, flyerTemplate,
+    fields.location_tba, terrain.venue_lat, terrain.venue_lng, terrain.elevation_grid,
   ).run();
 
   // FLYER-ENGINE-SPEC.md section 8: a trusted crew publishing straight
@@ -179,7 +181,6 @@ export async function handleCrewFlyerPreview(request, env) {
     presented_by: fields.presented_by || crew.name,
     id: `preview_${crew.id}`,
     flyer_template: TEMPLATES[body.flyer_template] ? body.flyer_template : null,
-    flyer_thumb_key: null,
     seed_salt: 0,
   };
 
@@ -203,18 +204,15 @@ async function ownedEvent(env, crew, id) {
 function flyerPayload(event) {
   const normalised = normaliseEvent(event, {});
   const auto = resolveTemplate(normalised, null);
-  // Matches eventCard.js/eventPage.js: an uploaded flyer always wins, so
-  // there is nothing useful to preview or pick a template for here.
-  const result = event.flyer_thumb_key ? null : render(event, { surface: 'page' });
+  const result = render(event, { surface: 'page' });
   return {
     ok: true,
     current: event.flyer_template || null,
     auto: { id: auto.id, name: auto.name },
     templates: Object.entries(TEMPLATES).map(([id, t]) => ({ id, name: t.name, blurb: t.blurb })),
     svg: result ? result.svg : null,
-    // The contour template's real terrain, owner request: only offered
-    // for a disclosed venue, same rule the template itself follows.
-    canFetchTerrain: !event.location_tba && Boolean(event.venue_name || event.venue_address),
+    // Real terrain is now fetched automatically on every save (see
+    // geocode.js's terrainFieldsFor), not behind a crew-facing button.
     terrainFetched: Boolean(event.elevation_grid),
   };
 }
@@ -236,9 +234,9 @@ export async function handleCrewEventFlyer(request, env, id) {
 
 /**
  * POST /api/crew/events/:id/flyer-template. Applied directly regardless
- * of trust level, unlike other edits: it only changes which of the ten
- * approved templates draws the same factual data, never the facts
- * themselves, so it carries none of the risk the review queue exists for.
+ * of trust level, unlike other edits: it only changes which registered
+ * template draws the same factual data, never the facts themselves, so
+ * it carries none of the risk the review queue exists for.
  */
 export async function handleCrewEventFlyerTemplate(request, env, id) {
   const body = await readJson(request);
@@ -272,31 +270,6 @@ export async function handleCrewEventRerollFlyer(request, env, id) {
   return jsonResponse(flyerPayload({ ...event, seed_salt: nextSalt }));
 }
 
-/**
- * POST /api/crew/events/:id/fetch-terrain. Geocodes the venue and fetches
- * its real elevation grid once, for the contour template. Never for a
- * location_tba event. Best-effort: fetchRealTerrain never throws, a
- * failed lookup just leaves the columns as they were.
- */
-export async function handleCrewEventFetchTerrain(request, env, id) {
-  const body = await readJson(request);
-  const crew = await requireCrew(request, env, body);
-  if (!crew) return jsonResponse({ ok: false, error: 'Not signed in.' }, 401);
-
-  const event = await ownedEvent(env, crew, id);
-  if (!event) return jsonResponse({ ok: false, error: 'Event not found.' }, 404);
-  if (event.location_tba) return jsonResponse({ ok: false, error: 'Location is TBA for this event.' }, 400);
-
-  const terrain = await fetchRealTerrain(event.venue_name, event.venue_address);
-  if (!terrain) return jsonResponse({ ok: false, error: 'Could not find that venue. Try a more specific address.' }, 422);
-
-  const gridJson = JSON.stringify(terrain.grid);
-  await env.DB.prepare('UPDATE events SET venue_lat = ?, venue_lng = ?, elevation_grid = ? WHERE id = ?')
-    .bind(terrain.lat, terrain.lng, gridJson, id).run();
-
-  return jsonResponse(flyerPayload({ ...event, elevation_grid: gridJson }));
-}
-
 export async function handleCrewEventUpdate(request, env, id) {
   const body = await readJson(request);
   const crew = await requireCrew(request, env, body);
@@ -314,13 +287,15 @@ export async function handleCrewEventUpdate(request, env, id) {
 
   if (canApplyDirectly) {
     const sequenceBump = event.visibility === 'published' ? 'sequence + 1' : 'sequence';
+    const terrain = await terrainFieldsFor(fields, event);
     await env.DB.prepare(
       `UPDATE events SET title = ?, start_at = ?, end_at = ?, venue_name = ?, venue_address = ?, genres = ?,
          lineup = ?, lineup_equal_billing = ?, ticket_url = ?, notes = ?, age_restriction = ?, sequence = ${sequenceBump},
-         updated_at = ? WHERE id = ?`,
+         updated_at = ?, location_tba = ?, venue_lat = ?, venue_lng = ?, elevation_grid = ? WHERE id = ?`,
     ).bind(
       fields.title, fields.start_at, fields.end_at, fields.venue_name, fields.venue_address, fields.genres,
-      fields.lineup, fields.lineup_equal_billing, fields.ticket_url, fields.notes, fields.age_restriction, now, id,
+      fields.lineup, fields.lineup_equal_billing, fields.ticket_url, fields.notes, fields.age_restriction, now,
+      fields.location_tba, terrain.venue_lat, terrain.venue_lng, terrain.elevation_grid, id,
     ).run();
 
     await sendAdminAlert(env, {

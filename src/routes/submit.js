@@ -1,12 +1,12 @@
 import { layout } from '../templates/layout.js';
 import { submitFormPage, submitConfirmationPage } from '../templates/submit.js';
 import { readEventFields, validateEventFields } from '../lib/eventFields.js';
-import { validateFlyerUpload, MAX_LARGE_BYTES, MAX_THUMB_BYTES } from '../lib/imagePipeline.js';
 import { generateId, eventSlugFor } from '../lib/ids.js';
 import { generateToken, hashToken } from '../lib/tokens.js';
 import { verifyTurnstile } from '../lib/turnstile.js';
 import { checkRateLimit } from '../lib/rateLimit.js';
 import { sendAdminAlert } from '../lib/email.js';
+import { terrainFieldsFor } from '../lib/geocode.js';
 
 const TURNSTILE_SCRIPT = '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>';
 
@@ -63,29 +63,13 @@ export async function handleSubmissionApi(request, env) {
     if (!crew) return jsonResponse({ ok: false, error: 'That crew key is not recognised.' }, 400);
   }
 
-  let flyerKey = null;
-  let flyerThumbKey = null;
-  const largeFile = formData.get('flyer_large');
-  if (largeFile && typeof largeFile.arrayBuffer === 'function') {
-    const large = await validateFlyerUpload(largeFile, MAX_LARGE_BYTES);
-    const thumb = await validateFlyerUpload(formData.get('flyer_thumb'), MAX_THUMB_BYTES);
-    if (!large.ok) return jsonResponse({ ok: false, error: `Flyer: ${large.error}` }, 400);
-    if (!thumb.ok) return jsonResponse({ ok: false, error: `Flyer thumbnail: ${thumb.error}` }, 400);
-
-    flyerKey = `flyers/${generateId()}.webp`;
-    flyerThumbKey = `flyers/${generateId()}.webp`;
-    await Promise.all([
-      env.FLYERS.put(flyerKey, large.buffer, { httpMetadata: { contentType: 'image/webp' } }),
-      env.FLYERS.put(flyerThumbKey, thumb.buffer, { httpMetadata: { contentType: 'image/webp' } }),
-    ]);
-  }
-
   const now = new Date().toISOString();
   const id = generateId('evt');
   const slug = eventSlugFor(fields.title, fields.start_at);
   const source = crew ? 'crew' : 'public';
   const willPublish = crew?.trusted && fields.title && fields.start_at;
   const visibility = willPublish ? 'published' : 'pending';
+  const terrain = await terrainFieldsFor(fields);
 
   let editToken = null;
   let editTokenHash = null;
@@ -97,15 +81,17 @@ export async function handleSubmissionApi(request, env) {
   await env.DB.prepare(
     `INSERT INTO events (id, slug, title, crew_id, presented_by, start_at, end_at, venue_name, venue_address,
        location_tba, location_reveal_at, location_how_to_find, genres, lineup, lineup_equal_billing, ticket_url, notes,
-       flyer_key, flyer_thumb_key, age_restriction, status, visibility, source, submitter_contact,
-       edit_token_hash, sequence, created_at, updated_at, published_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'on', ?, ?, ?, ?, ?, ?, ?, ?)`,
+       age_restriction, status, visibility, source, submitter_contact,
+       edit_token_hash, sequence, created_at, updated_at, published_at,
+       venue_lat, venue_lng, elevation_grid)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'on', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).bind(
     id, slug, fields.title, crew?.id || null, fields.presented_by, fields.start_at, fields.end_at,
     fields.venue_name, fields.venue_address, fields.location_tba, fields.location_reveal_at,
     fields.location_how_to_find, fields.genres, fields.lineup, fields.lineup_equal_billing, fields.ticket_url,
-    fields.notes, flyerKey, flyerThumbKey, fields.age_restriction, visibility, source, submitterContact,
+    fields.notes, fields.age_restriction, visibility, source, submitterContact,
     editTokenHash, willPublish ? 1 : 0, now, now, willPublish ? now : null,
+    terrain.venue_lat, terrain.venue_lng, terrain.elevation_grid,
   ).run();
 
   const adminUrl = new URL(`/admin/events/${id}/edit`, request.url).toString();

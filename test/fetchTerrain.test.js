@@ -1,8 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { hashToken } from '../src/lib/tokens.js';
-import { handleEventFetchTerrain } from '../src/routes/admin/events.js';
-import { handleCrewEventFetchTerrain } from '../src/routes/crew.js';
+import { terrainFieldsFor } from '../src/lib/geocode.js';
 
 function withFetch(impl, fn) {
   const original = global.fetch;
@@ -14,121 +12,66 @@ function withFetch(impl, fn) {
 
 const OK_GEOCODE_AND_ELEVATION = async (url) => {
   if (String(url).includes('nominatim')) {
-    return { ok: true, json: async () => [{ lat: '-35.30', lon: '149.12' }] };
+    return { ok: true, json: async () => [{ lat: '-35.30', lon: '149.12', place_rank: 26, addresstype: 'road' }] };
   }
   const points = new URL(url).searchParams.get('locations').split('|');
   return { ok: true, json: async () => ({ status: 'OK', results: points.map(() => ({ elevation: 580 })) }) };
 };
 
-// A minimal in-memory stand-in for env.DB, pattern-matching the exact
-// statement shapes both fetch-terrain handlers issue.
-function fakeDb({ crews = [], events }) {
-  return {
-    prepare(sql) {
-      return {
-        bind(...args) {
-          return {
-            async first() {
-              if (sql.startsWith('SELECT * FROM crews WHERE key_hash = ?')) {
-                return crews.find((c) => c.key_hash === args[0]) || null;
-              }
-              if (sql.startsWith('SELECT id, venue_name, venue_address, location_tba FROM events WHERE id = ?')) {
-                const event = events.find((e) => e.id === args[0]);
-                if (!event) return null;
-                return { id: event.id, venue_name: event.venue_name, venue_address: event.venue_address, location_tba: event.location_tba };
-              }
-              if (sql.includes('FROM events LEFT JOIN crews') && sql.includes('events.crew_id = ?')) {
-                const [id, crewId] = args;
-                return events.find((e) => e.id === id && e.crew_id === crewId) || null;
-              }
-              throw new Error(`fakeDb: unhandled first() for: ${sql}`);
-            },
-            async run() {
-              if (sql.startsWith('UPDATE events SET venue_lat = ?, venue_lng = ?, elevation_grid = ?')) {
-                const [lat, lng, grid, id] = args;
-                Object.assign(events.find((e) => e.id === id), { venue_lat: lat, venue_lng: lng, elevation_grid: grid });
-                return {};
-              }
-              throw new Error(`fakeDb: unhandled run() for: ${sql}`);
-            },
-          };
-        },
-      };
-    },
-  };
-}
+// terrainFieldsFor replaces the old manual "Fetch real terrain" button
+// (owner decision, 2026-09-14): every save with a real, disclosed venue
+// tries to fetch real terrain automatically; only location_tba skips it.
+// Called from handleEventCreate/handleEventUpdate (admin), handleCrewEventCreate/
+// handleCrewEventUpdate (crew), the public submission and self-edit routes,
+// and the change-approval flow -- tested here in isolation rather than once
+// per call site.
 
-test('admin fetch-terrain geocodes and stores the grid for a disclosed venue', async () => {
-  const events = [{ id: 'evt_1', venue_name: 'Sideway', venue_address: '1 Lonsdale St', location_tba: 0 }];
-  const env = { DB: fakeDb({ events }) };
-
+test('terrainFieldsFor geocodes and returns the grid for a disclosed venue', async () => {
   await withFetch(OK_GEOCODE_AND_ELEVATION, async () => {
-    const request = new Request('http://localhost/admin/events/evt_1/fetch-terrain', { method: 'POST' });
-    const response = await handleEventFetchTerrain(request, env, {}, 'evt_1');
-    assert.equal(response.status, 303);
+    const result = await terrainFieldsFor({ location_tba: 0, venue_name: 'Sideway', venue_address: '1 Lonsdale St' });
+    assert.equal(result.venue_lat, -35.3);
+    assert.equal(result.venue_lng, 149.12);
+    assert.equal(JSON.parse(result.elevation_grid).values.length, 81);
   });
-
-  const event = events[0];
-  assert.equal(event.venue_lat, -35.3);
-  assert.equal(event.venue_lng, 149.12);
-  assert.equal(JSON.parse(event.elevation_grid).values.length, 81);
 });
 
-test('admin fetch-terrain does nothing for a location_tba event', async () => {
-  const events = [{ id: 'evt_1', venue_name: null, venue_address: null, location_tba: 1 }];
-  const env = { DB: fakeDb({ events }) };
+test('terrainFieldsFor never fetches, and clears any existing terrain, for a location_tba event', async () => {
   let fetchCalled = false;
-
   await withFetch(async (...args) => { fetchCalled = true; return OK_GEOCODE_AND_ELEVATION(...args); }, async () => {
-    const request = new Request('http://localhost/admin/events/evt_1/fetch-terrain', { method: 'POST' });
-    await handleEventFetchTerrain(request, env, {}, 'evt_1');
+    const result = await terrainFieldsFor(
+      { location_tba: 1, venue_name: null, venue_address: null },
+      { venue_lat: -35.3, venue_lng: 149.12, elevation_grid: '{"size":9}' },
+    );
+    assert.deepEqual(result, { venue_lat: null, venue_lng: null, elevation_grid: null });
   });
-
   assert.equal(fetchCalled, false);
-  assert.equal(events[0].elevation_grid, undefined);
 });
 
-async function setupCrew({ locationTba = false } = {}) {
-  const key = 'test-crew-key';
-  const crew = { id: 'crw_1', name: 'Low Frequency Society', key_hash: await hashToken(key) };
-  const event = {
-    id: 'evt_1', crew_id: crew.id, venue_name: 'Sideway', venue_address: '1 Lonsdale St',
-    location_tba: locationTba ? 1 : 0, elevation_grid: null,
-  };
-  const env = { DB: fakeDb({ crews: [crew], events: [event] }) };
-  return { env, key, event };
-}
-
-function postJson(body) {
-  return new Request('http://localhost/api/crew/events/evt_1/fetch-terrain', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+test('terrainFieldsFor keeps existing terrain (does not fetch) when there is no venue text and it is not TBA', async () => {
+  let fetchCalled = false;
+  await withFetch(async (...args) => { fetchCalled = true; return OK_GEOCODE_AND_ELEVATION(...args); }, async () => {
+    const existing = { venue_lat: -35.3, venue_lng: 149.12, elevation_grid: '{"size":9}' };
+    const result = await terrainFieldsFor({ location_tba: 0, venue_name: null, venue_address: null }, existing);
+    assert.deepEqual(result, existing);
   });
-}
-
-test('crew fetch-terrain geocodes and returns an updated flyer payload', async () => {
-  const { env, key, event } = await setupCrew();
-
-  const result = await withFetch(OK_GEOCODE_AND_ELEVATION, () => handleCrewEventFetchTerrain(postJson({ key }), env, 'evt_1').then((r) => r.json()));
-
-  assert.equal(result.ok, true);
-  assert.equal(result.terrainFetched, true);
-  assert.equal(JSON.parse(event.elevation_grid).values.length, 81);
+  assert.equal(fetchCalled, false);
 });
 
-test('crew fetch-terrain refuses a location_tba event', async () => {
-  const { env, key } = await setupCrew({ locationTba: true });
-
-  const result = await handleCrewEventFetchTerrain(postJson({ key }), env, 'evt_1').then((r) => r.json());
-
-  assert.equal(result.ok, false);
+test('terrainFieldsFor keeps existing terrain when the fetch fails, rather than erasing it', async () => {
+  const existing = { venue_lat: -35.3, venue_lng: 149.12, elevation_grid: '{"size":9}' };
+  const result = await withFetch(async () => ({ ok: true, json: async () => [] }), () => terrainFieldsFor(
+    { location_tba: 0, venue_name: 'Sideway', venue_address: '1 Lonsdale St' },
+    existing,
+  ));
+  assert.deepEqual(result, existing);
 });
 
-test('crew fetch-terrain reports failure when geocoding finds nothing', async () => {
-  const { env, key } = await setupCrew();
-
-  const result = await withFetch(async () => ({ ok: true, json: async () => [] }), () => handleCrewEventFetchTerrain(postJson({ key }), env, 'evt_1').then((r) => r.json()));
-
-  assert.equal(result.ok, false);
+test('terrainFieldsFor overwrites existing terrain with a fresh fetch', async () => {
+  const existing = { venue_lat: 1, venue_lng: 2, elevation_grid: '{"size":1}' };
+  const result = await withFetch(OK_GEOCODE_AND_ELEVATION, () => terrainFieldsFor(
+    { location_tba: 0, venue_name: 'Sideway', venue_address: '1 Lonsdale St' },
+    existing,
+  ));
+  assert.equal(result.venue_lat, -35.3);
+  assert.equal(result.venue_lng, 149.12);
 });

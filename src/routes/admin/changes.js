@@ -1,6 +1,7 @@
 import { adminLayout } from '../../templates/admin/layout.js';
 import { changeListPage } from '../../templates/admin/changes.js';
 import { notFound } from '../../lib/http.js';
+import { terrainFieldsFor } from '../../lib/geocode.js';
 
 const LIST_SQL = `
   SELECT event_changes.*, events.title AS event_title,
@@ -34,6 +35,18 @@ export async function handleChangeApprove(request, env, admin, id) {
 
   if (change.kind === 'edit') {
     const proposed = JSON.parse(change.proposed_json || '{}');
+
+    // The proposed edit's venue/location_tba fields decide real terrain
+    // just like a direct save does (owner request: always fetch real
+    // terrain unless TBA) -- this is the point the venue actually
+    // changes on the live event, so it's fetched here too, not only on
+    // handleEventCreate/handleEventUpdate's direct-write paths.
+    const existing = await env.DB.prepare(
+      'SELECT venue_lat, venue_lng, elevation_grid FROM events WHERE id = ?',
+    ).bind(change.event_id).first();
+    const terrain = await terrainFieldsFor(proposed, existing || {});
+    Object.assign(proposed, terrain);
+
     const setClauses = Object.keys(proposed).map((field) => `${field} = ?`);
     const values = Object.values(proposed);
     await env.DB.prepare(

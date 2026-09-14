@@ -1,14 +1,14 @@
 // The flyer engine's public entry point. PROJECT-C-EDM-FLYER-ENGINE-SPEC.md
-// section 4.7: this must never break a page. A template that throws, or
-// produces an invalid or oversized composition, falls back to medi; if
-// medi also fails, this returns null and the caller falls back to the
-// type-only scrap from the main spec.
+// section 4.7: this must never break a page. contour is now the only
+// template (see manifest.js), so it is its own fallback -- if it throws,
+// or produces an invalid or oversized composition, this returns null and
+// the caller falls back to the type-only scrap from the main spec.
 
 import { rngFor } from './seed.js';
 import { paletteFor } from './palette.js';
 import { gridFor } from './layout.js';
 import { normaliseEvent, flyerDataHash } from './normalise.js';
-import { resolveTemplate, TEMPLATES } from './manifest.js';
+import { resolveTemplate } from './manifest.js';
 import { stampTextFor, stamp } from './parts/stamp.js';
 import { grain } from './parts/grain.js';
 import { escapeXml } from './xml.js';
@@ -18,13 +18,13 @@ import { isEventPast } from '../lib/dates.js';
 // to an existing one, a shared part changing). It is part of the cache
 // key (section 4.2), so forgetting to bump it serves stale artwork. Record
 // every bump under "## Flyers" in CHANGELOG.md.
-export const FLYER_ENGINE_VERSION = '0.9.1';
+export const FLYER_ENGINE_VERSION = '0.11.0';
 
 // scrap now matches page/social/print (owner-reported bug: a real-terrain
 // contour flyer with a full lineup could exceed the old 12KB budget,
-// silently crash-falling back to medi/"Deep field" below -- the board
-// would show a different template than the admin preview for the same
-// event, for no visible reason). A first fix raised this to 20KB, but
+// silently crash-falling back to "Deep field" below -- the board would
+// show a different template than the admin preview for the same event,
+// for no visible reason). A first fix raised this to 20KB, but
 // measuring actual worst-case output (long title/presenter, real terrain,
 // a long lineup of long names, contour's own scrap-surface terrain
 // trimming already applied) shows byte size grows roughly linearly with
@@ -48,13 +48,13 @@ const SIZE_BUDGETS = {
   print: 60 * 1024,
 };
 
-function buildCtx(event, rawEvent, surface, now, template) {
+function buildCtx(event, rawEvent, surface, now) {
   const random = rngFor(event.id, event.seedSalt);
   const isPast = isEventPast(rawEvent, now);
   return {
     event,
     random,
-    palette: paletteFor(random, isPast, { excludeYellowOnPaper: template?.paperField }),
+    palette: paletteFor(random, isPast),
     canvas: gridFor(1080, 1350),
     surface,
     isPast,
@@ -125,20 +125,11 @@ export function render(rawEvent, options = {}) {
   const dataHash = flyerDataHash(rawEvent);
 
   try {
-    const svg = renderWithTemplate(template, buildCtx(event, rawEvent, surface, now, template));
+    const svg = renderWithTemplate(template, buildCtx(event, rawEvent, surface, now));
     return { svg, templateId: template.id, dataHash };
   } catch (err) {
     console.error(`Flyer render failed for event ${rawEvent.id} (template ${template.id})`, err);
-  }
-
-  if (template.id === 'medi') return null; // medi is itself the fallback; nothing left to try
-
-  try {
-    const svg = renderWithTemplate(TEMPLATES.medi, buildCtx(event, rawEvent, surface, now, TEMPLATES.medi));
-    return { svg, templateId: 'medi', dataHash };
-  } catch (err) {
-    console.error(`Flyer fallback to medi also failed for event ${rawEvent.id}`, err);
-    return null;
+    return null; // contour is itself the only template; nothing left to fall back to
   }
 }
 
