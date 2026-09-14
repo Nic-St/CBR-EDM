@@ -545,9 +545,9 @@ export default {
 
     parts.push(actsBlock.svg);
 
-    // ticketFooter now draws the wordmark itself, centred with "Look
-    // after each other" as one bottom-middle pair, and the date centred
-    // on the same line as doors/close and 18+ (owner request).
+    // ticketFooter centres "Look after each other" at the bottom
+    // middle, and the date centred on the same line as doors/close and
+    // 18+ (owner request).
     parts.push(ticketFooter(ctx, { date: event.dateLong }));
 
     return `<g>${parts.join('')}</g>`;

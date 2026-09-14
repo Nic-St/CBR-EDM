@@ -14,7 +14,6 @@
 // changes. Revisit if a true mixed-run engine gets built later.
 
 import { wrap } from '../layout.js';
-import { wordmark } from '../parts/wordmark.js';
 import { measure } from '../metrics.js';
 import { escapeXml } from '../xml.js';
 import { pick } from '../seed.js';
@@ -62,8 +61,7 @@ export default {
     // template incorporates the info into its own structure). The rule
     // separates the event/crew-specific line above it from the site's own
     // material below (owner request): the detail line belongs to this
-    // event, "look after each other" and the wordmark are the same on
-    // every flyer.
+    // event, "look after each other" is the same on every flyer.
     y += 20;
     const detailLine = [
       event.presenter,
@@ -78,18 +76,14 @@ export default {
     y += gap;
     parts.push(`<rect x="${canvas.left}" y="${y}" width="${canvas.contentWidth}" height="2" fill="${palette.tonerBlack}"/>`);
     y += gap;
-    // Bottom middle, as one centred pair (owner request): "look after
-    // each other" and the wordmark are the site's own material, not the
-    // event's, and centring them under the crew's own left-aligned
-    // detail line is what makes that separation actually read.
+    // Bottom middle (owner request): "look after each other" is the
+    // site's own material, not the event's, and centring it under the
+    // crew's own left-aligned detail line is what makes that separation
+    // actually read.
     const harmSize = 14;
-    const wordmarkSize = 20;
-    const harmWordmarkGap = 20;
     const harmWidth = measure(config.harmReductionTitle, { font: 'archivo', size: harmSize });
-    const wordmarkWidth = measure(config.siteName, { font: 'big-shoulders-display', size: wordmarkSize, letterSpacing: wordmarkSize * 0.06 });
-    const groupLeft = canvas.centerX - (harmWidth + harmWordmarkGap + wordmarkWidth) / 2;
-    parts.push(`<text x="${groupLeft}" y="${y}" font-family="'Archivo',Arial,sans-serif" font-size="${harmSize}" fill="${palette.tonerBlack}" opacity="0.6">${escapeXml(config.harmReductionTitle)}</text>`);
-    parts.push(wordmark(ctx, { x: groupLeft + harmWidth + harmWordmarkGap, y, size: wordmarkSize, align: 'start', color: palette.tonerBlack }));
+    const harmLeft = canvas.centerX - harmWidth / 2;
+    parts.push(`<text x="${harmLeft}" y="${y}" font-family="'Archivo',Arial,sans-serif" font-size="${harmSize}" fill="${palette.tonerBlack}" opacity="0.6">${escapeXml(config.harmReductionTitle)}</text>`);
 
     return `<g>${parts.join('')}</g>`;
   },

@@ -58,8 +58,8 @@ export default {
     const dateVenue = [event.dateLong, event.venueName || (event.locationTba ? 'Location TBA' : null)].filter(Boolean).join(' - ');
     if (dateVenue) centerText(dateVenue, 22);
 
-    // ticketFooter now draws the wordmark itself, centred with "Look
-    // after each other" as one bottom-middle pair (owner request).
+    // ticketFooter centres "Look after each other" at the bottom
+    // middle (owner request).
     parts.push(ticketFooter(ctx));
 
     return `<g>${parts.join('')}</g>`;

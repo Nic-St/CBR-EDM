@@ -75,9 +75,9 @@ export default {
       }
     });
 
-    // ticketFooter now draws the wordmark itself, centred with "Look
-    // after each other" as one bottom-middle pair (owner request). This
-    // canvas is the light paper colour, so both need the dark ink.
+    // ticketFooter centres "Look after each other" at the bottom middle
+    // (owner request). This canvas is the light paper colour, so it
+    // needs the dark ink.
     parts.push(ticketFooter(ctx, { color: palette.tonerBlack }));
 
     return `<g>${parts.join('')}</g>`;

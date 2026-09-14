@@ -356,24 +356,20 @@ test('contour caps real-terrain segments on a pathological checkerboard grid', (
   assert.ok(bytes <= SIZE_BUDGETS.page, `checkerboard terrain produced ${bytes} bytes, over budget`);
 });
 
-test('ticketFooter centres the harm reduction line and the wordmark together at the bottom middle', () => {
-  // Owner request: both are the site's own material, not the crew's,
-  // so they sit as one centred pair below the rule rather than at the
-  // left/right edges like the crew's own doors/close/age facts above it.
+test('ticketFooter centres the harm reduction line at the bottom middle, with no site wordmark', () => {
+  // Owner request: the wordmark has been removed from every flyer. The
+  // harm reduction line remains, centred, as the site's own material.
   const result = render({ ...FIXTURES.full, flyer_template: 'medi' }, { now: FIXTURE_NOW });
   const harmMatch = result.svg.match(/<text x="([\d.]+)" y="[\d.]+" font-family="'Archivo', Arial, sans-serif" font-size="16"\s+fill="[^"]+" opacity="0.7">Look after each other<\/text>/);
   assert.ok(harmMatch, 'harm reduction text not found');
-  const wordmarkMatch = result.svg.match(/<text x="([\d.]+)" y="[\d.]+" text-anchor="start" font-family="'Big Shoulders Display'/);
-  assert.ok(wordmarkMatch, 'wordmark text not found');
+  assert.ok(!/Big Shoulders Display/.test(result.svg), 'wordmark font should not appear anywhere in the flyer');
+  assert.ok(!result.svg.includes('CBR EDM'), 'wordmark text should not appear anywhere in the flyer');
 
   const harmX = Number(harmMatch[1]);
-  const wordmarkX = Number(wordmarkMatch[1]);
   const harmWidth = measure('Look after each other', { font: 'archivo', size: 16 });
-  const wordmarkWidth = measure('CBR EDM', { font: 'big-shoulders-display', size: 20, letterSpacing: 1.2 });
-  const groupCentre = (harmX + (wordmarkX + wordmarkWidth)) / 2;
+  const harmCentre = harmX + harmWidth / 2;
 
-  assert.ok(harmX < wordmarkX, 'harm reduction text should come before the wordmark, left to right');
-  assert.ok(Math.abs(groupCentre - 540) < 2, `the pair is not centred on canvas.centerX (540): centre is ${groupCentre.toFixed(1)}`);
+  assert.ok(Math.abs(harmCentre - 540) < 2, `harm reduction text is not centred on canvas.centerX (540): centre is ${harmCentre.toFixed(1)}`);
 });
 
 test('contour centres the date on the same line as doors/close and 18+, not as its own line', () => {

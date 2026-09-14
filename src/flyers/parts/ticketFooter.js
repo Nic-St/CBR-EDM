@@ -5,15 +5,12 @@
 // honesty rule): this is not the place to print placeholder text.
 
 import { rules } from './rules.js';
-import { wordmark } from './wordmark.js';
 import { measure } from '../metrics.js';
 import { escapeXml } from '../xml.js';
 import { config } from '../../config.js';
 
 const HEIGHT = 126;
 const HARM_TEXT_SIZE = 16;
-const WORDMARK_SIZE = 20;
-const HARM_WORDMARK_GAP = 24;
 
 /**
  * @param {object} ctx
@@ -34,12 +31,12 @@ export function ticketFooter(ctx, { color, date } = {}) {
 
   // Owner request: the rule separates event/crew-specific facts (above)
   // from the site's own material (below) -- doors, close and age belong
-  // to this event, but "look after each other" and the wordmark are the
-  // same on every flyer. The pair now sits right at the bottom of the
-  // page (canvas.height - 20, in the true margin) rather than tucked
-  // just under the rule, so it reads as a footer of the physical page,
-  // not another line of the form -- decoupled from the rule/labelY
-  // gap math below, which still governs the event-facts band only.
+  // to this event, but "look after each other" is the same on every
+  // flyer. It now sits right at the bottom of the page (canvas.height -
+  // 20, in the true margin) rather than tucked just under the rule, so
+  // it reads as a footer of the physical page, not another line of the
+  // form -- decoupled from the rule/labelY gap math below, which still
+  // governs the event-facts band only.
   const linkY = canvas.height - 20;
   const gap = 36;
   const ruleY = top + HEIGHT - 22 - gap;
@@ -65,24 +62,21 @@ export function ticketFooter(ctx, { color, date } = {}) {
       fill="${textColor}">${escapeXml(date)}</text>`;
   }
 
-  // Bottom middle, as one centred pair -- owner request: "look after
-  // each other" and the wordmark are the site's own material, not the
-  // crew's, and centring them (rather than left/right like the crew's
-  // own facts above the rule) is what makes that separation actually
-  // read, instead of just being true in the code.
+  // Bottom middle -- owner request: "look after each other" is the
+  // site's own material, not the crew's, and centring it (rather than
+  // left/right like the crew's own facts above the rule) is what makes
+  // that separation actually read, instead of just being true in the code.
   const harmText = config.harmReductionTitle;
   const harmWidth = measure(harmText, { font: 'archivo', size: HARM_TEXT_SIZE });
-  const wordmarkWidth = measure(config.siteName, { font: 'big-shoulders-display', size: WORDMARK_SIZE, letterSpacing: WORDMARK_SIZE * 0.06 });
-  const groupLeft = canvas.centerX - (harmWidth + HARM_WORDMARK_GAP + wordmarkWidth) / 2;
+  const harmLeft = canvas.centerX - harmWidth / 2;
 
   return `
     ${doorsLabel}
     ${ageLabel}
     ${dateLabel}
     ${rules(ctx, { kind: 'full', x: canvas.left, y: ruleY, width: canvas.contentWidth, color: textColor })}
-    <text x="${groupLeft}" y="${linkY}" font-family="'Archivo', Arial, sans-serif" font-size="${HARM_TEXT_SIZE}"
+    <text x="${harmLeft}" y="${linkY}" font-family="'Archivo', Arial, sans-serif" font-size="${HARM_TEXT_SIZE}"
       fill="${textColor}" opacity="0.7">${escapeXml(harmText)}</text>
-    ${wordmark(ctx, { x: groupLeft + harmWidth + HARM_WORDMARK_GAP, y: linkY, size: WORDMARK_SIZE, align: 'start', color: textColor })}
   `;
 }
 

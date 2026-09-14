@@ -5,7 +5,6 @@
 // not printed, never "null" or "-".
 
 import { grain } from '../parts/grain.js';
-import { wordmark } from '../parts/wordmark.js';
 import { measure } from '../metrics.js';
 import { escapeXml } from '../xml.js';
 import { pick } from '../seed.js';
@@ -88,18 +87,14 @@ export default {
     y += gap;
     parts.push(`<rect x="${canvas.left}" y="${y}" width="${canvas.contentWidth}" height="2" fill="${palette.paper}" opacity="0.3"/>`);
     y += gap;
-    // Bottom middle, as one centred pair (owner request): "look after
-    // each other" and the wordmark are the site's own material, not the
-    // event's, and centring them under the crew's own left-aligned
-    // readout is what makes that separation actually read.
+    // Bottom middle (owner request): "look after each other" is the
+    // site's own material, not the event's, and centring it under the
+    // crew's own left-aligned readout is what makes that separation
+    // actually read.
     const harmSize = 16;
-    const wordmarkSize = 20;
-    const harmWordmarkGap = 20;
     const harmWidth = measure(config.harmReductionTitle, { font: 'mono', size: harmSize });
-    const wordmarkWidth = measure(config.siteName, { font: 'big-shoulders-display', size: wordmarkSize, letterSpacing: wordmarkSize * 0.06 });
-    const groupLeft = canvas.centerX - (harmWidth + harmWordmarkGap + wordmarkWidth) / 2;
-    parts.push(`<text x="${groupLeft}" y="${y}" font-family="${font}" font-size="${harmSize}" fill="${palette.paper}" opacity="0.6">${escapeXml(config.harmReductionTitle)}</text>`);
-    parts.push(wordmark(ctx, { x: groupLeft + harmWidth + harmWordmarkGap, y, size: wordmarkSize, align: 'start' }));
+    const harmLeft = canvas.centerX - harmWidth / 2;
+    parts.push(`<text x="${harmLeft}" y="${y}" font-family="${font}" font-size="${harmSize}" fill="${palette.paper}" opacity="0.6">${escapeXml(config.harmReductionTitle)}</text>`);
 
     return `<g>${parts.join('')}</g>`;
   },

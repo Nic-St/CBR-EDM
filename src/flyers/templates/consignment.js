@@ -20,7 +20,7 @@
 // Deliberate grid deviation (section 4.6 permits this with a comment): the
 // bordered form uses the standard 72 margin rather than the "inset 40"
 // figure in the spec prose, so there is guaranteed room below it for the
-// wordmark, which every generated flyer must carry (section 11).
+// harm reduction line every generated flyer must carry (section 11).
 //
 // The spec's standard ticketFooter is not used here: this template's own
 // HANDLING and WINDOW cells already carry age, ticket text and doors/close,
@@ -28,7 +28,6 @@
 
 import { rules } from '../parts/rules.js';
 import { barcode } from '../parts/barcode.js';
-import { wordmark } from '../parts/wordmark.js';
 import { grain } from '../parts/grain.js';
 import { fitSingleLine } from '../layout.js';
 import { measure } from '../metrics.js';
@@ -188,19 +187,14 @@ export default {
     // Section 11 rule 1: the footer band's facts are covered by this
     // template's own cells, but the harm reduction line is not a fact
     // about this event, it is the same on every flyer -- it belongs on
-    // the kraft paper below the label's own border. Bottom middle, as
-    // one centred pair with the wordmark (owner request): both are the
-    // site's own material, not the crew's, so they sit apart from the
-    // form above rather than at its left/right edges.
+    // the kraft paper below the label's own border. Centred (owner
+    // request): it is the site's own material, not the crew's, so it
+    // sits apart from the form above rather than at its left/right edges.
     const harmSize = 16;
-    const wordmarkSize = 20;
-    const harmWordmarkGap = 20;
     const harmY = canvas.bottom - 12;
     const harmWidth = measure(config.harmReductionTitle, { font: 'archivo', size: harmSize });
-    const wordmarkWidth = measure(config.siteName, { font: 'big-shoulders-display', size: wordmarkSize, letterSpacing: wordmarkSize * 0.06 });
-    const groupLeft = canvas.centerX - (harmWidth + harmWordmarkGap + wordmarkWidth) / 2;
-    parts.push(`<text x="${groupLeft}" y="${harmY}" font-family="'Archivo',Arial,sans-serif" font-size="${harmSize}" fill="${palette.tonerBlack}" opacity="0.6">${escapeXml(config.harmReductionTitle)}</text>`);
-    parts.push(wordmark(ctx, { x: groupLeft + harmWidth + harmWordmarkGap, y: harmY, size: wordmarkSize, align: 'start', color: palette.tonerBlack }));
+    const harmLeft = canvas.centerX - harmWidth / 2;
+    parts.push(`<text x="${harmLeft}" y="${harmY}" font-family="'Archivo',Arial,sans-serif" font-size="${harmSize}" fill="${palette.tonerBlack}" opacity="0.6">${escapeXml(config.harmReductionTitle)}</text>`);
 
     return `<g>${parts.join('')}</g>`;
   },

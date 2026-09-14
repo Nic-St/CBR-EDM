@@ -59,8 +59,8 @@ export default {
       parts.push(`<text x="${canvas.centerX}" y="${y}" text-anchor="middle" font-family="'Archivo',Arial,sans-serif" font-size="22" fill="${palette.paper}">${escapeXml(dateVenue)}</text>`);
     }
 
-    // ticketFooter now draws the wordmark itself, centred with "Look
-    // after each other" as one bottom-middle pair (owner request).
+    // ticketFooter centres "Look after each other" at the bottom
+    // middle (owner request).
     parts.push(ticketFooter(ctx));
 
     return `<g>${parts.join('')}</g>`;

@@ -5,6 +5,12 @@ All notable changes to this project are documented here. Format follows
 
 ## [Unreleased]
 
+### Removed
+- The site wordmark ("CBR EDM") from every generated flyer template,
+  owner request. `src/flyers/parts/wordmark.js` deleted; the harm
+  reduction line ("Look after each other") stays, now centred on its
+  own rather than as a pair with the wordmark.
+
 ### Decided
 - Flyer engine phases 4 (Open Graph rasterisation) and 5 (print
   download): not building them. Rasterising an SVG to PNG needs either

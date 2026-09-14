@@ -90,8 +90,8 @@ export default {
       parts.push(textLine(dateVenue, centerX, 1050, { font, size: 26, color: palette.paper }));
     }
 
-    // ticketFooter now draws the wordmark itself, centred with "Look
-    // after each other" as one bottom-middle pair (owner request).
+    // ticketFooter centres "Look after each other" at the bottom
+    // middle (owner request).
     parts.push(ticketFooter(ctx));
 
     return `<g>${parts.join('')}</g>`;
