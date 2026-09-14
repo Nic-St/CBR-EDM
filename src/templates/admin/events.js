@@ -115,24 +115,12 @@ export function eventFormPage(event, crews, options = {}) {
 function adminEventActions(event, options = {}) {
   return html`
     <h2>Flyer</h2>
-    ${event.flyer_thumb_key ? html`<img src="/img/${event.flyer_thumb_key}" alt="Current flyer" width="200">` : html`<p class="muted">No flyer uploaded.</p>`}
     ${options.fromEmailId
-      ? html`<div data-flyer-from-email="${options.fromEmailId}" data-flyer-from-email-index="0" data-event-id="${event.id}">
-          <p>This event was converted from an email. Use its attached image as the flyer:</p>
+      ? html`<div>
+          <p>This event was converted from an email. Its attached image, for reference (the flyer itself is always the generated contour map below):</p>
           <img src="/admin/api/inbound-emails/${options.fromEmailId}/attachments/0" alt="Attachment from the source email" width="200">
-          <button type="button" data-flyer-from-email-btn>Use this image as the flyer</button>
-          <p data-flyer-from-email-status role="status"></p>
         </div>`
       : ''}
-    <form data-flyer-upload action="/admin/api/events/${event.id}/flyer" method="post" enctype="multipart/form-data">
-      <div class="field">
-        <label for="flyer-file">Upload a flyer image</label>
-        <input type="file" id="flyer-file" name="file" accept="image/*">
-      </div>
-      <button type="submit">Upload flyer</button>
-      <p data-flyer-status role="status"></p>
-      <noscript><p class="error">Flyer upload needs JavaScript, since the image is resized in your browser before it uploads.</p></noscript>
-    </form>
 
     ${generatedFlyerSection(event)}
 
@@ -181,8 +169,12 @@ function adminEventActions(event, options = {}) {
  * in the codebase at all (see manifest.js), so this markup is not coming
  * back unchanged the way it might have when they were merely archived
  * from selection -- see git history/CHANGELOG.md if template choice is
- * ever wanted again. The Reroll and Fetch real terrain buttons stay --
- * they're not about choosing a template, just about this one, contour.
+ * ever wanted again. The Reroll button stays -- it's not about choosing
+ * a template, just about this one, contour. The manual "Fetch real
+ * terrain" button is gone too (owner decision, 2026-09-14): terrain is
+ * now fetched automatically on every save (see geocode.js's
+ * terrainFieldsFor, called from handleEventCreate/handleEventUpdate),
+ * so there is nothing left for a separate button to do.
  * @param {object} event
  */
 function generatedFlyerSection(event) {
@@ -190,7 +182,13 @@ function generatedFlyerSection(event) {
 
   return html`
     <h2>Generated flyer</h2>
-    <p class="muted">Used only while there is no uploaded flyer above -- an uploaded one always wins. Always rendered with the contour map template.</p>
+    <p class="muted">Always rendered with the contour map template.
+      ${event.location_tba
+        ? 'Location TBA, so this uses a procedural map, never a real one.'
+        : event.elevation_grid
+          ? 'Drawing this venue\'s real terrain, fetched automatically when the venue was saved.'
+          : 'Drawing a procedural map -- the venue could not be geocoded to real terrain. Re-saving the event tries again.'}
+    </p>
 
     ${preview
       ? html`<div class="generated-flyer-preview" style="max-width: 300px;">${raw(preview.svg)}</div>`
@@ -199,15 +197,6 @@ function generatedFlyerSection(event) {
     <form method="post" action="/admin/events/${event.id}/reroll-flyer">
       <button type="submit" class="secondary">Reroll (new random variation)</button>
     </form>
-
-    ${!event.location_tba && (event.venue_name || event.venue_address)
-      ? html`<form method="post" action="/admin/events/${event.id}/fetch-terrain">
-          <p class="muted">The contour map template can draw this venue's real terrain instead of a procedural one.</p>
-          <button type="submit" class="secondary">${event.elevation_grid ? 'Re-fetch real terrain' : 'Fetch real terrain'}</button>
-          ${event.elevation_grid ? html`<span class="muted"> Fetched.</span>` : ''}
-        </form>`
-      : ''}
-
   `;
 }
 

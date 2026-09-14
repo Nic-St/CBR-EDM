@@ -90,16 +90,13 @@ export function crewDashboardPage(turnstileSiteKey) {
 function flyerPickerMarkup(scope, { withReroll }) {
   return html`<div data-crew-flyer data-scope="${scope}" hidden>
     <h3>Generated flyer</h3>
-    <p class="muted">Only shown while there is no uploaded flyer.</p>
+    <p class="muted">Real terrain is fetched automatically for a disclosed venue; mark the event Location TBA to keep the map procedural.</p>
     <img data-crew-flyer-preview alt="Generated flyer preview" style="max-width: 300px; display: block;">
     <div class="field">
       <label for="${scope}-flyer-template">Template</label>
       <select id="${scope}-flyer-template" data-crew-flyer-template></select>
     </div>
     ${withReroll ? html`<button type="button" data-crew-flyer-reroll class="secondary">Reroll (new random variation)</button>` : ''}
-    ${withReroll
-      ? html`<button type="button" data-crew-flyer-fetch-terrain class="secondary" hidden>Fetch real terrain (for the contour map template)</button>`
-      : ''}
     <p data-crew-flyer-status role="status"></p>
   </div>`;
 }

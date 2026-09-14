@@ -18,7 +18,7 @@ import { isEventPast } from '../lib/dates.js';
 // to an existing one, a shared part changing). It is part of the cache
 // key (section 4.2), so forgetting to bump it serves stale artwork. Record
 // every bump under "## Flyers" in CHANGELOG.md.
-export const FLYER_ENGINE_VERSION = '0.10.0';
+export const FLYER_ENGINE_VERSION = '0.11.0';
 
 // scrap now matches page/social/print (owner-reported bug: a real-terrain
 // contour flyer with a full lineup could exceed the old 12KB budget,

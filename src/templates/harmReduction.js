@@ -6,12 +6,12 @@ const REGIONS = ['ACT', 'NSW', 'National'];
 /**
  * /look-after-each-other. Section 15.4.
  * @param {object[]} links - rows from harm_reduction_links, any order
+ * @param {string} intro - admin-editable intro copy, one paragraph per line
  */
-export function harmReductionPage(links) {
+export function harmReductionPage(links, intro) {
   return html`
     <h1>${config.harmReductionTitle}</h1>
-    <p>In an emergency call 000.</p>
-    <p>Drug checking in NSW is offered only at selected licensed festivals, not at underground events, so CanTEST is the local option before heading out.</p>
+    ${intro.split('\n').filter(Boolean).map((paragraph) => html`<p>${paragraph}</p>`)}
     ${REGIONS.map((region) => {
       const regionLinks = links
         .filter((link) => link.region === region)

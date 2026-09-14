@@ -6,8 +6,8 @@ import { normaliseEvent, flyerDataHash } from '../flyers/normalise.js';
  * GET /flyer/:eventId.svg. PROJECT-C-EDM-FLYER-ENGINE-SPEC.md section 4.2.
  * Standalone raw-SVG access to a generated flyer (the board and event page
  * inline the SVG directly instead of fetching this, section 4.5). Only
- * for published events, matching handleImg's precedent for uploaded
- * flyers -- a generated flyer is not published data until the event is.
+ * for published events -- a generated flyer is not published data until
+ * the event is.
  * @param {Request} request
  * @param {import('../env.js').Env} env
  * @param {string} eventId

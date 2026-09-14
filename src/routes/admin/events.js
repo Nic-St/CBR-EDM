@@ -7,7 +7,7 @@ import { generateToken, hashToken } from '../../lib/tokens.js';
 import { notFound } from '../../lib/http.js';
 import { resolveTemplate } from '../../flyers/manifest.js';
 import { normaliseEvent } from '../../flyers/normalise.js';
-import { fetchRealTerrain } from '../../lib/geocode.js';
+import { terrainFieldsFor } from '../../lib/geocode.js';
 
 function page(admin, title, body) {
   return new Response(String(adminLayout({ title, bodyContent: body, email: admin.email })), {
@@ -82,17 +82,20 @@ export async function handleEventCreate(request, env, admin) {
   const now = new Date().toISOString();
   const id = generateId('evt');
   const slug = eventSlugFor(fields.title, fields.start_at);
+  const terrain = await terrainFieldsFor(fields);
 
   await env.DB.prepare(
     `INSERT INTO events (id, slug, title, crew_id, presented_by, start_at, end_at, venue_name, venue_address,
        location_tba, location_reveal_at, location_how_to_find, genres, lineup, lineup_equal_billing, ticket_url, notes,
-       age_restriction, status, visibility, source, sequence, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'admin', 0, ?, ?)`,
+       age_restriction, status, visibility, source, sequence, created_at, updated_at,
+       venue_lat, venue_lng, elevation_grid)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'admin', 0, ?, ?, ?, ?, ?)`,
   ).bind(
     id, slug, fields.title, fields.crew_id, fields.presented_by, fields.start_at, fields.end_at,
     fields.venue_name, fields.venue_address, fields.location_tba, fields.location_reveal_at,
     fields.location_how_to_find, fields.genres, fields.lineup, fields.lineup_equal_billing, fields.ticket_url,
     fields.notes, fields.age_restriction, fields.status, now, now,
+    terrain.venue_lat, terrain.venue_lng, terrain.elevation_grid,
   ).run();
 
   return Response.redirect(new URL(`/admin/events/${id}/edit`, request.url), 303);
@@ -102,23 +105,25 @@ export async function handleEventCreate(request, env, admin) {
  * POST /admin/events/:id/edit
  */
 export async function handleEventUpdate(request, env, admin, id) {
-  const event = await env.DB.prepare('SELECT id FROM events WHERE id = ?').bind(id).first();
+  const event = await env.DB.prepare('SELECT venue_lat, venue_lng, elevation_grid FROM events WHERE id = ?').bind(id).first();
   if (!event) return notFound();
 
   const formData = await request.formData();
   const fields = readEventFields(formData);
   const now = new Date().toISOString();
+  const terrain = await terrainFieldsFor(fields, event);
 
   await env.DB.prepare(
     `UPDATE events SET title = ?, crew_id = ?, presented_by = ?, start_at = ?, end_at = ?, venue_name = ?,
        venue_address = ?, location_tba = ?, location_reveal_at = ?, location_how_to_find = ?, genres = ?,
-       lineup = ?, lineup_equal_billing = ?, ticket_url = ?, notes = ?, age_restriction = ?, status = ?, updated_at = ?
+       lineup = ?, lineup_equal_billing = ?, ticket_url = ?, notes = ?, age_restriction = ?, status = ?, updated_at = ?,
+       venue_lat = ?, venue_lng = ?, elevation_grid = ?
      WHERE id = ?`,
   ).bind(
     fields.title, fields.crew_id, fields.presented_by, fields.start_at, fields.end_at, fields.venue_name,
     fields.venue_address, fields.location_tba, fields.location_reveal_at, fields.location_how_to_find,
     fields.genres, fields.lineup, fields.lineup_equal_billing, fields.ticket_url, fields.notes, fields.age_restriction,
-    fields.status, now, id,
+    fields.status, now, terrain.venue_lat, terrain.venue_lng, terrain.elevation_grid, id,
   ).run();
 
   return Response.redirect(new URL(`/admin/events/${id}/edit`, request.url), 303);
@@ -242,28 +247,6 @@ export async function handleEventRerollFlyer(request, env, admin, id) {
 }
 
 /**
- * POST /admin/events/:id/fetch-terrain. The contour template's real
- * terrain (owner request): geocodes the venue and fetches its real
- * elevation grid once, an explicit action rather than something that
- * runs on every save. Never for a location_tba event -- the same rule
- * the template itself follows. Best-effort: fetchRealTerrain never
- * throws, so a failed lookup just leaves the columns as they were.
- */
-export async function handleEventFetchTerrain(request, env, admin, id) {
-  const event = await env.DB.prepare('SELECT id, venue_name, venue_address, location_tba FROM events WHERE id = ?').bind(id).first();
-  if (!event) return notFound();
-  if (event.location_tba) return Response.redirect(new URL(`/admin/events/${id}/edit`, request.url), 303);
-
-  const terrain = await fetchRealTerrain(event.venue_name, event.venue_address);
-  if (terrain) {
-    await env.DB.prepare('UPDATE events SET venue_lat = ?, venue_lng = ?, elevation_grid = ? WHERE id = ?')
-      .bind(terrain.lat, terrain.lng, JSON.stringify(terrain.grid), id).run();
-  }
-
-  return Response.redirect(new URL(`/admin/events/${id}/edit`, request.url), 303);
-}
-
-/**
  * POST /admin/events/:id/flyer-template. Section 13: the admin's explicit
  * template choice, or "Auto" (stored as null) to route by genre again.
  */
@@ -277,13 +260,8 @@ export async function handleEventSetFlyerTemplate(request, env, admin, id) {
 }
 
 export async function handleEventDelete(request, env, admin, id) {
-  const event = await env.DB.prepare('SELECT flyer_key, flyer_thumb_key FROM events WHERE id = ?').bind(id).first();
+  const event = await env.DB.prepare('SELECT id FROM events WHERE id = ?').bind(id).first();
   if (!event) return notFound();
-
-  const keysToDelete = [event.flyer_key, event.flyer_thumb_key].filter(Boolean);
-  if (keysToDelete.length) {
-    await Promise.all(keysToDelete.map((key) => env.FLYERS.delete(key)));
-  }
 
   await env.DB.prepare('DELETE FROM events WHERE id = ?').bind(id).run();
 

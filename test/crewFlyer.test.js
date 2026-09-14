@@ -58,7 +58,6 @@ async function setup(eventOverrides = {}) {
     lineup: 'DJ One\nDJ Two',
     venue_name: 'Sideway',
     flyer_template: null,
-    flyer_thumb_key: null,
     seed_salt: 0,
     ...eventOverrides,
   };
@@ -83,14 +82,6 @@ test('a crew can preview the auto-routed flyer for its own event', async () => {
   assert.equal(result.auto.id, 'contour');
   assert.equal(result.templates.length, 1);
   assert.ok(result.svg.startsWith('<svg'));
-});
-
-test('an uploaded flyer suppresses the generated preview', async () => {
-  const { env, key, event } = await setup({ flyer_thumb_key: 'evt_1/flyer.webp' });
-  const result = await handleCrewEventFlyer(postJson({ key }), env, event.id).then((r) => r.json());
-
-  assert.equal(result.ok, true);
-  assert.equal(result.svg, null);
 });
 
 test('a crew can set an explicit template for its own event', async () => {

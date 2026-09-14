@@ -5,6 +5,7 @@ import { readEventFields, validateEventFields } from '../lib/eventFields.js';
 import { generateId } from '../lib/ids.js';
 import { utcToCanberraLocalInput } from '../lib/dates.js';
 import { checkRateLimit } from '../lib/rateLimit.js';
+import { terrainFieldsFor } from '../lib/geocode.js';
 
 const NO_JS_HEADERS = {
   'Content-Type': 'text/html; charset=utf-8',
@@ -90,14 +91,17 @@ export async function handleEditUpdate(request, env) {
   const now = new Date().toISOString();
 
   if (event.visibility === 'pending') {
+    const terrain = await terrainFieldsFor(fields, event);
     await env.DB.prepare(
       `UPDATE events SET title = ?, presented_by = ?, start_at = ?, end_at = ?, venue_name = ?, venue_address = ?,
          location_tba = ?, location_reveal_at = ?, location_how_to_find = ?, genres = ?,
-         lineup = ?, lineup_equal_billing = ?, ticket_url = ?, notes = ?, age_restriction = ?, updated_at = ? WHERE id = ?`,
+         lineup = ?, lineup_equal_billing = ?, ticket_url = ?, notes = ?, age_restriction = ?, updated_at = ?,
+         venue_lat = ?, venue_lng = ?, elevation_grid = ? WHERE id = ?`,
     ).bind(
       fields.title, fields.presented_by, fields.start_at, fields.end_at, fields.venue_name, fields.venue_address,
       fields.location_tba, fields.location_reveal_at, fields.location_how_to_find, fields.genres,
-      fields.lineup, fields.lineup_equal_billing, fields.ticket_url, fields.notes, fields.age_restriction, now, event.id,
+      fields.lineup, fields.lineup_equal_billing, fields.ticket_url, fields.notes, fields.age_restriction, now,
+      terrain.venue_lat, terrain.venue_lng, terrain.elevation_grid, event.id,
     ).run();
 
     return jsonResponse({ ok: true, applied: 'direct' });

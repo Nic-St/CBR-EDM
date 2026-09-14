@@ -3,7 +3,6 @@ import { handleEventPage, handleEventIcs } from './routes/event.js';
 import { handleArchive } from './routes/archive.js';
 import { handleHarmReduction } from './routes/harmReduction.js';
 import { handleCalendarFeed } from './routes/calendarFeed.js';
-import { handleImg } from './routes/img.js';
 import { handleGo } from './routes/go.js';
 import { handleRobots } from './routes/robots.js';
 import { adminRouter } from './routes/admin/router.js';
@@ -13,7 +12,6 @@ import {
   handleCrewPage, handleCrewLogin, handleCrewEventList, handleCrewEventCreate,
   handleCrewEventUpdate, handleCrewEventStatus, handleCrewEventUnpublish, handleCrewProfileUpdate,
   handleCrewEventFlyer, handleCrewEventFlyerTemplate, handleCrewEventRerollFlyer, handleCrewFlyerPreview,
-  handleCrewEventFetchTerrain,
 } from './routes/crew.js';
 import { handleContactForm, handleContactSent, handleContactApi } from './routes/contact.js';
 import { handleCrewsDirectory, handleCrewProfile } from './routes/crews.js';
@@ -58,13 +56,12 @@ export async function router(request, env) {
   if (path === '/api/crew/profile' && method === 'POST') return handleCrewProfileUpdate(request, env);
   if (path === '/api/crew/flyer-preview' && method === 'POST') return handleCrewFlyerPreview(request, env);
 
-  const crewEventAction = path.match(/^\/api\/crew\/events\/([^/]+)\/(update|status|unpublish|flyer|flyer-template|reroll-flyer|fetch-terrain)$/);
+  const crewEventAction = path.match(/^\/api\/crew\/events\/([^/]+)\/(update|status|unpublish|flyer|flyer-template|reroll-flyer)$/);
   if (crewEventAction && method === 'POST') {
     const [, id, action] = crewEventAction;
     const handlers = {
       update: handleCrewEventUpdate, status: handleCrewEventStatus, unpublish: handleCrewEventUnpublish,
       flyer: handleCrewEventFlyer, 'flyer-template': handleCrewEventFlyerTemplate, 'reroll-flyer': handleCrewEventRerollFlyer,
-      'fetch-terrain': handleCrewEventFetchTerrain,
     };
     return handlers[action](request, env, id);
   }
@@ -84,9 +81,6 @@ export async function router(request, env) {
 
   const eventSlug = path.match(/^\/e\/([^/]+)$/);
   if (eventSlug) return handleEventPage(request, env, eventSlug[1]);
-
-  const imgKey = path.match(/^\/img\/(.+)$/);
-  if (imgKey) return handleImg(request, env, imgKey[1]);
 
   const goEventId = path.match(/^\/go\/([^/]+)$/);
   if (goEventId) return handleGo(request, env, goEventId[1]);

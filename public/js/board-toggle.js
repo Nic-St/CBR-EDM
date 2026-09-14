@@ -37,5 +37,11 @@
     show('board');
   });
 
-  show('board');
+  // The calendar's own prev/next month links are plain full-page
+  // navigations (no-JS friendly by design, see calendar.js), so they
+  // carry a view=calendar marker in the URL -- otherwise a full reload
+  // always lands back on show('board') below, throwing the visitor out
+  // of the calendar the moment they change month.
+  var initialView = /[?&]view=calendar\b/.test(window.location.search) ? 'calendar' : 'board';
+  show(initialView);
 })();

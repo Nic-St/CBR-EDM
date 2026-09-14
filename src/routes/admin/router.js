@@ -4,7 +4,6 @@ import {
   handleEventList, handleEventNewForm, handleEventEditForm, handleEventCreate, handleEventUpdate,
   handleEventPublish, handleEventReject, handleEventRemove, handleEventRestore, handleEventDelete,
   handleEventReissueEditLink, handleEventRevokeEditLink, handleEventRerollFlyer, handleEventSetFlyerTemplate,
-  handleEventFetchTerrain,
 } from './events.js';
 import { handleChangeList, handleChangeApprove, handleChangeReject } from './changes.js';
 import { handleContactMessageList, handleContactMessageMarkDone } from './contactMessages.js';
@@ -12,9 +11,10 @@ import {
   handleCrewList, handleCrewNewForm, handleCrewEditForm, handleCrewCreate, handleCrewUpdate,
   handleCrewIssueKey, handleCrewRevokeKey,
 } from './crews.js';
-import { handleHarmReductionList, handleHarmReductionCreate, handleHarmReductionUpdate } from './harmReduction.js';
+import {
+  handleHarmReductionList, handleHarmReductionCreate, handleHarmReductionUpdate, handleHarmReductionIntroUpdate,
+} from './harmReduction.js';
 import { handleStats } from './stats.js';
-import { handleFlyerUpload } from './flyerUpload.js';
 import {
   handleInboundEmailList, handleInboundEmailView, handleInboundEmailAttachment,
   handleInboundEmailDismiss, handleInboundEmailConvert,
@@ -48,7 +48,7 @@ export async function adminRouter(request, env) {
   if (eventEdit && method === 'GET') return handleEventEditForm(request, env, admin, eventEdit[1]);
   if (eventEdit && method === 'POST') return handleEventUpdate(request, env, admin, eventEdit[1]);
 
-  const eventAction = path.match(/^\/admin\/events\/([^/]+)\/(publish|reject|remove|restore|delete|reissue-edit-link|revoke-edit-link|reroll-flyer|flyer-template|fetch-terrain)$/);
+  const eventAction = path.match(/^\/admin\/events\/([^/]+)\/(publish|reject|remove|restore|delete|reissue-edit-link|revoke-edit-link|reroll-flyer|flyer-template)$/);
   if (eventAction && method === 'POST') {
     const [, id, action] = eventAction;
     const handlers = {
@@ -56,7 +56,6 @@ export async function adminRouter(request, env) {
       restore: handleEventRestore, delete: handleEventDelete,
       'reissue-edit-link': handleEventReissueEditLink, 'revoke-edit-link': handleEventRevokeEditLink,
       'reroll-flyer': handleEventRerollFlyer, 'flyer-template': handleEventSetFlyerTemplate,
-      'fetch-terrain': handleEventFetchTerrain,
     };
     return handlers[action](request, env, admin, id);
   }
@@ -71,9 +70,6 @@ export async function adminRouter(request, env) {
   if (path === '/admin/contact-messages' && method === 'GET') return handleContactMessageList(request, env, admin);
   const contactMessageDone = path.match(/^\/admin\/contact-messages\/([^/]+)\/done$/);
   if (contactMessageDone && method === 'POST') return handleContactMessageMarkDone(request, env, admin, contactMessageDone[1]);
-
-  const flyerUpload = path.match(/^\/admin\/api\/events\/([^/]+)\/flyer$/);
-  if (flyerUpload && method === 'POST') return handleFlyerUpload(request, env, flyerUpload[1]);
 
   if (path === '/admin/crews' && method === 'GET') return handleCrewList(request, env, admin);
   if (path === '/admin/crews/new' && method === 'GET') return handleCrewNewForm(request, env, admin);
@@ -91,6 +87,7 @@ export async function adminRouter(request, env) {
 
   if (path === '/admin/harm-reduction' && method === 'GET') return handleHarmReductionList(request, env, admin);
   if (path === '/admin/harm-reduction/new' && method === 'POST') return handleHarmReductionCreate(request, env, admin);
+  if (path === '/admin/harm-reduction/intro' && method === 'POST') return handleHarmReductionIntroUpdate(request, env, admin);
 
   const harmReductionEdit = path.match(/^\/admin\/harm-reduction\/([^/]+)$/);
   if (harmReductionEdit && method === 'POST') return handleHarmReductionUpdate(request, env, admin, harmReductionEdit[1]);

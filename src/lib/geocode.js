@@ -17,6 +17,21 @@ const METERS_PER_DEGREE_LAT = 111320;
 
 const USER_AGENT = 'CBR-EDM/1.0 (community EDM noticeboard; contact via cbredm.org)';
 
+// Roughly Canberra plus enough surrounding region for a legitimate bush
+// doof site, not so wide it lets an unrelated word match drift interstate
+// (bounded=1 makes Nominatim actually enforce it, not just prefer it).
+const CANBERRA_VIEWBOX = '148.65,-35.05,149.45,-35.55';
+
+// Nominatim's place_rank, lower is coarser: 2 country, 4 state, 8-12
+// region/county, ~15-16 city, 17 town, 18 village, 20 suburb, 26 road,
+// 30 building/POI. A genuine venue address should resolve to something
+// suburb-level or more specific -- a fake or nonsense address that
+// doesn't match anything real still often returns *something* this
+// coarse (the city or a whole suburb/village), because free-text search
+// falls back to whatever part of the query it could match rather than
+// returning nothing, and "the middle of Canberra" is not a venue.
+const MIN_SPECIFIC_PLACE_RANK = 20;
+
 /**
  * @param {string|null} venueName
  * @param {string|null} venueAddress
@@ -28,7 +43,7 @@ export async function geocodeVenue(venueName, venueAddress) {
   const query = [primary, 'Canberra', 'ACT', 'Australia'].join(', ');
 
   try {
-    const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(query)}`;
+    const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&bounded=1&viewbox=${CANBERRA_VIEWBOX}&q=${encodeURIComponent(query)}`;
     const response = await fetch(url, {
       headers: { 'User-Agent': USER_AGENT },
       signal: AbortSignal.timeout(5000),
@@ -38,6 +53,12 @@ export async function geocodeVenue(venueName, venueAddress) {
     const results = await response.json();
     const first = results[0];
     if (!first) return null;
+    // Reject a match too coarse to be an actual venue (see
+    // MIN_SPECIFIC_PLACE_RANK above) -- a bogus or made-up address
+    // shouldn't quietly become "somewhere in Canberra", which would
+    // then draw a confident-looking real contour map for a venue that
+    // was never actually geocoded.
+    if (typeof first.place_rank === 'number' && first.place_rank < MIN_SPECIFIC_PLACE_RANK) return null;
 
     return { lat: Number(first.lat), lng: Number(first.lon) };
   } catch {
@@ -104,4 +125,35 @@ export async function fetchRealTerrain(venueName, venueAddress) {
   if (!grid) return null;
 
   return { lat: location.lat, lng: location.lng, grid };
+}
+
+/**
+ * The venue_lat/venue_lng/elevation_grid columns to persist for a save,
+ * called automatically on every event create/update rather than behind a
+ * manual "Fetch real terrain" button (owner request: it should always be
+ * fetching real terrain unless the address is TBA, in which case contour
+ * draws its synthetic map instead -- never a real coordinate for a
+ * location-TBA event, the same rule the template itself follows).
+ *
+ * Additive only: a skipped or failed fetch never erases previously
+ * fetched terrain, so a transient network hiccup on an unrelated edit
+ * (e.g. changing the ticket URL) doesn't regress a flyer that already
+ * had real terrain -- it just tries again on the next save.
+ * @param {{ location_tba: boolean|number, venue_name: string|null, venue_address: string|null }} fields
+ * @param {{ venue_lat: number|null, venue_lng: number|null, elevation_grid: string|null }} [existing]
+ */
+export async function terrainFieldsFor(fields, existing = {}) {
+  const kept = {
+    venue_lat: existing.venue_lat ?? null,
+    venue_lng: existing.venue_lng ?? null,
+    elevation_grid: existing.elevation_grid ?? null,
+  };
+
+  if (fields.location_tba) return { venue_lat: null, venue_lng: null, elevation_grid: null };
+  if (!fields.venue_name && !fields.venue_address) return kept;
+
+  const terrain = await fetchRealTerrain(fields.venue_name, fields.venue_address);
+  if (!terrain) return kept;
+
+  return { venue_lat: terrain.lat, venue_lng: terrain.lng, elevation_grid: JSON.stringify(terrain.grid) };
 }

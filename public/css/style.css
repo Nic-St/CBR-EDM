@@ -197,14 +197,16 @@ select:focus-visible {
 }
 
 .site-nav a {
+  display: inline-block;
   font-weight: 600;
   text-decoration: none;
-  border-bottom: 2px solid transparent;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--border);
 }
 
 .site-nav a:hover,
 .site-nav a:focus-visible {
-  border-bottom-color: var(--paper);
+  border-color: var(--paper);
 }
 
 /* Paper scraps: event cards. Shape and rotation are set inline per event

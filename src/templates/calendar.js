@@ -24,9 +24,9 @@ export function calendar(events, year, month, now = new Date()) {
   return html`<section class="calendar-panel">
     <div class="calendar">
       <nav class="calendar-nav" aria-label="Change month">
-        <a href="/?month=${monthParam(prev.year, prev.month)}" aria-label="Previous month">&lt;</a>
+        <a href="/?month=${monthParam(prev.year, prev.month)}&view=calendar" aria-label="Previous month">&lt;</a>
         <span class="calendar-nav-label">${monthLabel(year, month)}</span>
-        <a href="/?month=${monthParam(next.year, next.month)}" aria-label="Next month">&gt;</a>
+        <a href="/?month=${monthParam(next.year, next.month)}&view=calendar" aria-label="Next month">&gt;</a>
       </nav>
       <table>
         <caption class="sr-only">${monthLabel(year, month)}</caption>

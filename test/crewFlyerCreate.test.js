@@ -39,7 +39,7 @@ function fakeDb({ crews, events }) {
                   venue_address: venueAddress, genres, lineup, ticket_url: ticketUrl, notes,
                   age_restriction: ageRestriction, status: 'on', visibility, published: publishedFlag,
                   created_at: createdAt, updated_at: updatedAt, published_at: publishedAt,
-                  flyer_template: flyerTemplate, seed_salt: 0, flyer_thumb_key: null,
+                  flyer_template: flyerTemplate, seed_salt: 0,
                 });
                 return {};
               }

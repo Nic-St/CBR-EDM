@@ -329,8 +329,12 @@ function buildActsBlock(ctx, event) {
     const support = event.acts.slice(1);
     if (support.length) {
       const names = support.map((act) => act.name.toUpperCase());
+      // maxSize stays below smallSize (20, the title/"Presented by" line
+      // above): a short support lineup with short names used to fit at
+      // up to 22, making a support act's own name read bigger than the
+      // event/crew name line -- found on a live flyer (DFPM's Dub.Sept).
       const fit = fitNamesBlock(names, { width: canvas.contentWidth, height: 380 }, {
-        minSize: 16, maxSize: 22, font: 'archivo', leading: 1.6, letterSpacingRatio: 0.05,
+        minSize: 16, maxSize: 19, font: 'archivo', leading: 1.6, letterSpacingRatio: 0.05,
       });
       for (const fitLine of fit.lines) {
         line(fitLine, fit.size, { letterSpacing: fit.size * 0.05 });

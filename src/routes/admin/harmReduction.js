@@ -2,6 +2,8 @@ import { adminLayout } from '../../templates/admin/layout.js';
 import { harmReductionAdminPage } from '../../templates/admin/harmReduction.js';
 import { generateId } from '../../lib/ids.js';
 import { notFound } from '../../lib/http.js';
+import { getSetting, setSetting } from '../../lib/settings.js';
+import { HARM_REDUCTION_INTRO_KEY, HARM_REDUCTION_INTRO_DEFAULT } from '../harmReduction.js';
 
 function page(admin, body) {
   return new Response(String(adminLayout({ title: 'Harm reduction links', bodyContent: body, email: admin.email })), {
@@ -11,7 +13,15 @@ function page(admin, body) {
 
 export async function handleHarmReductionList(request, env, admin) {
   const { results } = await env.DB.prepare('SELECT * FROM harm_reduction_links').all();
-  return page(admin, harmReductionAdminPage(results));
+  const intro = await getSetting(env, HARM_REDUCTION_INTRO_KEY, HARM_REDUCTION_INTRO_DEFAULT);
+  return page(admin, harmReductionAdminPage(results, intro));
+}
+
+export async function handleHarmReductionIntroUpdate(request, env, admin) {
+  const formData = await request.formData();
+  const intro = (formData.get('intro') || '').trim();
+  await setSetting(env, HARM_REDUCTION_INTRO_KEY, intro || HARM_REDUCTION_INTRO_DEFAULT);
+  return Response.redirect(new URL('/admin/harm-reduction', request.url), 303);
 }
 
 function readLinkFields(formData) {
