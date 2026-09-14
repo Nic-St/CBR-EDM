@@ -174,15 +174,15 @@ function adminEventActions(event, options = {}) {
  * actually picked), a Reroll button, and a compare grid rendering the
  * event through all ten templates.
  *
- * Owner decision (2026-09-13): stick purely to the real contour map, with
- * no way to choose anything else on this screen -- every event always
- * renders with contour, so the dropdown and compare grid are removed
- * here entirely (archived below in a comment, not deleted: TEMPLATES,
- * ACTIVE_TEMPLATES, resolveTemplate and the /flyer-template route are
- * all still intact and this markup drops back in unchanged if template
- * choice is ever wanted again). The Reroll and Fetch real terrain
- * buttons stay -- they're not about choosing a template, just about this
- * one, contour.
+ * Owner decision (2026-09-13, then again 2026-09-14): stick purely to the
+ * real contour map, with no way to choose anything else on this screen --
+ * every event always renders with contour, so the dropdown and compare
+ * grid are removed here entirely. The other nine templates are no longer
+ * in the codebase at all (see manifest.js), so this markup is not coming
+ * back unchanged the way it might have when they were merely archived
+ * from selection -- see git history/CHANGELOG.md if template choice is
+ * ever wanted again. The Reroll and Fetch real terrain buttons stay --
+ * they're not about choosing a template, just about this one, contour.
  * @param {object} event
  */
 function generatedFlyerSection(event) {
@@ -211,9 +211,7 @@ function generatedFlyerSection(event) {
   `;
 }
 
-// The archived template picker (the "Set template" dropdown and the
-// "Compare templates" grid) was removed here, owner decision 2026-09-13:
-// no way to choose anything but contour on this screen. See git history
-// (the commit before this comment was added) for the removed markup --
-// TEMPLATES, ACTIVE_TEMPLATES, resolveTemplate and the /flyer-template
-// route it posted to are all still intact, so it drops back in unchanged.
+// The template picker (the "Set template" dropdown and the "Compare
+// templates" grid) was removed here, owner decision 2026-09-13: no way
+// to choose anything but contour on this screen. See git history for the
+// removed markup.

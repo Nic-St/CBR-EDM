@@ -10,6 +10,29 @@ All notable changes to this project are documented here. Format follows
   owner request. `src/flyers/parts/wordmark.js` deleted; the harm
   reduction line ("Look after each other") stays, now centred on its
   own rather than as a pair with the wordmark.
+- The nine flyer templates other than `contour` (`medi`, `consignment`,
+  `schematic`, `stencil`, `terminal`, `halftoneField`, `ransom`,
+  `index-list`, `cymatic`), owner request: contour is the only template
+  wanted in the live site at all, not merely archived from routing/admin
+  selection as before. Deleted the template files and the shared parts
+  only they used (`barcode.js`, `halftone.js`, `tape.js`); they remain
+  fully recoverable from git history if ever wanted again, just not in
+  the working code. `manifest.js`'s `TEMPLATES` now registers only
+  `contour`; `render()` no longer has a `medi` fallback to crash-fall-back
+  to (contour is now its own fallback -- a render that throws returns
+  `null`, same as it always did once every fallback was exhausted).
+  `paletteFor`'s `excludeYellowOnPaper` option (halftoneField-specific)
+  and `ticketFooter`'s `color` override (ransom/schematic-specific) were
+  both dead with those templates gone, so removed rather than left
+  unused. While removing the fallback, found and fixed a real latent bug
+  it had been silently papering over: a pathological (checkerboard)
+  real-terrain grid plus a long lineup could push contour's own `page`
+  surface output past the 60KB budget, which used to crash-fall-back to
+  `medi` unnoticed -- the exact "board shows a different template than
+  admin preview" class of bug already fixed once for the `scrap` surface.
+  Lowered `MAX_TERRAIN_SEGMENTS` 2400 -> 1500 in `contour.js` so the page
+  surface stays under budget in that worst case too, with real headroom
+  for a long lineup on top of it.
 
 ### Decided
 - Flyer engine phases 4 (Open Graph rasterisation) and 5 (print

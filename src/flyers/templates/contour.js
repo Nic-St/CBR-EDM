@@ -22,8 +22,15 @@ const triangleMarker = (x, y, s) => `M ${x.toFixed(1)} ${(y - s).toFixed(1)} L $
 // 150m apart), so a contour level realistically crosses on the order of
 // the grid's own size in cells, not anywhere near all of them -- this
 // cap is a safety net against a pathological dataset, not the expected
-// count, matching halftone.js's MAX_ELEMENTS approach.
-const MAX_TERRAIN_SEGMENTS = 2400;
+// count. Lowered from 2400 (owner decision, 2026-09-14: contour is now
+// the only template in the codebase, so render() has nothing left to
+// silently fall back to if this template's own output blows the size
+// budget -- a pathological checkerboard grid plus a long lineup used to
+// land north of it at 2400, which the old medi fallback quietly papered
+// over, the exact silent-substitution bug described below for a
+// different cause). 1500 leaves real headroom for a long lineup even in
+// that worst case; see test/flyers.test.js's checkerboard test.
+const MAX_TERRAIN_SEGMENTS = 1500;
 const MAP_OVERSCAN = 120;
 // The geocoded grid is only 9x9 (real API points cost a request each);
 // upsampling it before tracing is what makes the lines smooth curves

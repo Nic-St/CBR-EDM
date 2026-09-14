@@ -320,7 +320,9 @@ The shared bottom band: age restriction, doors and close, ticket text, harm redu
 
 ## 7. Templates
 
-Ten. Each section gives the intent, the layout, the type treatment, what varies by seed, and what it does with sparse data. Build `medi` and `consignment` first, prove the renderer, then the rest.
+Ten were built. Owner decision (2026-09-13, then again 2026-09-14): stick purely to the real contour map -- T-01 through T-09 below (everything except T-10 `contour`) are archived, removed from the codebase entirely and not wanted in the live site. Their spec sections stay below as a design record only, kept for history the way CHANGELOG.md is; nothing under them describes code that still exists. See `src/flyers/manifest.js` and CHANGELOG.md for the removal.
+
+Each section gives the intent, the layout, the type treatment, what varies by seed, and what it does with sparse data.
 
 Canvas is 1080 x 1350 with 72 margins unless stated.
 
@@ -548,6 +550,8 @@ Two data sources, owner request (2026-09): by default the terrain is procedural,
 ---
 
 ## 8. Genre routing
+
+Superseded (owner decision, 2026-09-13/14): contour is now the only auto-routed template, full stop -- see `resolveTemplate` in `src/flyers/manifest.js`. Kept below as a design record only; none of the templates this table names other than `contour` still exist in the codebase.
 
 When `flyer_template` is null, route automatically.
 

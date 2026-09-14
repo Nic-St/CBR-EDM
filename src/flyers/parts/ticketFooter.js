@@ -1,8 +1,10 @@
 // The shared bottom band, PROJECT-C-EDM-FLYER-ENGINE-SPEC.md section 6:
 // age restriction, doors and close, ticket text, harm reduction mark.
-// Used by most templates so it stays consistent. Height 126, flush to the
-// bottom margin. Only ever shows fields that actually exist (section 5's
-// honesty rule): this is not the place to print placeholder text.
+// Used by contour, the only template left in the codebase (the other
+// nine that used to share this were removed, see manifest.js). Height
+// 126, flush to the bottom margin. Only ever shows fields that actually
+// exist (section 5's honesty rule): this is not the place to print
+// placeholder text.
 
 import { rules } from './rules.js';
 import { measure } from '../metrics.js';
@@ -14,19 +16,12 @@ const HARM_TEXT_SIZE = 16;
 
 /**
  * @param {object} ctx
- * @param {{ color?: string, date?: string }} [options] - color: text
- * colour, for the two templates in the seven that use this whose canvas
- * is the light paper colour instead of toner black (ransom, schematic)
- * -- without this, every line in the footer band defaults to
- * palette.paper text on a palette.paper background and is invisible.
- * Defaults to palette.paper, correct for the other five, which are dark.
- * date: an optional date string centred on the same line as doors/close
- * and 18+ (owner request, contour only -- the other templates using
- * this already show the date in their own dateVenue line elsewhere).
+ * @param {{ date?: string }} [options] - date: an optional date string
+ * centred on the same line as doors/close and 18+ (owner request).
  */
-export function ticketFooter(ctx, { color, date } = {}) {
+export function ticketFooter(ctx, { date } = {}) {
   const { event, canvas, palette } = ctx;
-  const textColor = color || palette.paper;
+  const textColor = palette.paper;
   const top = canvas.bottom - HEIGHT;
 
   // Owner request: the rule separates event/crew-specific facts (above)

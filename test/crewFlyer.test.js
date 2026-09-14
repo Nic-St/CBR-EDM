@@ -81,7 +81,7 @@ test('a crew can preview the auto-routed flyer for its own event', async () => {
   assert.equal(result.ok, true);
   assert.equal(result.current, null);
   assert.equal(result.auto.id, 'contour');
-  assert.equal(result.templates.length, 10);
+  assert.equal(result.templates.length, 1);
   assert.ok(result.svg.startsWith('<svg'));
 });
 
@@ -95,10 +95,10 @@ test('an uploaded flyer suppresses the generated preview', async () => {
 
 test('a crew can set an explicit template for its own event', async () => {
   const { env, key, event } = await setup();
-  const result = await handleCrewEventFlyerTemplate(postJson({ key, template: 'ransom' }), env, event.id).then((r) => r.json());
+  const result = await handleCrewEventFlyerTemplate(postJson({ key, template: 'contour' }), env, event.id).then((r) => r.json());
 
-  assert.equal(result.current, 'ransom');
-  assert.equal(event.flyer_template, 'ransom');
+  assert.equal(result.current, 'contour');
+  assert.equal(event.flyer_template, 'contour');
 });
 
 test('an unrecognised template value is treated as Auto', async () => {
@@ -111,7 +111,7 @@ test('an unrecognised template value is treated as Auto', async () => {
 
 test('a crew cannot set a template on an event it does not own', async () => {
   const { env, key } = await setup();
-  const result = await handleCrewEventFlyerTemplate(postJson({ key, template: 'ransom' }), env, 'evt_someone_elses').then((r) => r.json());
+  const result = await handleCrewEventFlyerTemplate(postJson({ key, template: 'contour' }), env, 'evt_someone_elses').then((r) => r.json());
 
   assert.equal(result.ok, false);
 });

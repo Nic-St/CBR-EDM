@@ -236,9 +236,9 @@ export async function handleCrewEventFlyer(request, env, id) {
 
 /**
  * POST /api/crew/events/:id/flyer-template. Applied directly regardless
- * of trust level, unlike other edits: it only changes which of the ten
- * approved templates draws the same factual data, never the facts
- * themselves, so it carries none of the risk the review queue exists for.
+ * of trust level, unlike other edits: it only changes which registered
+ * template draws the same factual data, never the facts themselves, so
+ * it carries none of the risk the review queue exists for.
  */
 export async function handleCrewEventFlyerTemplate(request, env, id) {
   const body = await readJson(request);
