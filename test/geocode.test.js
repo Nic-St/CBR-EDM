@@ -46,6 +46,30 @@ test('geocodeVenue returns null when no results are found', async () => {
   });
 });
 
+test('geocodeVenue rejects a match too coarse to be a real venue (a made-up address falling back to "the city")', async () => {
+  // A bogus address often still returns *something* from Nominatim's
+  // free-text search -- the city or region it fell back to -- rather
+  // than an empty result. place_rank 15 is city-level, nowhere near a
+  // specific venue, so this must not be treated as a genuine geocode.
+  await withFetch(async () => ({
+    ok: true,
+    json: async () => [{ lat: '-35.30', lon: '149.13', place_rank: 15, addresstype: 'city' }],
+  }), async () => {
+    const result = await geocodeVenue('asdkfjasdlkfj', null);
+    assert.equal(result, null);
+  });
+});
+
+test('geocodeVenue accepts a street/building-level match', async () => {
+  await withFetch(async () => ({
+    ok: true,
+    json: async () => [{ lat: '-35.30', lon: '149.13', place_rank: 30, addresstype: 'shop' }],
+  }), async () => {
+    const result = await geocodeVenue('Sideway', '1 Lonsdale St, Braddon');
+    assert.deepEqual(result, { lat: -35.3, lng: 149.13 });
+  });
+});
+
 test('fetchElevationGrid builds a north-up grid: row 0 is north of row 8', async () => {
   // contour.js's toScreen maps row -> y directly (row 0 at the top of the
   // canvas), so row 0 must be the grid's north edge -- a real bug found

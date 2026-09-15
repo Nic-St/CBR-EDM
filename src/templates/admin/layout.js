@@ -42,9 +42,6 @@ export function adminLayout({ title, bodyContent, email, now = new Date() }) {
     ${raw(bodyContent)}
   </main>
   <script src="/js/admin-confirm.js" defer></script>
-  <script src="/js/image-resize.js" defer></script>
-  <script src="/js/admin-flyer-upload.js" defer></script>
-  <script src="/js/admin-flyer-from-email.js" defer></script>
 </body>
 </html>`;
 }

@@ -52,8 +52,8 @@ export async function handleInboundEmailDismiss(request, env, admin, id) {
 /**
  * POST /admin/inbound-emails/:id/convert. Section 10.6: opens the event
  * form pre-filled (subject as title). The first image attachment, if any,
- * can then be pulled in as the flyer from the event edit page, running
- * through the same browser resize pipeline as any other upload.
+ * is shown for reference on the event edit page -- the flyer itself is
+ * always the generated contour map, owner request: uploads are gone.
  */
 export async function handleInboundEmailConvert(request, env, admin, id) {
   const emailRow = await env.DB.prepare('SELECT * FROM inbound_emails WHERE id = ?').bind(id).first();

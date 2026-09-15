@@ -9,7 +9,7 @@ import { html } from '../lib/escape.js';
 export function contactFormPage(turnstileSiteKey, eventId) {
   return html`
     <h1>Get in touch</h1>
-    <p>Messages go to whoever runs the site. We don't publish anything you send here.</p>
+    <p>We don't publish anything you send here.</p>
 
     <form data-contact-form action="/api/contact" method="post">
       ${eventId ? html`<input type="hidden" name="event_id" value="${eventId}">` : ''}
@@ -34,5 +34,5 @@ export function contactFormPage(turnstileSiteKey, eventId) {
 }
 
 export function contactConfirmationPage() {
-  return html`<h1>Message sent</h1><p>Thanks, someone will get back to you if needed.</p>`;
+  return html`<h1>Message sent</h1><p>Got it, thanks. We'll reply if you left a way to reach you and it needs one.</p>`;
 }

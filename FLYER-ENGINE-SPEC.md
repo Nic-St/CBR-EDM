@@ -216,7 +216,7 @@ When you do build it, evaluate `resvg-wasm` inside the Worker with fonts loaded 
 | `social` | 1200 x 630 (1.91:1) | Re-composed, not cropped, see below |
 | `print` | A5, 148 x 210 mm at 300 dpi, 3 mm bleed, 5 mm safe margin | Phase 5 |
 
-Templates never render directly to 1.91:1. Instead each template exports an optional `renderWide(ctx)`. If it is absent, the social card uses a shared fallback: the template's background treatment, the headliner, the date and the site wordmark. A 4:5 flyer letterboxed into a landscape card looks broken.
+Templates never render directly to 1.91:1. Instead each template exports an optional `renderWide(ctx)`. If it is absent, the social card uses a shared fallback: the template's background treatment, the headliner and the date. A 4:5 flyer letterboxed into a landscape card looks broken.
 
 **Grid.** 1080 x 1350, margin 72, 12 columns of 62 with 18 gutters, baseline grid of 18. Templates may break the grid deliberately but must say so in a code comment explaining why.
 
@@ -316,14 +316,13 @@ Hairline dividers: `full`, `partial`, `leader` (dot leaders for lineup lists), `
 **`ticketFooter(ctx)`**
 The shared bottom band: age restriction, doors and close, ticket text, harm reduction mark. Used by seven of the ten templates so it stays consistent. Height 126, sits flush to the bottom margin.
 
-**`wordmark(ctx, {size})`**
-The site wordmark, small, bottom right or in the footer band. Present on every generated flyer, absent from crew flyers. This is how someone can tell at a glance which is which, and it is the quiet bit of credit the site earns.
-
 ---
 
 ## 7. Templates
 
-Ten. Each section gives the intent, the layout, the type treatment, what varies by seed, and what it does with sparse data. Build `medi` and `consignment` first, prove the renderer, then the rest.
+Ten were built. Owner decision (2026-09-13, then again 2026-09-14): stick purely to the real contour map -- T-01 through T-09 below (everything except T-10 `contour`) are archived, removed from the codebase entirely and not wanted in the live site. Their spec sections stay below as a design record only, kept for history the way CHANGELOG.md is; nothing under them describes code that still exists. See `src/flyers/manifest.js` and CHANGELOG.md for the removal.
+
+Each section gives the intent, the layout, the type treatment, what varies by seed, and what it does with sparse data.
 
 Canvas is 1080 x 1350 with 72 margins unless stated.
 
@@ -552,6 +551,8 @@ Two data sources, owner request (2026-09): by default the terrain is procedural,
 
 ## 8. Genre routing
 
+Superseded (owner decision, 2026-09-13/14): contour is now the only auto-routed template, full stop -- see `resolveTemplate` in `src/flyers/manifest.js`. Kept below as a design record only; none of the templates this table names other than `contour` still exist in the codebase.
+
 When `flyer_template` is null, route automatically.
 
 ```js
@@ -636,7 +637,7 @@ Rules:
 ## 11. Rules that apply to every template
 
 1. The footer band is present on every template except `terminal` and `index-list`, which incorporate the same information into their own structure.
-2. The wordmark is present on every generated flyer, always.
+2. No site wordmark appears anywhere on a generated flyer (owner request; previously always present).
 3. Status stamps sit above everything and are drawn last. They never cover the date.
 4. Past events get the faded treatment described in section 9 plus one extra layer of grain. No sepia, no blur, no opacity reduction on text.
 5. The site never renders a generated flyer larger than 1080 wide on screen.
@@ -727,7 +728,7 @@ Phase complete when:
 
 - All ten templates render all ten fixtures without error.
 - The contact sheet contains no flyer that a reasonable person would call broken, cut off, or empty.
-- A stranger shown the board cannot immediately tell which flyers were uploaded by crews and which were generated, other than by the wordmark.
+- A stranger shown the board cannot immediately tell which flyers were uploaded by crews and which were generated.
 - All automated checks pass.
 - Turning off the flyer engine entirely leaves a working site.
 
@@ -761,8 +762,9 @@ Do not start 2b until 2a meets its acceptance criteria with two templates.
 
 ## 18. Open questions for the owner
 
-1. **Wordmark on generated flyers.** Confirmed as always present, or should it be suppressed on the event page where the site identity is already obvious?
-2. **Print download.** Worth building in phase 5, or would crews rather just have the PNG?
-3. **Template naming in the admin panel.** Internal IDs like `medi` and `consignment`, or plainer names like "Deep field" and "Shipping label"?
-4. **Anti-repetition.** Is the board more interesting with visual variety, or more coherent if similar events look similar? The routing table currently favours coherence.
-5. **A local template beyond `contour`.** Canberra has brutalist concrete and a very specific winter fog. Is there a second local template worth having, or does one keep it from becoming a gimmick?
+1. **Print download.** Worth building in phase 5, or would crews rather just have the PNG?
+2. **Template naming in the admin panel.** Internal IDs like `medi` and `consignment`, or plainer names like "Deep field" and "Shipping label"?
+3. **Anti-repetition.** Is the board more interesting with visual variety, or more coherent if similar events look similar? The routing table currently favours coherence.
+4. **A local template beyond `contour`.** Canberra has brutalist concrete and a very specific winter fog. Is there a second local template worth having, or does one keep it from becoming a gimmick?
+
+Resolved: **Wordmark on generated flyers.** Removed entirely (owner request, see CHANGELOG).

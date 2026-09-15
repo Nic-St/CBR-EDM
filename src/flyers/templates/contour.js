@@ -22,8 +22,15 @@ const triangleMarker = (x, y, s) => `M ${x.toFixed(1)} ${(y - s).toFixed(1)} L $
 // 150m apart), so a contour level realistically crosses on the order of
 // the grid's own size in cells, not anywhere near all of them -- this
 // cap is a safety net against a pathological dataset, not the expected
-// count, matching halftone.js's MAX_ELEMENTS approach.
-const MAX_TERRAIN_SEGMENTS = 2400;
+// count. Lowered from 2400 (owner decision, 2026-09-14: contour is now
+// the only template in the codebase, so render() has nothing left to
+// silently fall back to if this template's own output blows the size
+// budget -- a pathological checkerboard grid plus a long lineup used to
+// land north of it at 2400, which the old medi fallback quietly papered
+// over, the exact silent-substitution bug described below for a
+// different cause). 1500 leaves real headroom for a long lineup even in
+// that worst case; see test/flyers.test.js's checkerboard test.
+const MAX_TERRAIN_SEGMENTS = 1500;
 const MAP_OVERSCAN = 120;
 // The geocoded grid is only 9x9 (real API points cost a request each);
 // upsampling it before tracing is what makes the lines smooth curves
@@ -322,8 +329,12 @@ function buildActsBlock(ctx, event) {
     const support = event.acts.slice(1);
     if (support.length) {
       const names = support.map((act) => act.name.toUpperCase());
+      // maxSize stays below smallSize (20, the title/"Presented by" line
+      // above): a short support lineup with short names used to fit at
+      // up to 22, making a support act's own name read bigger than the
+      // event/crew name line -- found on a live flyer (DFPM's Dub.Sept).
       const fit = fitNamesBlock(names, { width: canvas.contentWidth, height: 380 }, {
-        minSize: 16, maxSize: 22, font: 'archivo', leading: 1.6, letterSpacingRatio: 0.05,
+        minSize: 16, maxSize: 19, font: 'archivo', leading: 1.6, letterSpacingRatio: 0.05,
       });
       for (const fitLine of fit.lines) {
         line(fitLine, fit.size, { letterSpacing: fit.size * 0.05 });
@@ -545,9 +556,9 @@ export default {
 
     parts.push(actsBlock.svg);
 
-    // ticketFooter now draws the wordmark itself, centred with "Look
-    // after each other" as one bottom-middle pair, and the date centred
-    // on the same line as doors/close and 18+ (owner request).
+    // ticketFooter centres "Look after each other" at the bottom
+    // middle, and the date centred on the same line as doors/close and
+    // 18+ (owner request).
     parts.push(ticketFooter(ctx, { date: event.dateLong }));
 
     return `<g>${parts.join('')}</g>`;

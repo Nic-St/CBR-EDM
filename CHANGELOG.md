@@ -5,6 +5,89 @@ All notable changes to this project are documented here. Format follows
 
 ## [Unreleased]
 
+### Removed
+- The site wordmark ("CBR EDM") from every generated flyer template,
+  owner request. `src/flyers/parts/wordmark.js` deleted; the harm
+  reduction line ("Look after each other") stays, now centred on its
+  own rather than as a pair with the wordmark.
+- The nine flyer templates other than `contour` (`medi`, `consignment`,
+  `schematic`, `stencil`, `terminal`, `halftoneField`, `ransom`,
+  `index-list`, `cymatic`), owner request: contour is the only template
+  wanted in the live site at all, not merely archived from routing/admin
+  selection as before. Deleted the template files and the shared parts
+  only they used (`barcode.js`, `halftone.js`, `tape.js`); they remain
+  fully recoverable from git history if ever wanted again, just not in
+  the working code. `manifest.js`'s `TEMPLATES` now registers only
+  `contour`; `render()` no longer has a `medi` fallback to crash-fall-back
+  to (contour is now its own fallback -- a render that throws returns
+  `null`, same as it always did once every fallback was exhausted).
+  `paletteFor`'s `excludeYellowOnPaper` option (halftoneField-specific)
+  and `ticketFooter`'s `color` override (ransom/schematic-specific) were
+  both dead with those templates gone, so removed rather than left
+  unused. While removing the fallback, found and fixed a real latent bug
+  it had been silently papering over: a pathological (checkerboard)
+  real-terrain grid plus a long lineup could push contour's own `page`
+  surface output past the 60KB budget, which used to crash-fall-back to
+  `medi` unnoticed -- the exact "board shows a different template than
+  admin preview" class of bug already fixed once for the `scrap` surface.
+  Lowered `MAX_TERRAIN_SEGMENTS` 2400 -> 1500 in `contour.js` so the page
+  surface stays under budget in that worst case too, with real headroom
+  for a long lineup on top of it.
+- Flyer uploads, entirely, owner request: the site only ever shows the
+  generated contour map now. Deleted the admin upload form and route
+  (`src/routes/admin/flyerUpload.js`), the "use an email attachment as
+  the flyer" feature (the attachment is still shown for reference, just
+  can't become the flyer), the public submission form's flyer step, the
+  shared browser resize pipeline (`image-resize.js`, `imagePipeline.js`),
+  and the `/img/:key` route that served uploaded images from R2.
+  `events.flyer_key`/`flyer_thumb_key` dropped from the schema (migration
+  0007). The board, event page and admin preview no longer check for an
+  uploaded flyer at all -- every flyer is `render()`'s output.
+- The manual "Fetch real terrain" button (admin and crew dashboard),
+  owner request: it should always be fetching real terrain unless the
+  address is TBA. Terrain is now fetched automatically on every save
+  that isn't location_tba (`geocode.js`'s new `terrainFieldsFor`, wired
+  into every event create/update path: admin, crew, the public
+  submission form, the self-service edit link, and the pending-change
+  approval flow) -- additive only, so a failed or skipped fetch never
+  erases previously fetched terrain.
+
+### Fixed
+- A made-up or garbled venue address could still produce a confident-
+  looking real contour map, owner report: Nominatim's free-text search
+  falls back to a generic match (a same-named unrelated shop, or just
+  "the middle of Canberra") rather than returning nothing for a query it
+  can't really resolve. `geocodeVenue` now rejects anything coarser than
+  suburb-level (`place_rank` below 20) and only searches within a
+  Canberra-area viewbox, so a bogus address falls through to contour's
+  synthetic map instead of a wrong "real" one.
+- contour's support-act names could render larger than the event/crew
+  name above them for a short lineup of short names, owner report (live
+  on DFPM's Dub.Sept) -- the support-act fit's `maxSize` (22) exceeded
+  the title/"Presented by" line's fixed size (20). Capped support acts to
+  19.
+- Board/calendar view resetting to the board on every month change,
+  owner report: the calendar's prev/next links are plain page
+  navigations (no-JS friendly by design), so a full reload always ran
+  `board-toggle.js`'s default `show('board')`, throwing the visitor out
+  of the calendar the moment they changed month. The links now carry a
+  `view=calendar` marker the toggle script checks on load.
+
+### Added
+- Admin-editable intro text on `/look-after-each-other`, owner request:
+  the harm reduction links were already admin-editable, but the page's
+  own intro copy (the emergency-call/CanTEST paragraphs) was hardcoded.
+  New `site_settings` key/value table (migration 0006) and
+  `src/lib/settings.js`; edited from the same `/admin/harm-reduction`
+  page as the links, above them.
+
+### Changed
+- Header nav links get a visible bounding box (a hairline border,
+  filled on hover/focus) instead of relying on an underline alone,
+  owner report: they didn't read as buttons.
+- "Get in touch" page copy, owner report: sounded AI-written. Simplified
+  to "We don't publish anything you send here."
+
 ### Decided
 - Flyer engine phases 4 (Open Graph rasterisation) and 5 (print
   download): not building them. Rasterising an SVG to PNG needs either

@@ -64,7 +64,6 @@
       tbaFields.hidden = !tbaToggle.checked;
     });
 
-    var fileInput = form.querySelector('#flyer-file');
     var status = form.querySelector('[data-submit-status]');
     var submitButton = form.querySelector('button[type="submit"]');
 
@@ -82,13 +81,6 @@
 
       try {
         var body = new FormData(form);
-
-        if (fileInput.files && fileInput.files[0]) {
-          var processed = await window.CEDM.processFlyerFile(fileInput.files[0]);
-          body.append('flyer_large', processed.large, 'large.webp');
-          body.append('flyer_thumb', processed.thumb, 'thumb.webp');
-        }
-
         var response = await fetch(form.action, { method: 'POST', body: body });
         var result = await response.json();
 

@@ -82,6 +82,10 @@ test('publishing an event with no explicit template freezes the auto-routed choi
 });
 
 test('publishing does not touch an explicit flyer_template', async () => {
+  // 'ransom' is deliberately an archived template id here, not 'contour':
+  // an already-set flyer_template column must never be touched by publish
+  // regardless of whether that id is still a live template, since old
+  // rows can carry an id for a template that's since been removed.
   const event = pendingEvent({ flyer_template: 'ransom' });
   const env = { DB: fakeDb([event]) };
   const request = new Request('http://localhost/admin/events/x/publish', { method: 'POST' });
